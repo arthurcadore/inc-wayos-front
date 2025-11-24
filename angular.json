@@ -3,7 +3,7 @@
     "version": 1,
     "newProjectRoot": "projects",
     "projects": {
-        "sakai-ng": {
+        "inc-wayos-front": {
             "projectType": "application",
             "schematics": {
                 "@schematics/angular:component": {
@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:application",
                     "options": {
-                        "outputPath": "dist/sakai-ng",
+                        "outputPath": "dist/inc-wayos-front",
                         "index": "src/index.html",
                         "browser": "src/main.ts",
                         "polyfills": [
@@ -73,13 +73,13 @@
                     "builder": "@angular-devkit/build-angular:dev-server",
                     "configurations": {
                         "production": {
-                            "buildTarget": "sakai-ng:build:production"
+                            "buildTarget": "inc-wayos-front:build:production"
                         },
                         "homologation": {
-                            "buildTarget": "sakai-ng:build:homologation"
+                            "buildTarget": "inc-wayos-front:build:homologation"
                         },
                         "development": {
-                            "buildTarget": "sakai-ng:build:development"
+                            "buildTarget": "inc-wayos-front:build:development"
                         }
                     },
                     "defaultConfiguration": "development"
