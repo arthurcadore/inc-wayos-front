@@ -38,12 +38,33 @@
                     },
                     "configurations": {
                         "production": {
-                            "outputHashing": "all"
+                            "outputHashing": "all",
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.production.ts"
+                                }
+                            ]
+                        },
+                        "homologation": {
+                            "outputHashing": "all",
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.homologation.ts"
+                                }
+                            ]
                         },
                         "development": {
                             "optimization": false,
                             "extractLicenses": false,
-                            "sourceMap": true
+                            "sourceMap": true,
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.development.ts"
+                                }
+                            ]
                         }
                     },
                     "defaultConfiguration": "production"
@@ -53,6 +74,9 @@
                     "configurations": {
                         "production": {
                             "buildTarget": "sakai-ng:build:production"
+                        },
+                        "homologation": {
+                            "buildTarget": "sakai-ng:build:homologation"
                         },
                         "development": {
                             "buildTarget": "sakai-ng:build:development"
