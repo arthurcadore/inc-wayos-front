@@ -27,7 +27,7 @@ export class AppMenu {
                     { label: 'Escolas', icon: 'pi pi-fw pi-graduation-cap', routerLink: ['/schools'] },
 
                     // Remover essa página depois de testes
-                    { label: 'Detalhes da Escola', icon: 'pi pi-fw pi-home', routerLink: ['/school-details'] }
+                    // { label: 'Detalhes da Escola', icon: 'pi pi-fw pi-home', routerLink: ['/school-details'] }
                 ],
             },
 
