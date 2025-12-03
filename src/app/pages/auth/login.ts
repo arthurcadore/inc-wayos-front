@@ -8,9 +8,9 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 // import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '../service/auth.service';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
-
+import { LoadingModalService } from '@/layout/component/app.loading-modal';
+import { ToastModule } from 'primeng/toast';
 
 @Component({
     selector: 'app-login',
@@ -25,7 +25,7 @@ import { MessageService } from 'primeng/api';
         RouterModule,
         RippleModule,
         // AppFloatingConfigurator,        
-        ToastModule
+        ToastModule,
     ],
     providers: [MessageService],
     template: `
@@ -87,12 +87,6 @@ import { MessageService } from 'primeng/api';
     `
 })
 export class Login {
-    // email: string = '';
-
-    // password: string = '';
-
-    // checked: boolean = false;
-
     form = new FormGroup({
         email: new FormControl('', [Validators.required, Validators.email]),
         password: new FormControl('', [Validators.required, Validators.minLength(4)]),
@@ -102,9 +96,11 @@ export class Login {
         private readonly authService: AuthService,
         private readonly router: Router,
         private readonly messageService: MessageService,
+        private readonly loadingModalService: LoadingModalService,
     ) { }
 
     handleLogin() {
+        this.loadingModalService.show();
         const { email, password } = this.form.value;
         this.authService.login(email!, password!).subscribe({
             next: (success) => {
@@ -113,7 +109,7 @@ export class Login {
                         severity: 'success', 
                         summary: 'Sucesso', 
                         detail: 'Login realizado com sucesso!', 
-                        life: 3000 
+                        life: 3000,
                     });
                     setTimeout(() => {
                         this.router.navigate(['/']);
@@ -123,7 +119,7 @@ export class Login {
                         severity: 'error', 
                         summary: 'Erro', 
                         detail: 'Usuário ou senha inválidos', 
-                        life: 3000 
+                        life: 3000,
                     });
                 }
             },
@@ -133,8 +129,13 @@ export class Login {
                     severity: 'error', 
                     summary: 'Erro', 
                     detail: 'Erro ao conectar com o servidor', 
-                    life: 3000 
+                    life: 3000,
                 });
+            },
+            complete: () => {
+                setTimeout(() => {
+                    this.loadingModalService.hide();
+                }, 500);
             }
         });
     }

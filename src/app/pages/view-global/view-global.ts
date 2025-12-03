@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableModule } from 'primeng/table';
@@ -10,29 +10,43 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
+import { EaceService, ViewGlobalItem } from '../service/eace.service';
+import { LoadingModalService } from '@/layout/component/app.loading-modal';
 
 @Component({
     selector: 'app-view-global',
     standalone: true,
-    imports: [CardModule, ButtonModule, TableModule, DividerModule, TagModule, InputTextModule, InputIconModule, MultiSelectModule, SelectModule, CommonModule, IconFieldModule],
+    imports: [
+        CardModule,
+        ButtonModule,
+        TableModule,
+        DividerModule,
+        TagModule,
+        InputTextModule,
+        InputIconModule,
+        MultiSelectModule,
+        SelectModule,
+        CommonModule,
+        IconFieldModule,
+    ],
     template: `
         <div class="flex flex-row justify-between items-center mb-3">
             <p class="text-3xl font-extrabold">Visão Global da Rede</p>
             <p-button label="Exportar Excel" />
         </div>
         <p-card header="Status do dispositivo">
-            <p class="text-gray-400">Atualizado: 14:32</p>
+            <p class="text-gray-400">Atualizado: {{ refreshedAt | date:'HH:mm' }}</p>
             <div class="flex justify-around items-center mb-3">
                 <div>
                     <img style="width: 10rem;" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAABFCAMAAAAW7Xg4AAAC91BMVEUAAAAAAABKSkwqKiwzMzU+PkFNTU9NTU9eXmApKSx5eXltbW5PT1BGRkiBgYGfn5+fn58LCwuFhYUtLS0yMjI2NjdGRkcAAABHR0kbGxyIiIgpKSkjIySYmJgwMDBMS09dXGCRkZGXl5ePjpBVZGdVZGU+PUA8PD5XZmY/P0EAAAAsKy5AQEImJilBQUNVY2Q7Oz0uLjAoKCozOTo2NjgtLS4+RkdCQkQ7Oj00Ojs6OTsvMDI/R0kXFxePj48lJSdUY2YbGxseHR4xMTMkIydJSEwqKiwyMzVWWmdOXF1HR0kUFBSVlZUgICBTYmWKiopFRUcQEBBEQ0ZPXl9HuUNNTU40NDZNWls4ODpMWVl4eHlTYWI5OTtQUFSOjYx0dHZSUlVKSkxRYWRhYWM1NTd6enuJiYmFhIRfX2BUU1dcXF1SYGBLS09ZWVpNTVGSkZB3dnZQUFFubnBQX2BmZmlkZGdET0+Yl5ecmpZxc3RVVVc7cUCMjIyIh4aDg4N/f39kY2MJCQloaGsNDQ19fXxwcHJqam2GhYZPTlKUk5KBgYJ0c3BEvzhsbG9kcXOSkpJ9fX43Pz8GBQZPW1tKVlciIiWOl5mYlpKQj4xXV1laWlxGvDyMiodZZ2lATExndHYkJCWAgIFdXV87PDuko55zfoBubWtQX2NIVFWTm51fbG824xct7AB7hYhoZ2WZmZl/iYyLhoeEgn98enc6RES2tLCYoKS3/5JcamxramdGUVI8RkZCxTOenJlLW11ItkU7bEGrs7apqKO5/5N2gYRqdnlpg200ajuurKmDjZBycG5dZWZSUlL19fXy8vKysKxAUVQgHyOGj5KKk5Zuenxke2tGUlM+0Cyfnpqg3YdecGlVXmXJyMTAvrmdpaixuLukrK+x949bamiNvn03ODc62SLT0c65uLOAqXdSfF1Qjlit8Y2Y0INXU2m3v8Kc1oSHtXp7onU05gubm5um54pKq0qUyoF1l3JLpk47W0Z3m3QnMSwmWx4108I1AAAAJHRSTlMAT7VPT09OtU/IT08QFk+Pk6ZPpoxvX0y8V0/k3EU719OqhWAHLB0pAAAS40lEQVRo3mIYBaNgFIyCUTAKsAFZKSkpIRDggwEuVMCNCjgwARsWwIoLsOAEzEQCXqL9ppRvBwRxNTX+/v5pabW17e3p6el1XV0L6+sntLSkpkZFRRUUxMfHV7a2FhX19ra1NTWVlJSWNiQDQcairKysWbm5M6uqMhMSYmML8/JCc0ITE11dvbwCAoKCgszN9XR0NDXV1NQNDAysrGIiIiJMTFKAIAwIAIzVPUvDUBTG8VkQ2m/hUCo0GJAUdGholqzd6sskrQSsU0EEXdR2iouLU+wn9Xnuuacnt6FtjhG6/vifk2TZCDMcDjhxHPdkxm6icRRFfTxurjlpVaVpWqU/J211nRK4kKe6v6O6GXXEqW4FneCgI09x1CXUGS7zONX1AhxsHKE5XIpHpq2uk5flk7S7FdwD2hEn7b5FpzjqFPdO3GwnHdoVBXSwYfaku9B0I9VZOo6lQzsr53AChK6lTXCm+3I6tjPcArjD6ebUPUM3Ia6ms3SXSSK4sB1xIa/Rjry++lrquvl6vYZO9/K1lk7PLkj30cRtHn/DdBMupu4ldJoOOuC4mBjY5OpMFw8cznhiM54/vFbtaMthK00HXKgTHHV31AXlqJtZOuLuBVd4HIZ7ee7TcTMlnbbLMHZ18Fm8Zjr+uana3F13mWOYzl+dLqZdnS1mbS+Ja+zlC9Pd+HR+L+2FqbhkOtV0upd4hlseacbzOPyHl4dH2h2zyWJeed3uC5M2uzrgmuk2W92cuhVwoY7l9Oqgo40TpKvH87SgndVzDz4I1J0etnG4mPY5aF6d4LCXqvsUHWxBOpTTr0FhR4fBYlJ3Bh1wW14jnfP1mmenAe29kvIHdXttS69DOfsaaDrDvQFH3gK4f7rLYLWJKIzCGzeu9AVciIsi7RQdHAwGK4nXCUTBIDQLaWmkRG2ZFCKINNhRXJiajW7uokt9gb6Im/ssvoDnv3f+nrnTzplM22U/zv+f88cnitBFc/nHw1XWzWFds+ouug6T2fFtoNYNgCds9I6A0d7Jo7UgHwO10t08VzhuHcRIeRfoWHXMS87l5aqbMC/ZBjqYa7ROvRuEwSSfhOZ6lrHuKLLBPvzVRndD2EjHuVS4E7AB7vfKw0EaKehxwu1fVXWYy6PIuigwO2Id6MDHrePaZZm8WV5Zp1iEowySReliNoGLBjPOS8AtQSdxCTqBYxkwL2uJArrFRdXBOdJ5OM4lrANdY+1o3Tiztpu4cZo6yDxNB/aJ7dnHqekZ+7zv+r1+vRroHdn+nUOBjXDcOsBppDRPMNC19jicO+Bcgo6REpwTus6jezsej3UgdBWfm376UC72pi/eTvaWy/Jw6/PP5cfj14cvZ/urb99XX6e/vrw3gqaApCNbgGuPFF26ktbV70vCscej+xJFLs6pdZvV1kHYOp1LaOzl51KebrYxmx/ko9nD+fBostjdfPV3bXtYbN+d3X9QjIZnb0ank2d1tkTpyEa4eh1sXTqfS7Uuzsv2HhfrBI4nGA/MDc8mS6f3M6TfffgFIc3z7nqS4xf+8zwxqbiTuDS1xjh8nA2pSdXobt0OJgUS9Qo8AQiG6a7pPPI6qU9kBaWHpQykv5qjBocESz0Ll/NOwPIVp1zsgkwe5CXSpNl1kWXGejmH9/q1wHbnh3dIXRJVYCcerYR4dlVsHu5Y4RquaZ6chbjcRY2fSmAWReH3jv7JePJcgcRGLGBHE4ZHJ14tCV1H/IBC0zcb8T8rZoyCMBBEUbDxBIKdVhsWJWiVeI1UFusBbDyHx/b9+SYhxICgb/f/mZ0mOwNJkfMmmtvfucEUDZ095faZp67OnkE7CO9xew/WInQfA0BM4Xs0sHihlQTdLppb141GCOFSf5hRM2kC5oMcSGSG0pwjn34CcpBBBHbgaB9K2UnWtrDsXJnLApc5HNPWzXW+kyXGxBcxfpo1kqdHPxkJ8kVSQopDAexKQj9QpfXQXJOrIEnYInwC5CzS2NA6opatBWQIM/wtkVPDdXqbHPWUgk0oLtm0IEonmVKXrmU4VAlWfXNNOVz+x4vRMmZpGIjiOPhZ7uFth1qHomDAoe1glhRj6NbVMV8jZGnokkEXSRMrdBApElIyOHQtxQyFpEuGFtpBEBx9d8cRawf9Je/de3/eHXnkLuSkfoI3mrh4gL6SBHXl/8tu9fVRvXF1Jpc9a0hXcVyr3hwenEuvqxOqB4QQCGyN0H2AO/JTABBeZ0wkPIfmLhpovxSAxa6wAGj+pQBFwPIshWd36s8dQGhrwAAMj0HF+2XVHP4J1czRPEneRkGQkNksSrQAI72bBEQAQEAMaBI1Ah27rquB4rOtmHC3bq5kMsFUBKvmWimy6ktXkyZS55NEWGm3ptnreS1621JYjXMAxgCsd8ZYx0JjCujdHKpteYBfj5oXjvrhbDufvjykxbJPpuEsf3vKRwGpAKgCNOCjFk37YV/HmKPRcog8lrHjZDz63Kwxc5w4jv3Y8eN4uNpMhmWGChpnmC1YiSW+LEFdTEIcRK7ysTJs2+5Q6/T+QnJ//Ep5G2xg3UUuuNE4csdUNWfitlRnjjc3yNN0mabTYpun23y5LF6KMC3SJ9ncPiAgXdNz3fmdYRhCoTR7RErfx4fF4ONrs+aZ3/aztuP434yZ+29LYRjHE39LD8frUsaIy+G0kolVSw1VlYoShMjKgrq3OkQmS3S1FuvaZG3XTlrVsbVqiW3t2MwltjF3ZnEJcYsQlx983/d007rFR3d2vi+afvq8532f0x65cApyHy6cBBcQ8evUhXvc7ds4gQj9J4tvs/8Ejiw+glH6LKde3pOD0MRQVRZdCc8B+S1dQ091IBCuDnT23PT8WW7q5FsP3/R0omT3W5taH/U0PXocaU2/6Wlt1cj+ibxi77qdi4qLN+zXIBlS0y7l8+Vo6uLFi7t27cIP42Jt7RcM5ICR/HzxC0aAFC9dvPj9+7fCiWBOFW/YOEQZKDlfwvHeysBAJtMQ8VbKuZ9yI3Mr56x+HItUNz182NrZlG59HGsyQbCpNWz6i5UosuOVBdeuWQkhq3aYcFWGVvq3Pz937tx1cJkx320+47dYtrsOHy4tdbvR3dXU1JzJhw3sYaxbF4/H8SlGeWOj2WyuqOjqCgaT0Wg0OG0bKOP1IX0eBhRvWyAW6eyM9EQ2yocrtyyncqPHTp4n04gyTb2m3mQSTaZ6mSeBl5/w/EGLpw+xskFkcmuvXttP7GTJDhPijcPP7t+//4Dy/Llk+dzVf+4yTNva2vx+fz9oseTSAnDIJhcoxVuAd2APPOFIDYPJ8vMeHjj1HFuXpR8csYw4y3ojmXTa29kr5/44LceOh1wu9eEmRrhT81vJYp030/XeWCQhZuW2EC2T42Q33M9cdcULWePGWpnp5nOHW663xVktWDFA3NXYVZFDuSXOslQoUFMejVqtVnwSswk3893d0WTjzHm40EI6Dgyv+WXYGXT62tTZ1Fk8gJ77LzlTrKea0QODfDSRdCBdXxmLeJjcgqvXDhCtIys365mR5FFxrrTlur+A5BK1LMzLS1qseXnwcEVetnVBrgTLfxmqJU/peAOjClub89atGYVFPp9aqRAEWy3/LzmRTTWNCLt6zE9Nfb1Gyrlg7mpkGo9HxPKvoXI7iMoGOY5VrobY7A5bFjsJMrlBotWqVAJDSZKWJcjSgEpQkO7+KEHMoiAjIWfHQDbbBMhto0Z0GTl6VD4PFQM6Tl67TaeftGZuYdE43zG1UvUnuRGYQpJcX8eATHa3465M5uno41nmRGRu2IyT0SxyAx19HGyY3Eoi2Ddnp+X9RrwuvGKFQgnUxHq91HK9pYhgSKmWIOtdo1mWBpSk2LKB5SyOOcYkGXoKHO32ZLLxvG5cAWV2iqty4moD/MYpTlyHR+fMKSya7VMzOQxLcqOGK4fLg8qJnz8+eTrQ9/bJnQ7+3atX7+/R7KG572ftxL47T972eZ4++fh5aFqaiaDNyhnv+4ldUKiP+WaPw6spIsZzbstl/5I8uT0tq2mmA0qaK/zlUpYgG7bHHZKcAqCS66yN20rOU0JOTqfnDbWMKdgZdFWT5swY41PiyZTCWVyY836Vm8rkRNnr9uYnHS+am9vf9b1qbr8z8Dabm9/dG5a79w75RceT5va3vMhl5RQqyHFMrpTYtAol7KibjzReh1zbeoIpOCzn6u9imQ1AZl+bkWYqh4hp22JUaWkGVG6V0bo8paPo0aTo+Y0pvRwY5HxJqKxs0sRCtUprtwtK1UwD9j4mt2ZYbgTu1aic+Km9/VXH1+b25hd3P7a3v/bQ3Pee5hy5F8jv+161t3/isnLLiUKgcjIqZyZ2uxYiKF3BMYGcuOw+3dZSTK8pKAOFQMpdJ6RMSycIJNpvRpZKp0DuLi13ILMBQaVyDDZazXQroA2QvoovS83jy/QUtjNMKzymmqElWpsgTUvA/2ladry+84IfeHfn6V3u653XHRrk9/zAU+ScJeUuzdx7/L0oG5JTCt1S5Xbfx4JiI1o2M31aLQleNlraLIVEhVcr2SiI1TWVZUGyIass66XMJqJgW2oMIktXLl1ztMmo+awzhMVxY+oWX3K2hEfZDHKUCUuMYVKR4NjQ300v9ZnIFAPkJuTLwQ7vDgrIQ0XD48gOoonPXy65AdRI9PAibLJyasWw3DpCiMMuXWI4TV42bm+zDOLMzmqjwFnUtYpmZifgbHN/dCgraK5zd0kZAyqcqYJWc0qnr+K4ucQHJXYzwBlCep0Oj7njtGTzsz209merpMk7D6tlfocCoUpvQKPxVkZ6ZYlMOlCp6a2MZDQNsUhEhFLOeimjWiKXI6ekcjLIPfDviydhh/cdb2i5ubSNyo0WFA7sD5iwdpWSBF1LtAobMgZsdgXZ2Z8kCns22wT7VMgptNnsEITZkKvFRlDm/Aa5bB+yMWSQmpVpPkFLsIrRaenhJWjlRuUuKJDrjXXKTIFYTwBGsc6EKRKp7jUlwtU3PeKwGkU29OA0ktwxZbZyC9B2PbCgdoCQOJouf43L34KeahmhvgIJumtof+XuzuZNh92H0XGVRpFVgorU7Ymvq4mX7wsSuwo4ZgeTyaTVfDR0K1SFG5yNiQSP6el0Og2QpEzyqW1abIs2ters+W2UEJczLUcMTUtPQwPuz3q9laInk+n1iJVer1eUeTwNuLg02NMBDqJJI+KEQeWumolaoFuBjMqhofQHCwlQRLfTdnL3dj9tGkcRddHEOQWk4rCb4tpElEWFEwvIeouLgWIVFBYWkPFG1lXGsb8UjBlTYCvqoq2YWT3uWMqDt7n6Jr2xwW6GP6GjlHHHjgkOzAu1QjXpPMPJ5VRuBLrA4Q7FlH7YE9YkmsI9mZLYw5sxk0wEiepAJp3xetMBrzcR6U3Q34iZxJV1z55tReO8SqrcOsihXaYdiGMiygYO1bS4cEdQk1RPnDOjrrxGwrina1whvgcwG0vdwOiuaZyLPDsa3xOXOtGKqZD1dQeDtMkMTpmnK+MDkXQs7ZUPYWCLxySlGl4CViZtLc/gsBX8lMOHg5BjoHJpb0YmCwQCDabKQCCjkQbD6DXD1U3hcHVnINyUvhm+GaYDAUNF9/H1x3d2Rw9Cjp+3wspa3oV1YDT9BnLTieKisfQ7xvFLNoPu4rosI4uXgM1L6upG4YG8EBFMH1w2ODiID5jrpo4txgeza2bQT5V/sGYGOQkDURi+hgewtsTEqlGD1YVuNF1qF9XMzm2XTTgGSQNbcSlh7cJI4jE4j1/fY6YdEALoN8z//nko4bWlDDOno3SQP8+KmJ81upzjuKQu4L760KMueXZwdtwU17HFAVcdBXHFcbdENRlNJv0JayVv/f7r61v/kx/1wOC9MCYGU+pE/VsoixqxaVZmqynzUZr28rK2QMx7ecG/40e3V1V1WSky7Z9OZ1lvkWnlGNncNWfOL24NAbNnPmhAuHmh6+CFybM0R2TB0T2D2mD/1IxjMzb1MM5rSJphnqYDctFQlgbbq3/3XyZdInO41KxVHKvEfnGB75uI2rvlv1CYqDDiYgODcYyr3+aMbBTsSJQvFPcc7W8Fh12UB0L7ncC3y17Po01kQ3dKTbAz0fCp+Z47Yo0+vP4jFzTrWikUuQCErmA83PMf6jEV4x2ZHj0m7c+c20UBBsKBC/NNCY0ybghdDFXC0Pb1dGnW0UXU1hCU4+5qEhsTtQnUymZt67JssBWIaNyU0LeIlIg4s2JzRcWp3WBR8QxuLV15JDhbXKfDHEVPHiBe8DhQIcxLVyOy9UFwUJAGIDTMU2sPiZ+qywKiFrd3f3JFA9ThBueiagUiTQYYL3ocqtp4SGSAgDPINtzJq2zA+c+cIZOPYmxyjLiBuKTMJC0ImBQoLSrOOIBAXFK6GeKSSZMCZSTxuUWOTYyBGMArJiIsKCgoLCLKxsMwwICHTRTqGDFehlEwCkbBKBgFVAEA4kxy6ucOjnYAAAAASUVORK5CYII=" />
                     <div class="text-xl font-bold text-center">Routers</div>
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <div class="text-2xl font-extrabold text-green-400 text-center">87</div>
+                            <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineRouters }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
                         <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">12</div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineRouters }}</div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -42,11 +56,11 @@ import { IconFieldModule } from 'primeng/iconfield';
                     <div class="text-xl font-bold text-center">Switches</div>
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <div class="text-2xl font-extrabold text-green-400 text-center">87</div>
+                            <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineSwitches }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
                         <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">12</div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineSwitches }}</div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -56,11 +70,11 @@ import { IconFieldModule } from 'primeng/iconfield';
                     <div class="text-xl font-bold text-center">APs</div>
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <div class="text-2xl font-extrabold text-green-400 text-center">87</div>
+                            <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineAPs }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
                         <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">12</div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineAPs }}</div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -94,14 +108,14 @@ import { IconFieldModule } from 'primeng/iconfield';
                         <th pSortableColumn="inep" style="width:20%">
                             <div class="font-extrabold">Site <p-sortIcon field="inep" /></div>
                         </th>
-                        <th pSortableColumn="switche" style="width:20%">
-                            <div class="font-extrabold">Switches <p-sortIcon field="switche" /></div>
+                        <th style="width:20%">
+                            <div class="font-extrabold">Switches</div>
                         </th>
-                        <th pSortableColumn="accessPoint" style="width:20%">
-                            <div class="font-extrabold">Access Points <p-sortIcon field="accessPoint" /></div>
+                        <th style="width:20%">
+                            <div class="font-extrabold">Access Points</div>
                         </th>
-                        <th pSortableColumn="router" style="width:20%">
-                            <div class="font-extrabold">Roteadores <p-sortIcon field="router" /></div>
+                        <th style="width:20%">
+                            <div class="font-extrabold">Roteadores</div>
                         </th>
                         <th style="width:20%">
                             <div class="font-extrabold">Ações</div>
@@ -114,8 +128,20 @@ import { IconFieldModule } from 'primeng/iconfield';
                             <div class="font-extrabold">{{ site.inep }}</div>
                             <div class="text-sm text-gray-400">{{ site.city }}</div>
                         </td>
-                        <td>{{ site.switche }}</td>
-                        <td>{{ site.accessPoint }}</td>
+                        <td>
+                            @if (site.onlineSwitches === 0 && site.offlineSwitches === 0) {
+                                <span class="text-gray-400">-</span>
+                            } @else {
+                                <span>{{ site.onlineSwitches }}</span> / <span class="text-red-400">{{ site.offlineSwitches }}</span>
+                            }
+                        </td>
+                        <td>
+                            @if (site.onlineAccessPoints === 0 && site.offlineAccessPoints === 0) {
+                                <span class="text-gray-400">-</span>
+                            } @else {
+                                <span>{{ site.onlineAccessPoints }}</span> / <span class="text-red-400">{{ site.offlineAccessPoints }}</span>
+                            }
+                        </td>
                         <td>{{ site.router }}</td>
                         <td>
                             <div class="text-green-500 cursor-pointer">Detalhes do site</div>
@@ -126,79 +152,69 @@ import { IconFieldModule } from 'primeng/iconfield';
         </p-card>
     `,
 })
-export class ViewGlobal {
-    sites: any[] = [
-        {
-            inep: 'INEP-1837456',
-            city: 'São Paulo',
-            switche: '1/1',
-            accessPoint: '12/33',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-9876543',
-            city: 'Rio de Janeiro',
-            switche: '1/1',
-            accessPoint: '6/10',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-4567890',
-            city: 'Belo Horizonte',
-            switche: '1/1',
-            accessPoint: '7/10',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-1122334',
-            city: 'Curitiba',
-            switche: '1/1',
-            accessPoint: '11/23',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-2233445',
-            city: 'Porto Alegre',
-            switche: '1/1',
-            accessPoint: '17/19',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-3344556',
-            city: 'Recife',
-            switche: '1/1',
-            accessPoint: '12/33',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-4455667',
-            city: 'Fortaleza',
-            switche: '1/1',
-            accessPoint: '8/9',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-5566778',
-            city: 'Salvador',
-            switche: '1/1',
-            accessPoint: '12/15',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-6677889',
-            city: 'Brasília',
-            switche: '1/1',
-            accessPoint: '12/15',
-            router: '1/1',
-        },
-        {
-            inep: 'INEP-7788990',
-            city: 'Manaus',
-            switche: '1/1',
-            accessPoint: '12/15',
-            router: '1/1',
-        }
-    ];
+export class ViewGlobal implements OnInit {
+    refreshedAt: string = '';
+
+    onlineRouters: number = 0;
+    offlineRouters: number = 0;
+
+    onlineSwitches: number = 0;
+    offlineSwitches: number = 0;
+
+    onlineAPs: number = 0;
+    offlineAPs: number = 0;
+
+    sites: any[] = [];
+
+    constructor(
+        private readonly eaceService: EaceService,
+        private readonly loadingModalService: LoadingModalService,
+    ) {}
+
+    ngOnInit() {
+        this.getViewGlobal();
+    }
+
+    getViewGlobal() {
+        this.loadingModalService.show();
+        this.eaceService.getViewGlobalData().subscribe({
+            next: (data) => {
+
+                this.refreshedAt = data.refreshedAt;
+                
+                this.onlineRouters = data.onlineRouters;
+                this.offlineRouters = data.totalRouters - data.onlineRouters;
+                
+                this.onlineSwitches = data.onlineSwitches;
+                this.offlineSwitches = data.totalSwitches - data.onlineSwitches;
+                
+                this.onlineAPs = data.onlineAps;
+                this.offlineAPs = data.totalAps - data.onlineAps;
+
+                this.sites = data.data.map((item: ViewGlobalItem) => ({
+                    inep: item.inep,
+                    city: 'n/d',
+                    
+                    onlineSwitches: item.switches.filter(sw => sw.online).length,
+                    offlineSwitches: item.switches.filter(sw => !sw.online).length,
+                    
+                    onlineAccessPoints: item.aps.filter(ap => ap.online).length,
+                    offlineAccessPoints: item.aps.filter(ap => !ap.online).length,                    
+                    
+                    router: '1/1',
+                }));
+                                
+            },
+            error: (err) => {
+                console.error('Error fetching global view data', err);
+            },
+            complete: () => {
+                setTimeout(() => {
+                    this.loadingModalService.hide();                    
+                }, 500);
+            },
+        });
+    }
 
     clear(table: Table) {
         table.clear();

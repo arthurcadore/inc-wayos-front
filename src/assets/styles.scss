@@ -3,3 +3,27 @@
 @use './layout/layout.scss';
 @use 'primeicons/primeicons.css';
 @use './demo/demo.scss';
+
+/* Custom global styles */
+.loading-modal {
+    z-index: 999;
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    background: rgb(0 0 0 / 50%);
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+
+    & div {
+        color: rgb(0, 0, 0);
+        font-size: x-large;
+        padding: 10px 15px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.8);
+        box-shadow: 0px 3px 6px 2px #00000021;
+    }
+}
