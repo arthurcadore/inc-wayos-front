@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableModule } from 'primeng/table';
@@ -12,6 +12,8 @@ import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
 import { EaceService, ViewGlobalItem } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
+import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-view-global',
@@ -28,8 +30,11 @@ import { LoadingModalService } from '@/layout/component/app.loading-modal';
         SelectModule,
         CommonModule,
         IconFieldModule,
+        ToastModule,
     ],
+    providers: [MessageService],
     template: `
+        <p-toast />
         <div class="flex flex-row justify-between items-center mb-3">
             <p class="text-3xl font-extrabold">Visão Global da Rede</p>
             <p-button label="Exportar Excel" />
@@ -105,19 +110,22 @@ import { LoadingModalService } from '@/layout/component/app.loading-modal';
                 </ng-template>
                 <ng-template #header>
                     <tr>
-                        <th pSortableColumn="inep" style="width:20%">
+                        <th pSortableColumn="inep" style="width:16.66%">
                             <div class="font-extrabold">Site <p-sortIcon field="inep" /></div>
                         </th>
-                        <th style="width:20%">
+                        <th style="width:16.66%">
                             <div class="font-extrabold">Switches</div>
                         </th>
-                        <th style="width:20%">
+                        <th style="width:16.66%">
                             <div class="font-extrabold">Access Points</div>
                         </th>
-                        <th style="width:20%">
+                        <th style="width:16.66%">
                             <div class="font-extrabold">Roteadores</div>
                         </th>
-                        <th style="width:20%">
+                        <th style="width: 16.66%">
+                            <div class="font-extrabold">Último offline</div>
+                        </th>
+                        <th style="width:16.66%">
                             <div class="font-extrabold">Ações</div>
                         </th>
                     </tr>
@@ -129,22 +137,50 @@ import { LoadingModalService } from '@/layout/component/app.loading-modal';
                             <div class="text-sm text-gray-400">{{ site.city }}</div>
                         </td>
                         <td>
-                            @if (site.onlineSwitches === 0 && site.offlineSwitches === 0) {
+                            @if (site.onlineSwitches === 0 && site.totalSwitches === 0) {
                                 <span class="text-gray-400">-</span>
                             } @else {
-                                <span>{{ site.onlineSwitches }}</span> / <span class="text-red-400">{{ site.offlineSwitches }}</span>
+                                @if (site.onlineSwitches === site.totalSwitches) {
+                                    <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                                } @else {
+                                    <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                                }
+                                <span>{{ site.onlineSwitches }}</span> / <span>{{ site.totalSwitches }}</span>
                             }
                         </td>
                         <td>
-                            @if (site.onlineAccessPoints === 0 && site.offlineAccessPoints === 0) {
+                            @if (site.onlineAccessPoints === 0 && site.totalAccessPoints === 0) {
                                 <span class="text-gray-400">-</span>
                             } @else {
-                                <span>{{ site.onlineAccessPoints }}</span> / <span class="text-red-400">{{ site.offlineAccessPoints }}</span>
+                                @if (site.onlineAccessPoints === site.totalAccessPoints) {
+                                    <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                                } @else {
+                                    <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                                }
+                                <span>{{ site.onlineAccessPoints }}</span> / <span>{{ site.totalAccessPoints }}</span>
                             }
                         </td>
-                        <td>{{ site.router }}</td>
+                        <td>
+                            @if (site.routerIsOnline) {
+                                <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                                <span>1 / 1</span>
+                            } @else {
+                                <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                                <span>0 / 1</span>
+                            }
+                        </td>
+                        <td>-</td>
                         <td>
                             <div class="text-green-500 cursor-pointer">Detalhes do site</div>
+                        </td>
+                    </tr>
+                </ng-template>
+                <ng-template #emptymessage>
+                    <tr>
+                        <td colspan="6">
+                            <div class="text-center text-red-400">
+                                Não há dados disponíveis.
+                            </div>
                         </td>
                     </tr>
                 </ng-template>
@@ -169,7 +205,8 @@ export class ViewGlobal implements OnInit {
     constructor(
         private readonly eaceService: EaceService,
         private readonly loadingModalService: LoadingModalService,
-    ) {}
+        private readonly messageService: MessageService,
+    ) { }
 
     ngOnInit() {
         this.getViewGlobal();
@@ -179,38 +216,42 @@ export class ViewGlobal implements OnInit {
         this.loadingModalService.show();
         this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
-
                 this.refreshedAt = data.refreshedAt;
-                
+
                 this.onlineRouters = data.onlineRouters;
                 this.offlineRouters = data.totalRouters - data.onlineRouters;
-                
+
                 this.onlineSwitches = data.onlineSwitches;
                 this.offlineSwitches = data.totalSwitches - data.onlineSwitches;
-                
+
                 this.onlineAPs = data.onlineAps;
                 this.offlineAPs = data.totalAps - data.onlineAps;
 
                 this.sites = data.data.map((item: ViewGlobalItem) => ({
                     inep: item.inep,
                     city: 'n/d',
-                    
+
                     onlineSwitches: item.switches.filter(sw => sw.online).length,
-                    offlineSwitches: item.switches.filter(sw => !sw.online).length,
-                    
+                    totalSwitches: item.switches.length,
+
                     onlineAccessPoints: item.aps.filter(ap => ap.online).length,
-                    offlineAccessPoints: item.aps.filter(ap => !ap.online).length,                    
-                    
-                    router: '1/1',
+                    totalAccessPoints: item.aps.length,
+
+                    routerIsOnline: item.router.online,
                 }));
-                                
+
             },
             error: (err) => {
-                console.error('Error fetching global view data', err);
+                this.loadingModalService.hide();
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                });
             },
             complete: () => {
                 setTimeout(() => {
-                    this.loadingModalService.hide();                    
+                    this.loadingModalService.hide();
                 }, 500);
             },
         });

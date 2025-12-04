@@ -8,9 +8,9 @@ import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
 // import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '../service/auth.service';
-import { MessageService } from 'primeng/api';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { ToastModule } from 'primeng/toast';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-login',
