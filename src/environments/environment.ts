@@ -7,5 +7,6 @@ export const environment = {
     enableDebug: true,
     logLevel: 'debug',
     enableCache: true,
-    viewGlobalCacheTtlMinutes: 4
+    viewGlobalCacheTtlMinutes: 4,
+    refreshIntervalMinutes: 5
 };

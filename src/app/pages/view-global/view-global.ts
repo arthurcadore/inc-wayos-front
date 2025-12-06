@@ -13,6 +13,7 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { EaceService, IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-view-global',
@@ -33,7 +34,10 @@ import { MessageService } from 'primeng/api';
     providers: [MessageService],
     template: `
         <div class="flex flex-row justify-between items-center mb-3">
-            <p class="text-3xl font-extrabold">Visão Global da Rede</p>
+            <div>
+                <div class="text-3xl font-extrabold">Visão Global da Rede</div>
+                <span class="text-sm text-gray-400">{{ getTimeRemainingText() }}</span>
+            </div>
             <p-button label="Exportar Excel" />
         </div>
         <p-card header="Status do dispositivo">
@@ -202,11 +206,23 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
     sites: SiteModelView[] = [];
 
+    // Variáveis de controle do timer de atualização
+    private refreshInterval: any = null;
+    private timeRemaining: number = 0;
+    private isPageVisible: boolean = true;
+    private isLoading: boolean = false;
+    private readonly refreshIntervalSeconds: number;
+    private visibilityChangeListener: any;
+
     constructor(
         private readonly eaceService: EaceService,
         private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
-    ) { }
+    ) {
+        // Converter minutos para segundos
+        this.refreshIntervalSeconds = environment.refreshIntervalMinutes * 60;
+        this.timeRemaining = this.refreshIntervalSeconds;
+    }
     
     // Função auxiliar para obter o valor do evento de input
     // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
@@ -214,11 +230,31 @@ export class ViewGlobal implements OnInit, OnDestroy {
         return event.target.value;
     }
 
-    ngOnInit() {
+    ngOnInit(): void {
+        // Carregar dados inicialmente
         this.getViewGlobal();
+
+        // Configurar listener de visibilidade da página
+        this.visibilityChangeListener = () => {
+            const wasVisible = this.isPageVisible;
+            this.isPageVisible = !document.hidden;
+
+            // Se a página voltou a ser visível, atualizar dados imediatamente
+            if (!wasVisible && this.isPageVisible) {
+                this.getViewGlobal();
+                this.timeRemaining = this.refreshIntervalSeconds;
+            }
+        };
+
+        document.addEventListener('visibilitychange', this.visibilityChangeListener);
+
+        // Iniciar timer de atualização
+        this.startRefreshTimer();
     }
 
-    getViewGlobal() {
+    getViewGlobal(): void {
+        // Pausar o contador durante o carregamento
+        this.isLoading = true;
         this.loadingModalService.show();
         this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
@@ -244,12 +280,66 @@ export class ViewGlobal implements OnInit, OnDestroy {
             },
             complete: () => {
                 this.loadingModalService.hide();
+                // Reiniciar contador após finalização do carregamento
+                this.isLoading = false;
+                this.timeRemaining = this.refreshIntervalSeconds;
             },
         });
     }
 
+    /**
+     * Inicia o timer de atualização automática
+     */
+    private startRefreshTimer(): void {
+        // Limpar qualquer intervalo anterior
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+        }
+
+        // Criar novo intervalo que executa a cada segundo
+        this.refreshInterval = setInterval(() => {
+            // Só decrementar se a página estiver visível E não estiver carregando
+            if (this.isPageVisible && !this.isLoading) {
+                this.timeRemaining--;
+
+                // Quando chegar a zero, atualizar dados
+                if (this.timeRemaining <= 0) {
+                    this.getViewGlobal();
+                }
+            }
+        }, 1000);
+    }
+
+    /**
+     * Formata o tempo restante para exibição
+     * Retorna formato "Xm Ys" ou apenas "Ys" se menor que 1 minuto
+     */
+    getTimeRemainingText(): string {
+        if (this.timeRemaining <= 0) {
+            return 'Atualizando...';
+        }
+
+        const minutes = Math.floor(this.timeRemaining / 60);
+        const seconds = this.timeRemaining % 60;
+
+        if (minutes > 0) {
+            return `Restam ${minutes}m ${seconds}s para atualizar`;
+        } else {
+            return `Restam ${seconds}s para atualizar`;
+        }
+    }
+
     ngOnDestroy(): void {
-        // Implementar limpeza se necessário
+        // Limpar intervalo de atualização
+        if (this.refreshInterval) {
+            clearInterval(this.refreshInterval);
+            this.refreshInterval = null;
+        }
+
+        // Remover listener de visibilidade
+        if (this.visibilityChangeListener) {
+            document.removeEventListener('visibilitychange', this.visibilityChangeListener);
+        }
     }
 
     clear(table: Table) {

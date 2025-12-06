@@ -5,5 +5,6 @@
     enableDebug: false,
     logLevel: 'error',
     enableCache: true,
-    viewGlobalCacheTtlMinutes: 4
+    viewGlobalCacheTtlMinutes: 4,
+    refreshIntervalMinutes: 5
 };
