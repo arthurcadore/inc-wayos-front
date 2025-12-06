@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { SchoolService, School } from '../../services/school.service';
+import { EaceService } from '../service/eace.service';
+import { LoadingModalService } from '@/layout/component/app.loading-modal';
+import { MessageService } from 'primeng/api';
 
 @Component({
     selector: 'app-schools',
@@ -12,44 +14,13 @@ import { SchoolService, School } from '../../services/school.service';
     `,
 })
 export class Schools implements OnInit {
-    schools: School[] = [];
-    loading = false;
-
-    constructor(private schoolService: SchoolService) {}
+    constructor(
+        private readonly eaceService: EaceService,
+        private readonly loadingModalService: LoadingModalService,
+        private readonly messageService: MessageService,
+    ) { }
 
     ngOnInit() {
-        this.loadSchools();
-    }
-
-    // Exemplo de método para carregar escolas
-    loadSchools() {
-        this.loading = true;
-        this.schoolService.getSchools().subscribe({
-            next: (data) => {
-                this.schools = data;
-                this.loading = false;
-            },
-            error: (error) => {
-                console.error('Erro ao carregar escolas:', error);
-                this.loading = false;
-            }
-        });
-    }
-
-    // Exemplo de método para visualizar detalhes de uma escola
-    viewSchool(id: number) {
-        this.loading = true;
-        this.schoolService.getSchoolById(id).subscribe({
-            next: (school) => {
-                console.log('Escola:', school);
-                alert(`Escola: ${school.name}\nCidade: ${school.city}\nEstado: ${school.state}`);
-                this.loading = false;
-            },
-            error: (error) => {
-                console.error('Erro ao carregar escola:', error);
-                alert('Erro ao carregar detalhes da escola');
-                this.loading = false;
-            }
-        });
+        // Implementar lógica de inicialização, se necessário
     }
 }

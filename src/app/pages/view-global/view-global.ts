@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableModule } from 'primeng/table';
@@ -12,7 +12,6 @@ import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
 import { EaceService, IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 @Component({
@@ -30,11 +29,9 @@ import { MessageService } from 'primeng/api';
         SelectModule,
         CommonModule,
         IconFieldModule,
-        ToastModule,
     ],
     providers: [MessageService],
     template: `
-        <p-toast />
         <div class="flex flex-row justify-between items-center mb-3">
             <p class="text-3xl font-extrabold">Visão Global da Rede</p>
             <p-button label="Exportar Excel" />
@@ -104,7 +101,7 @@ import { MessageService } from 'primeng/api';
                             <p-inputicon>
                                 <i class="pi pi-search"></i>
                             </p-inputicon>
-                            <input pInputText type="text" (input)="dt2.filterGlobal($event.target.value, 'contains')" placeholder="Pesquisar po Site" />
+                            <input pInputText type="text" (input)="dt2.filterGlobal(getTargetValue($event), 'contains')" placeholder="Pesquisar por Site" />
                         </p-iconfield>
                     </div>
                 </ng-template>
@@ -191,7 +188,7 @@ import { MessageService } from 'primeng/api';
         </p-card>
     `,
 })
-export class ViewGlobal implements OnInit {
+export class ViewGlobal implements OnInit, OnDestroy {
     refreshedAtFormat: string = 'n/d';
 
     onlineRouters: number = 0;
@@ -210,6 +207,12 @@ export class ViewGlobal implements OnInit {
         private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
     ) { }
+    
+    // Função auxiliar para obter o valor do evento de input
+    // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
+    getTargetValue(event: any): any {
+        return event.target.value;
+    }
 
     ngOnInit() {
         this.getViewGlobal();
@@ -233,7 +236,6 @@ export class ViewGlobal implements OnInit {
                 this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
             },
             error: (err) => {
-                this.loadingModalService.hide();
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
@@ -241,11 +243,13 @@ export class ViewGlobal implements OnInit {
                 });
             },
             complete: () => {
-                setTimeout(() => {
-                    this.loadingModalService.hide();
-                }, 500);
+                this.loadingModalService.hide();
             },
         });
+    }
+
+    ngOnDestroy(): void {
+        // Implementar limpeza se necessário
     }
 
     clear(table: Table) {

@@ -87,6 +87,7 @@ export class Login {
                         detail: 'Login realizado com sucesso!', 
                         life: 3000,
                     });
+                    this.loadingModalService.hide();
                     this.router.navigate(['/']);
                 } else {
                     this.messageService.add({ 
@@ -107,9 +108,7 @@ export class Login {
                 });
             },
             complete: () => {
-                setTimeout(() => {
-                    this.loadingModalService.hide();
-                }, 500);
+                this.loadingModalService.hide();
             }
         });
     }
