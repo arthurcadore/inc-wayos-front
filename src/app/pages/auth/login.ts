@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
@@ -6,10 +6,8 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { RippleModule } from 'primeng/ripple';
-// import { AppFloatingConfigurator } from '../../layout/component/app.floatingconfigurator';
 import { AuthService } from '../service/auth.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
-import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 
 @Component({
@@ -24,13 +22,9 @@ import { MessageService } from 'primeng/api';
         ReactiveFormsModule,
         RouterModule,
         RippleModule,
-        // AppFloatingConfigurator,        
-        ToastModule,
     ],
-    providers: [MessageService],
     template: `
-        <p-toast />
-        <!-- <app-floating-configurator /> -->
+        <!-- <p-toast /> -->
         <div class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-screen overflow-hidden">
             <div class="flex flex-col items-center justify-center">
                 <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%)">
@@ -50,33 +44,15 @@ import { MessageService } from 'primeng/api';
                                     <path fill="var(--primary-color)" d="M78.3269191,8.63267969 L76.351918,8.6306875 C75.8814789,8.6306875 75.4999386,8.24619531 75.4999386,7.77152344 C75.4999386,7.29738281 75.8813472,6.91275781 76.351918,6.91275781 L80.6648907,6.91275781 C80.682407,6.85870313 81.1070138,5.55461719 81.1075406,3.89844531 C81.1075406,3.89844531 76.4362072,3.89804688 76.148702,3.89804688 C74.1324781,3.89804688 72.498058,5.54625 72.498058,7.57960938 C72.498058,9.61296875 74.1324781,11.2627656 76.148702,11.2627656 L78.1237032,11.2627656 C78.5941422,11.2627656 78.9756825,11.6473906 78.9756825,12.1217969 C78.9756825,12.5962031 78.5942739,12.9806953 78.1237032,12.9806953 L73.2315056,12.9806953 C73.2134625,13.0346172 72.7891191,14.3388359 72.7888557,15.9951406 C72.7888557,15.9951406 78.2544831,15.9954063 78.3270508,15.9954063 C80.3432747,15.9954063 81.9779583,14.3474688 81.9779583,12.3138438 C81.9778266,10.2808828 80.343143,8.63267969 78.3269191,8.63267969 Z"></path>
                                 </g>
                             </svg>
-                            <!-- <svg style="width: 90px;" viewBox="0 0 90 35" xmlns="http://www.w3.org/2000/svg" class="mb-8 w-16 shrink-0 mx-auto">
-                                <path
-                                    fill-rule="evenodd"
-                                    clip-rule="evenodd"
-                                    fill="var(--primary-color)"
-                                    d="M 55.781314,0.37590805 A 16.910268,17.191745 0 0 0 38.872534,17.568234 16.910268,17.191745 0 0 0 55.781314,34.760561 16.910268,17.191745 0 0 0 70.929656,25.146485 H 64.038853 A 10.908446,11.244105 0 0 1 55.87719,28.942749 10.908446,11.244105 0 0 1 44.969814,17.698788 10.908446,11.244105 0 0 1 55.87719,6.4527875 10.908446,11.244105 0 0 1 64.365238,10.638675 H 71.25196 A 16.910268,17.191745 0 0 0 55.781314,0.37590805 Z M 72.358517,1.155613 v 33.042394 h 17.506577 l -6.52e-4,-5.976924 h -11.57184 v -7.57825 H 89.422329 V 14.580234 H 78.292602 V 7.0896992 H 89.854789 V 1.155613 Z M 0.2,1.155152 v 33.042395 h 18.491746 l 4.912094,-8.428891 h 8.814433 v 8.428891 h 5.976924 V 1.155152 H 32.981286 L 15.529892,28.220623 H 6.1340861 v -7.57825 H 17.263812 V 14.579772 H 6.1340861 V 7.0892381 H 17.696272 V 1.155152 Z m 32.218273,9.483523 v 9.06738 h -5.283357 z" />
-                            </svg> -->
                             <div class="text-surface-900 dark:text-surface-0 text-3xl font-medium mb-4">Seja Bem-Vindo!</div>
                             <span class="text-muted-color font-medium">Faça login para continuar</span>
                         </div>
-
-
                         <div>
                             <form (ngSubmit)="handleLogin()" [formGroup]="form">
                             <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
                             <input pInputText id="email1" type="text" placeholder="Digite seu e-mail" class="w-full md:w-120 mb-8" formControlName="email" />
-
                             <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Senha</label>
                             <p-password id="password1" formControlName="password" placeholder="Digite sua senha" [toggleMask]="true" styleClass="mb-4" [fluid]="true" [feedback]="false"></p-password>
-
-                            <!-- <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                                <div class="flex items-center">
-                                    <p-checkbox [(ngModel)]="checked" id="rememberme1" binary class="mr-2"></p-checkbox>
-                                    <label for="rememberme1">Remember me</label>
-                                </div>
-                                <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
-                            </div> -->
                             <p-button label="Entrar" styleClass="w-full" type="submit" [disabled]="!form.valid"></p-button>
                             </form>
                         </div>
@@ -111,9 +87,7 @@ export class Login {
                         detail: 'Login realizado com sucesso!', 
                         life: 3000,
                     });
-                    setTimeout(() => {
-                        this.router.navigate(['/']);
-                    }, 1000);
+                    this.router.navigate(['/']);
                 } else {
                     this.messageService.add({ 
                         severity: 'error', 

@@ -10,7 +10,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { SelectModule } from 'primeng/select';
 import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
-import { EaceService, ViewGlobalItem } from '../service/eace.service';
+import { EaceService, IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from '../../pages/service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -75,11 +75,11 @@ import { MessageService } from 'primeng/api';
                     <div class="text-xl font-bold text-center">APs</div>
                     <div class="flex justify-between items-center mb-3">
                         <div>
-                            <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineAPs }}</div>
+                            <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineAccessPoints }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
                         <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineAPs }}</div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineAccessPoints }}</div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -169,7 +169,10 @@ import { MessageService } from 'primeng/api';
                                 <span>0 / 1</span>
                             }
                         </td>
-                        <td>-</td>
+                        <td>
+                            <!-- <i class="pi pi-clock" style="color:gray;"></i>&nbsp; -->
+                            <span>{{ site.getOfflineDuration(site) }}</span>
+                        </td>
                         <td>
                             <div class="text-green-500 cursor-pointer">Detalhes do site</div>
                         </td>
@@ -197,10 +200,10 @@ export class ViewGlobal implements OnInit {
     onlineSwitches: number = 0;
     offlineSwitches: number = 0;
 
-    onlineAPs: number = 0;
-    offlineAPs: number = 0;
+    onlineAccessPoints: number = 0;
+    offlineAccessPoints: number = 0;
 
-    sites: any[] = [];
+    sites: SiteModelView[] = [];
 
     constructor(
         private readonly eaceService: EaceService,
@@ -224,22 +227,10 @@ export class ViewGlobal implements OnInit {
                 this.onlineSwitches = data.onlineSwitches;
                 this.offlineSwitches = data.totalSwitches - data.onlineSwitches;
 
-                this.onlineAPs = data.onlineAps;
-                this.offlineAPs = data.totalAps - data.onlineAps;
+                this.onlineAccessPoints = data.onlineAps;
+                this.offlineAccessPoints = data.totalAps - data.onlineAps;
 
-                this.sites = data.data.map((item: ViewGlobalItem) => ({
-                    inep: item.inep,
-                    city: 'n/d',
-
-                    onlineSwitches: item.switches.filter(sw => sw.online).length,
-                    totalSwitches: item.switches.length,
-
-                    onlineAccessPoints: item.aps.filter(ap => ap.online).length,
-                    totalAccessPoints: item.aps.length,
-
-                    routerIsOnline: item.router.online,
-                }));
-
+                this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
             },
             error: (err) => {
                 this.loadingModalService.hide();
@@ -259,5 +250,85 @@ export class ViewGlobal implements OnInit {
 
     clear(table: Table) {
         table.clear();
+    }
+}
+
+class SiteModelView {
+    refreshedAt: Date | null;
+    inep: string;
+    router: WayosRouterInfo;
+    switches: IncCloudDevice[]; // devType === 'SWITCH'
+    aps: IncCloudDevice[]; // devType === 'CLOUDAP'
+
+    constructor(value: ViewGlobalItem, refreshedAt: string) {
+        this.refreshedAt = refreshedAt ? new Date(refreshedAt) : null;
+        this.inep = value.inep;
+        this.router = value.router;
+        this.switches = value.switches;
+        this.aps = value.aps;
+    }
+
+    get city(): string {
+        // Extraia a cidade do INEP ou retorne 'n/d' se não disponível
+        return 'n/d';
+    }
+
+    get onlineSwitches(): number {
+        return this.switches.filter(sw => sw.online).length;
+    }
+    
+    get totalSwitches(): number {
+        return this.switches.length;
+    }
+    
+    get onlineAccessPoints(): number {
+        return this.aps.filter(ap => ap.online).length;
+    }
+    
+    get totalAccessPoints(): number {
+        return this.aps.length;
+    }
+
+    get routerIsOnline(): boolean {
+        return this.router.online;
+    }
+
+    // Função para determinar o quanto tempo o dispositivo está offline
+    getOfflineDuration(site: any): string {
+        // Implementação paliativa: Retorna a diferença entre o horário atual e o horário de atualização se algum dos dispositivos estiver offline
+
+        if (this.refreshedAt === null) {
+            return '-';
+        }
+
+        //Checar se algum dispositivo está offline
+        const anyOffline = !this.router.online ||
+            this.switches.some(sw => !sw.online) ||
+            this.aps.some(ap => !ap.online);
+
+        if (!anyOffline) {
+            return '-';
+        }
+
+        // Calcule a diferença entre o horário atual e o horário de atualização
+        const now = new Date();
+        const diffMs = now.getTime() - this.refreshedAt.getTime();
+        const diffMins = Math.floor(diffMs / 60000);
+
+        // Se a doferença for menor que 5 minuto, retorne 'Agora mesmo'
+        // Se a diferença for menor que 60 minutos, retorne em minutos
+        // Se a diferença for maior que 60 minutos, retorne em horas
+        // Se a diferença for maior que 24 horas, retorne em dias
+        if (diffMins < 5) {
+            return 'Agora mesmo';
+        } else if (diffMins < 60) {
+            return `${diffMins} minutos atrás`;
+        } else if (diffMins < 1440) {
+            const hours = Math.floor(diffMins / 60);
+            return `${hours} horas atrás`;
+        } else {
+            const days = Math.floor(diffMins / 1440);
+            return `${days} dias atrás`;
+        }
     }
 }
