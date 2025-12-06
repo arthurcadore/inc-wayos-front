@@ -73,6 +73,8 @@ export class AuthService {
     logout(): void {
         localStorage.removeItem(this.TOKEN_KEY);
         localStorage.removeItem(this.USER_KEY);
+        localStorage.removeItem('view_global_cache');
+        localStorage.removeItem('view_global_cache_timestamp');
         this.router.navigate(['/login']);
     }
 

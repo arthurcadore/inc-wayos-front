@@ -3,5 +3,7 @@
     name: 'production',
     apiUrl: 'https://api.eace.com.br/api',
     enableDebug: false,
-    logLevel: 'error'
+    logLevel: 'error',
+    enableCache: true,
+    viewGlobalCacheTtlMinutes: 4
 };

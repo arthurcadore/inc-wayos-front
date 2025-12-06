@@ -3,5 +3,7 @@
     name: 'homologation',
     apiUrl: 'https://hml-api.eace.com.br/api',
     enableDebug: true,
-    logLevel: 'info'
+    logLevel: 'info',
+    enableCache: true,
+    viewGlobalCacheTtlMinutes: 4
 };

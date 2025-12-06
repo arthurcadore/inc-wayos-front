@@ -3,5 +3,7 @@
     name: 'development',
     apiUrl: 'http://localhost:3000/api',
     enableDebug: true,
-    logLevel: 'debug'
+    logLevel: 'debug',
+    enableCache: true,
+    viewGlobalCacheTtlMinutes: 4
 };
