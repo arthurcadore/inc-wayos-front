@@ -60,7 +60,7 @@ import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-mo
                             <p-inputicon>
                                 <i class="pi pi-search"></i>
                             </p-inputicon>
-                            <input pInputText type="text" (input)="dt2.filterGlobal(getTargetValue($event), 'contains')" placeholder="Pesquisar por Site" />
+                            <input pInputText type="text" (input)="dt2.filterGlobal(getTargetValue($event), 'contains')" placeholder="Pesquisar por INEP" />
                         </p-iconfield>
                     </div>
                 </ng-template>
