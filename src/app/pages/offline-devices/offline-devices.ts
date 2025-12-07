@@ -1,11 +1,11 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { ButtonModule } from "primeng/button";
 import { CardModule } from "primeng/card";
 import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from "primeng/inputtext";
-import { TableModule } from "primeng/table";
+import { Table, TableModule } from "primeng/table";
 import { ActivatedRoute } from '@angular/router';
 import { EaceService, ViewGlobalItem } from "../service/eace.service";
 import { LoadingModalService } from "@/layout/component/app.loading-modal";
@@ -36,6 +36,7 @@ import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-mo
     template: `
         <div class="flex flex-row justify-between items-center mb-3">
             <div class="text-3xl font-extrabold">Dispositivos Offline</div>
+            <p-button label="Exportar Excel" (onClick)="exportCSV()" />
         </div>
         <p-card>
             <p-table
@@ -78,7 +79,7 @@ import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-mo
                             <div class="font-extrabold">INEP <p-sortIcon field="inep" /></div>
                         </th>
                         <th pSortableColumn="lastMomentOnline" style="width: 16.66%">
-                            <div class="font-extrabold">Último offline <p-sortIcon field="lastMomentOnline" /></div>
+                            <div class="font-extrabold">Último momento online <p-sortIcon field="lastMomentOnline" /></div>
                         </th>
                         <th style="width:16.66%">
                             <div class="font-extrabold">Ações</div>
@@ -122,6 +123,8 @@ import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-mo
     `,
 })
 export class OfflineDevices implements OnInit {
+    @ViewChild('dt2') dt2!: Table;
+    
     deviceType: DeviceType = DeviceType.ROUTER;
     sites: SiteModelView[] = [];
     offlineDevices: OfflineDevice[] = [];
@@ -179,5 +182,49 @@ export class OfflineDevices implements OnInit {
     // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
     getTargetValue(event: any): any {
         return event.target.value;
+    }
+
+    exportCSV() {
+        // Preparar dados para exportação com as colunas: Tipo, Nome, INEP, Último momento online
+        const exportData = this.offlineDevices.map(device => ({
+            'Tipo': device.devType,
+            'Nome': device.name,
+            'INEP': device.inep,
+            'Último momento online': device.lastMomentOnline,
+        }));
+
+        // Criar CSV manualmente
+        const headers = Object.keys(exportData[0] || {});
+        const csvContent = [
+            headers.join(','),
+            ...exportData.map(row => headers.map(header => {
+                const value = row[header as keyof typeof row];
+                // Escapar valores que contêm vírgula ou aspas
+                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+                    ? `"${value.replace(/"/g, '""')}`
+                    : value;
+            }).join(','))
+        ].join('\n');
+
+        // Criar blob e fazer download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        // Formatar nome do arquivo: offline-device_dd-MM-yyyy_HH-mm
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
+        
+        link.setAttribute('download', `offline-device_${formattedDate}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
