@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableModule } from 'primeng/table';
@@ -38,7 +38,7 @@ import { environment } from '../../../environments/environment';
                 <div class="text-3xl font-extrabold">Visão Global da Rede</div>
                 <span class="text-sm text-gray-400">{{ getTimeRemainingText() }}</span>
             </div>
-            <p-button label="Exportar Excel" />
+            <p-button label="Exportar Excel" (onClick)="exportCSV()" />
         </div>
         <p-card header="Status do dispositivo">
             <p class="text-gray-400">Atualizado: {{ refreshedAtFormat }}</p>
@@ -193,7 +193,10 @@ import { environment } from '../../../environments/environment';
     `,
 })
 export class ViewGlobal implements OnInit, OnDestroy {
+    @ViewChild('dt2') dt2!: Table;
+
     refreshedAtFormat: string = 'n/d';
+    refreshedAt: Date = new Date();
 
     onlineRouters: number = 0;
     offlineRouters: number = 0;
@@ -230,6 +233,43 @@ export class ViewGlobal implements OnInit, OnDestroy {
         return event.target.value;
     }
 
+    exportCSV() {
+        // Preparar dados para exportação sem a coluna "Ações"
+        const exportData = this.sites.map(site => ({
+            'Site': site.inep,
+            'Cidade': site.city,
+            'Switches': `${site.onlineSwitches}/${site.totalSwitches}`,
+            'Access Points': `${site.onlineAccessPoints}/${site.totalAccessPoints}`,
+            'Roteadores': site.routerIsOnline ? '1/1' : '0/1',
+            'Último offline': site.getOfflineDuration(site)
+        }));
+
+        // Criar CSV manualmente
+        const headers = Object.keys(exportData[0] || {});
+        const csvContent = [
+            headers.join(','),
+            ...exportData.map(row => headers.map(header => {
+                const value = row[header as keyof typeof row];
+                // Escapar valores que contêm vírgula ou aspas
+                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+                    ? `"${value.replace(/"/g, '""')}"`
+                    : value;
+            }).join(','))
+        ].join('\n');
+
+        // Criar blob e fazer download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        const formattedDate = this.refreshedAt.toISOString().replace(/[-:]/g, '').replace('T', '_').split('.')[0];
+        link.setAttribute('download', `sites-global-${formattedDate}.csv`);        
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
     ngOnInit(): void {
         // Carregar dados inicialmente
         this.getViewGlobal();
@@ -259,6 +299,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
         this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
                 this.refreshedAtFormat = data.refreshedAtFormat;
+                this.refreshedAt = new Date(data.refreshedAt);
 
                 this.onlineRouters = data.onlineRouters;
                 this.offlineRouters = data.totalRouters - data.onlineRouters;
@@ -340,10 +381,6 @@ export class ViewGlobal implements OnInit, OnDestroy {
         if (this.visibilityChangeListener) {
             document.removeEventListener('visibilitychange', this.visibilityChangeListener);
         }
-    }
-
-    clear(table: Table) {
-        table.clear();
     }
 }
 
