@@ -3,17 +3,15 @@ import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
 import { Table, TableModule } from 'primeng/table';
 import { DividerModule } from 'primeng/divider';
-import { TagModule } from 'primeng/tag';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { SelectModule } from 'primeng/select';
-import { CommonModule } from '@angular/common';
 import { IconFieldModule } from 'primeng/iconfield';
 import { EaceService, IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
+import { RouterLink } from "@angular/router";
+import { SiteModelView } from './view-model';
 
 @Component({
     selector: 'app-view-global',
@@ -23,13 +21,10 @@ import { environment } from '../../../environments/environment';
         ButtonModule,
         TableModule,
         DividerModule,
-        TagModule,
         InputTextModule,
         InputIconModule,
-        MultiSelectModule,
-        SelectModule,
-        CommonModule,
         IconFieldModule,
+        RouterLink,
     ],
     providers: [MessageService],
     template: `
@@ -51,8 +46,10 @@ import { environment } from '../../../environments/environment';
                             <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineRouters }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
-                        <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineRouters }}</div>
+                        <div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">
+                                <a [routerLink]="['offline-devices']" [queryParams]="{ device: 'router' }">{{ offlineRouters }}</a>
+                            </div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -65,8 +62,10 @@ import { environment } from '../../../environments/environment';
                             <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineSwitches }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
-                        <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineSwitches }}</div>
+                        <div>
+                            <div class="text-2xl font-extrabold text-red-400 text-center">
+                                <a [routerLink]="['offline-devices']" [queryParams]="{ device: 'switch' }">{{ offlineSwitches }}</a>
+                            </div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -79,8 +78,10 @@ import { environment } from '../../../environments/environment';
                             <div class="text-2xl font-extrabold text-green-400 text-center">{{ onlineAccessPoints }}</div>
                             <div class="text-sm text-center">Online</div>
                         </div>
-                        <div class="cursor-pointer">
-                            <div class="text-2xl font-extrabold text-red-400 text-center">{{ offlineAccessPoints }}</div>
+                        <div>                            
+                            <div class="text-2xl font-extrabold text-red-400 text-center">
+                                <a [routerLink]="['offline-devices']" [queryParams]="{ device: 'accessPoint' }">{{ offlineAccessPoints }}</a>
+                            </div>
                             <div class="text-sm text-center">Offline</div>
                         </div>
                     </div>
@@ -172,7 +173,7 @@ import { environment } from '../../../environments/environment';
                         </td>
                         <td>
                             <!-- <i class="pi pi-clock" style="color:gray;"></i>&nbsp; -->
-                            <span>{{ site.getOfflineDuration(site) }}</span>
+                            <span>{{ site.getOfflineDuration() }}</span>
                         </td>
                         <td>
                             <div class="text-green-500 cursor-pointer">Detalhes do site</div>
@@ -226,7 +227,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
         this.refreshIntervalSeconds = environment.refreshIntervalMinutes * 60;
         this.timeRemaining = this.refreshIntervalSeconds;
     }
-    
+
     // Função auxiliar para obter o valor do evento de input
     // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
     getTargetValue(event: any): any {
@@ -241,7 +242,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
             'Switches': `${site.onlineSwitches}/${site.totalSwitches}`,
             'Access Points': `${site.onlineAccessPoints}/${site.totalAccessPoints}`,
             'Roteadores': site.routerIsOnline ? '1/1' : '0/1',
-            'Último offline': site.getOfflineDuration(site)
+            'Último offline': site.getOfflineDuration(),
         }));
 
         // Criar CSV manualmente
@@ -263,7 +264,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
         const formattedDate = this.refreshedAt.toISOString().replace(/[-:]/g, '').replace('T', '_').split('.')[0];
-        link.setAttribute('download', `sites-global-${formattedDate}.csv`);        
+        link.setAttribute('download', `sites-global-${formattedDate}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
@@ -384,82 +385,4 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 }
 
-class SiteModelView {
-    refreshedAt: Date | null;
-    inep: string;
-    router: WayosRouterInfo;
-    switches: IncCloudDevice[]; // devType === 'SWITCH'
-    aps: IncCloudDevice[]; // devType === 'CLOUDAP'
 
-    constructor(value: ViewGlobalItem, refreshedAt: string) {
-        this.refreshedAt = refreshedAt ? new Date(refreshedAt) : null;
-        this.inep = value.inep;
-        this.router = value.router;
-        this.switches = value.switches;
-        this.aps = value.aps;
-    }
-
-    get city(): string {
-        // Extraia a cidade do INEP ou retorne 'n/d' se não disponível
-        return 'n/d';
-    }
-
-    get onlineSwitches(): number {
-        return this.switches.filter(sw => sw.online).length;
-    }
-    
-    get totalSwitches(): number {
-        return this.switches.length;
-    }
-    
-    get onlineAccessPoints(): number {
-        return this.aps.filter(ap => ap.online).length;
-    }
-    
-    get totalAccessPoints(): number {
-        return this.aps.length;
-    }
-
-    get routerIsOnline(): boolean {
-        return this.router.online;
-    }
-
-    // Função para determinar o quanto tempo o dispositivo está offline
-    getOfflineDuration(site: any): string {
-        // Implementação paliativa: Retorna a diferença entre o horário atual e o horário de atualização se algum dos dispositivos estiver offline
-
-        if (this.refreshedAt === null) {
-            return '-';
-        }
-
-        //Checar se algum dispositivo está offline
-        const anyOffline = !this.router.online ||
-            this.switches.some(sw => !sw.online) ||
-            this.aps.some(ap => !ap.online);
-
-        if (!anyOffline) {
-            return '-';
-        }
-
-        // Calcule a diferença entre o horário atual e o horário de atualização
-        const now = new Date();
-        const diffMs = now.getTime() - this.refreshedAt.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-
-        // Se a doferença for menor que 5 minuto, retorne 'Agora mesmo'
-        // Se a diferença for menor que 60 minutos, retorne em minutos
-        // Se a diferença for maior que 60 minutos, retorne em horas
-        // Se a diferença for maior que 24 horas, retorne em dias
-        if (diffMins < 5) {
-            return 'Agora mesmo';
-        } else if (diffMins < 60) {
-            return `${diffMins} minutos atrás`;
-        } else if (diffMins < 1440) {
-            const hours = Math.floor(diffMins / 60);
-            return `${hours} horas atrás`;
-        } else {
-            const days = Math.floor(diffMins / 1440);
-            return `${days} dias atrás`;
-        }
-    }
-}

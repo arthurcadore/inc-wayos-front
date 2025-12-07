@@ -6,6 +6,7 @@ import { ViewGlobal } from '@/pages/view-global/view-global';
 import { SchoolDetails } from '@/pages/school-details/school-details';
 import { Schools } from '@/pages/schools/schools';
 import { authGuard } from '@/pages/auth/auth.guard';
+import { OfflineDevices } from '@/pages/offline-devices/offline-devices';
 
 export const appRoutes: Routes = [
 
@@ -18,6 +19,7 @@ export const appRoutes: Routes = [
             { path: '', component: ViewGlobal },
             { path: 'schools', component: Schools },
             { path: 'school-details', component: SchoolDetails },
+            { path: 'offline-devices', component: OfflineDevices },
         ],
     },
     { path: 'notfound', component: Notfound },
