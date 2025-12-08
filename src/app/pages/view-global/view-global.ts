@@ -180,7 +180,9 @@ import { FormsModule } from '@angular/forms';
                             <span>{{ site.getOfflineDuration() }}</span>
                         </td>
                         <td>
-                            <div class="text-green-500 cursor-pointer">Detalhes do site</div>
+                            <div class="text-green-500 cursor-pointer">
+                                <a [routerLink]="['school-details']" [queryParams]="{ inep: site.inep }">Detalhes do site</a>
+                            </div>
                         </td>
                     </tr>
                 </ng-template>

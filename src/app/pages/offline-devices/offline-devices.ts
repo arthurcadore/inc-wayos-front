@@ -145,11 +145,11 @@ export class OfflineDevices implements OnInit {
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
             this.deviceType = this.deviceTypeMapping[params['device'] as keyof typeof this.deviceTypeMapping] || DeviceType.ROUTER;
-            this.loadDate();
+            this.loadData();
         });
     }
 
-    async loadDate(): Promise<void> {
+    async loadData(): Promise<void> {
         this.loadingModalService.show();
         this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
