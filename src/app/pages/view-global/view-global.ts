@@ -6,13 +6,14 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
-import { EaceService, IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from '../service/eace.service';
+import { EaceService, ViewGlobalItem } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
 import { RouterLink } from "@angular/router";
 import { SiteModelView } from './view-model';
-
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { FormsModule } from '@angular/forms';
 @Component({
     selector: 'app-view-global',
     standalone: true,
@@ -25,6 +26,8 @@ import { SiteModelView } from './view-model';
         InputIconModule,
         IconFieldModule,
         RouterLink,
+        SelectButtonModule,
+        FormsModule,
     ],
     providers: [MessageService],
     template: `
@@ -102,6 +105,7 @@ import { SiteModelView } from './view-model';
             >
                 <ng-template #caption>
                     <div class="flex">
+                        <p-selectbutton [options]="stateOptions" [(ngModel)]="value" optionLabel="label" optionValue="value" aria-labelledby="basic" />
                         <p-iconfield iconPosition="left" class="ml-auto">
                             <p-inputicon>
                                 <i class="pi pi-search"></i>
@@ -217,6 +221,14 @@ export class ViewGlobal implements OnInit, OnDestroy {
     private isLoading: boolean = false;
     private readonly refreshIntervalSeconds: number;
     private visibilityChangeListener: any;
+
+    // Opções do filtro de status
+    stateOptions: any[] = [
+        { label: 'Todos', value: 'all' },
+        { label: 'Online', value: 'online' },
+        { label: 'Offline', value: 'offline' },
+    ];
+    value: string = 'all';
 
     constructor(
         private readonly eaceService: EaceService,
