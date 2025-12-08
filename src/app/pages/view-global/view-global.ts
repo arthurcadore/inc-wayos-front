@@ -95,7 +95,7 @@ import { FormsModule } from '@angular/forms';
         <p-card>
             <p-table
                 #dt2
-                [value]="sites"
+                [value]="filteredSites"
                 dataKey="id"
                 [paginator]="true"
                 [globalFilterFields]="['inep', 'city']"
@@ -105,7 +105,7 @@ import { FormsModule } from '@angular/forms';
             >
                 <ng-template #caption>
                     <div class="flex">
-                        <p-selectbutton [options]="stateOptions" [(ngModel)]="value" optionLabel="label" optionValue="value" aria-labelledby="basic" />
+                        <p-selectbutton [options]="stateOptions" [(ngModel)]="value" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
                         <p-iconfield iconPosition="left" class="ml-auto">
                             <p-inputicon>
                                 <i class="pi pi-search"></i>
@@ -213,6 +213,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
     offlineAccessPoints: number = 0;
 
     sites: SiteModelView[] = [];
+    filteredSites: SiteModelView[] = [];
 
     // Variáveis de controle do timer de atualização
     private refreshInterval: any = null;
@@ -246,9 +247,27 @@ export class ViewGlobal implements OnInit, OnDestroy {
         return event.target.value;
     }
 
+    /**
+     * Aplica o filtro de status aos sites
+     * - 'all': Mostra todos os sites
+     * - 'online': Mostra apenas sites com todos os devices online
+     * - 'offline': Mostra sites com pelo menos um device offline
+     */
+    applyFilter(): void {
+        if (this.value === 'all') {
+            this.filteredSites = [...this.sites];
+        } else if (this.value === 'online') {
+            // Sites online = sites SEM nenhum device offline
+            this.filteredSites = this.sites.filter(site => !site.hasOfflineDevices());
+        } else if (this.value === 'offline') {
+            // Sites offline = sites COM pelo menos um device offline
+            this.filteredSites = this.sites.filter(site => site.hasOfflineDevices());
+        }
+    }
+
     exportCSV() {
         // Preparar dados para exportação sem a coluna "Ações"
-        const exportData = this.sites.map(site => ({
+        const exportData = this.filteredSites.map(site => ({
             'Site': site.inep,
             'Cidade': site.city,
             'Switches': `${site.onlineSwitches}/${site.totalSwitches}`,
@@ -324,6 +343,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
                 this.offlineAccessPoints = data.totalAps - data.onlineAps;
 
                 this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
+                this.applyFilter();
             },
             error: (err) => {
                 this.messageService.add({
