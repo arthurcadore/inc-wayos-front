@@ -25,6 +25,7 @@ export interface IncCloudDevice {
 
 export interface ViewGlobalItem {
     inep: string;
+    city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'
     aps: IncCloudDevice[]; // devType === 'CLOUDAP'

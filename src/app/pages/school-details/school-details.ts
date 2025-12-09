@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
@@ -11,6 +11,7 @@ import { SiteModelView } from '../view-global/view-model';
     standalone: true,
     imports: [
         CardModule,
+        RouterLink,
     ],
     styles: `
     .margin-padding {
@@ -37,7 +38,7 @@ import { SiteModelView } from '../view-global/view-model';
     template: `
         <div class="flex flex-row justify-between items-center mb-3">
             <div>
-                <div class="text-3xl font-extrabold mb-2">Detalhes po Escola</div>
+                <div class="text-3xl font-extrabold mb-2">Detalhes por Escola</div>
                 <div class="font-normal">Visão detalhada da infraestrutura e conectividade</div>
             </div>
         </div>
@@ -90,7 +91,9 @@ import { SiteModelView } from '../view-global/view-model';
                 </div>
                 <div class="margin-padding">Última atualização: {{inepInfo.lastMomentOnline}}</div>
                 <div class="margin-padding">Dispositivos: {{inepInfo.totalDevices}}</div>
-                <div class="margin-padding text-green-500 cursor-pointer">Dispositivos {{inepInfo.online ? 'Online' : 'Offline'}}</div>
+                <div class="margin-padding text-green-500 cursor-pointer">
+                    <a [routerLink]="['/connected-devices']" [queryParams]="{ inep: inepInfo.inep }">Dispositivos Online</a>
+                </div>
 
                 <!-- Dispositivos da Escola -->
                 <!-- Roteadores -->
@@ -138,7 +141,6 @@ import { SiteModelView } from '../view-global/view-model';
                     <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
                 }
             </div>
-        
         </p-card>
     `,
 })
