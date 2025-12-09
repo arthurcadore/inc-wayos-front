@@ -35,7 +35,7 @@ import { IconFieldModule } from "primeng/iconfield";
             [value]="devices"
             dataKey="id"
             [paginator]="true"
-            [globalFilterFields]="['inep', 'city']"
+            [globalFilterFields]="['type', 'operatingSystem', 'brand', 'macAddress', 'ipAddress']"
             [rows]="5"
             [rowsPerPageOptions]="[5, 10, 20]"
             [tableStyle]="{ 'min-width': '50rem' }"
@@ -52,20 +52,20 @@ import { IconFieldModule } from "primeng/iconfield";
             </ng-template>
             <ng-template #header>
                 <tr>
-                    <th pSortableColumn="inep" style="width:16.66%">
-                        <div class="font-extrabold">Tipo <p-sortIcon field="inep" /></div>
+                    <th pSortableColumn="type" style="width:20%">
+                        <div class="font-extrabold">Tipo <p-sortIcon field="type" /></div>
                     </th>
-                    <th style="width:16.66%">
-                        <div class="font-extrabold">Sistema Operacional</div>
+                    <th pSortableColumn="operatingSystem" style="width:20%">
+                        <div class="font-extrabold">Sistema Operacional <p-sortIcon field="operatingSystem" /></div>
                     </th>
-                    <th style="width:16.66%">
-                        <div class="font-extrabold">Marca</div>
+                    <th pSortableColumn="brand" style="width:20%">
+                        <div class="font-extrabold">Marca <p-sortIcon field="brand" /></div>
                     </th>
-                    <th style="width:16.66%">
-                        <div class="font-extrabold">Endereço MAC</div>
+                    <th pSortableColumn="macAddress" style="width:20%">
+                        <div class="font-extrabold">Endereço MAC <p-sortIcon field="macAddress" /></div>
                     </th>
-                    <th style="width: 16.66%">
-                        <div class="font-extrabold">Endereço IP</div>
+                    <th pSortableColumn="ipAddress" style="width:20%">
+                        <div class="font-extrabold">Endereço IP <p-sortIcon field="ipAddress" /></div>
                     </th>
                 </tr>
             </ng-template>
