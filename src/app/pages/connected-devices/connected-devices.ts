@@ -135,6 +135,19 @@ export class ConnectedDevices implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        this.route.queryParams.subscribe(params => {
+            this.inep = params['inep'] || '';
+            this.loadData();
+        });
+    }
+
+    // Função auxiliar para obter o valor do evento de input
+    // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
+    getTargetValue(event: any): any {
+        return event.target.value;
+    }
+
+    loadData(): void {
         this.loadingModalService.show();
         setTimeout(() => {
             // Simulated data fetch
@@ -197,17 +210,48 @@ export class ConnectedDevices implements OnInit {
         // });
     }
 
-    // Função auxiliar para obter o valor do evento de input
-    // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
-    getTargetValue(event: any): any {
-        return event.target.value;
-    }
-
-    loadData(): void {
-        // 
-    }
-
     exportCSV(): void {
-        // Export CSV logic here
+        // Preparar dados para exportação com as colunas: Tipo, Sistema Operacional, Marca, Endereço MAC, Endereço IP
+        const exportData = this.devices.map(device => ({
+            'Tipo': device.type,
+            'Sistema Operacional': device.operatingSystem,
+            'Marca': device.brand,
+            'Endereço MAC': device.macAddress,
+            'Endereço IP': device.ipAddress,
+        }));
+
+        // Criar CSV manualmente
+        const headers = Object.keys(exportData[0] || {});
+        const csvContent = [
+            headers.join(','),
+            ...exportData.map(row => headers.map(header => {
+                const value = row[header as keyof typeof row];
+                // Escapar valores que contêm vírgula ou aspas
+                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
+                    ? `"${value.replace(/"/g, '""')}"`
+                    : value;
+            }).join(','))
+        ].join('\n');
+
+        // Criar blob e fazer download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        
+        // Formatar nome do arquivo: connected-devices_dd-MM-yyyy_HH-mm
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
+        
+        link.setAttribute('download', `connected-devices_${formattedDate}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
