@@ -6,12 +6,7 @@ import { MessageService } from 'primeng/api';
 @Component({
     selector: 'app-schools',
     standalone: true,
-    template: `
-        <div class="card">
-            <h1>Escolas</h1>
-            <p>Conteúdo da página de escolas.</p>
-        </div>
-    `,
+    templateUrl: './schools.html',
 })
 export class Schools implements OnInit {
     constructor(

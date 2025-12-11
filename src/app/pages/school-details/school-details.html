@@ -1,0 +1,107 @@
+<div class="flex flex-row justify-between items-center mb-3">
+    <div>
+        <div class="text-3xl font-extrabold mb-2">Detalhes por Escola</div>
+        <div class="font-normal">Visão detalhada da infraestrutura e conectividade</div>
+    </div>
+</div>
+<p-card>
+    <div class="text-xl font-extrabold mb-2">Hierarquia da Escola</div>
+    <hr>
+    <div class="grid grid-cols-5">
+        <!-- Localidade -->
+
+        <div class="margin-padding font-bold">
+            <i class="pi pi-sitemap text-green-600"></i>&nbsp;
+            <span>{{stateInfo.name}}</span>
+        </div>
+        <div class="margin-padding">
+            @if(stateInfo.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="margin-padding">Última atualização: {{stateInfo.lastMomentOnline}}</div>
+        <div class="margin-padding">Dispositivos: {{stateInfo.totalDevices}}</div>
+        <div class="margin-padding"></div>
+
+        <div class="margin-padding font-bold" style="margin-left: 1rem;">
+            <i class="pi pi-map text-green-600"></i>&nbsp;
+            <span>{{cityInfo.name}}</span>
+        </div>
+        <div class="margin-padding">
+            @if(cityInfo.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="margin-padding">Última atualização: {{cityInfo.lastMomentOnline}}</div>
+        <div class="margin-padding">Dispositivos: {{cityInfo.totalDevices}}</div>
+        <div class="margin-padding"></div>
+
+        <div class="margin-padding font-bold" style="margin-left: 2rem;">
+            <i class="pi pi-graduation-cap text-green-600"></i>&nbsp;
+            <span>{{inepInfo.inep}}</span>
+        </div>
+        <div class="margin-padding">
+            @if(inepInfo.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="margin-padding">Última atualização: {{inepInfo.lastMomentOnline}}</div>
+        <div class="margin-padding">Dispositivos: {{inepInfo.totalDevices}}</div>
+        <div class="margin-padding text-green-500 cursor-pointer">
+            <a [routerLink]="['/connected-devices']" [queryParams]="{ inep: inepInfo.inep }">Dispositivos Online</a>
+        </div>
+
+        <!-- Dispositivos da Escola -->
+        <!-- Roteadores -->
+        @if (siteModelView?.router) {
+        <div class="border-left margin-padding" style="margin-left: 3rem;">{{siteModelView?.router?.model || 'n/d'}}
+        </div>
+        <div class="border-center margin-padding">
+            @if(siteModelView?.router?.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="border-center margin-padding">IP: {{siteModelView?.router?.lanIp}}</div>
+        <div class="border-center margin-padding text-green-500 cursor-pointer">Template do Firewall</div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        }
+
+        <!-- Switches -->
+        @for (item of siteModelView?.switches; track item) {
+        <div class="border-left margin-padding" style="margin-left: 3rem;">{{item.aliasName || 'n/d'}}</div>
+        <div class="border-center margin-padding">
+            @if(item.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="border-center margin-padding">IP: (campo n/d)</div>
+        <div class="border-center margin-padding"></div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        }
+
+        <!-- Access Points -->
+        @for (item of siteModelView?.aps; track item) {
+        <div class="border-left margin-padding" style="margin-left: 3rem;">{{item.aliasName || 'n/d'}}</div>
+        <div class="border-center margin-padding">
+            @if(item.online) {
+            <span>Online</span>
+            } @else {
+            <span class="text-red-600">Offline</span>
+            }
+        </div>
+        <div class="border-center margin-padding">IP: (campo n/d)</div>
+        <div class="border-center margin-padding"></div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        }
+    </div>
+</p-card>
