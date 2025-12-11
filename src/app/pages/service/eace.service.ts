@@ -3,49 +3,8 @@ import { Injectable } from "@angular/core";
 import { Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
-
-export interface WayosRouterInfo {
-    inep: string;
-    sn: string;
-    model: string | null;
-    wanIp: string | null;
-    lanIp: string | null;
-    lanMac: string | null;
-    online: boolean;
-}
-
-export interface IncCloudDevice {
-    devType: string;
-    sn: string;
-    online: boolean;
-    onlineTime: number;
-    firstOnlineTime: number;
-    aliasName: string;
-}
-
-export interface ViewGlobalItem {
-    inep: string;
-    city: string;
-    router: WayosRouterInfo;
-    switches: IncCloudDevice[]; // devType === 'SWITCH'
-    aps: IncCloudDevice[]; // devType === 'CLOUDAP'
-}
-
-export interface ViewGlobalResponse {
-    refreshedAtFormat: string; // Propriedade adicional para formato legível
-    refreshedAt: string;
-
-    totalRouters: number;
-    onlineRouters: number;
-
-    totalSwitches: number;
-    onlineSwitches: number;
-
-    totalAps: number;
-    onlineAps: number;
-
-    data: ViewGlobalItem[];
-}
+import { ViewGlobalResponse } from "./dtos/view-global.dtos";
+import { WayosAlarmLogItem } from "./dtos/alarm-log.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -55,6 +14,16 @@ export class EaceService {
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
     constructor(private httpService: HttpService) {}
+
+    public getLastMomentOffline(sceneId: string): Observable<WayosAlarmLogItem[]> {
+        return this.httpService.get<WayosAlarmLogItem[]>(`/v1/alarm-logs/last-moment-offline/${sceneId}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched last moment offline data:', data);
+                }
+            })
+        );
+    }
 
     /**
      * Obtém dados globais da visualização com cache local

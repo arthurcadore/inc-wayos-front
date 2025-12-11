@@ -1,4 +1,4 @@
-import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/eace.service";
+import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/dtos/view-global.dtos";
 
 export enum DeviceType {
     ROUTER = 'Router',

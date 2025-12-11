@@ -7,10 +7,11 @@ import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from "primeng/inputtext";
 import { Table, TableModule } from "primeng/table";
 import { ActivatedRoute } from '@angular/router';
-import { EaceService, ViewGlobalItem } from "../service/eace.service";
+import { EaceService } from "../service/eace.service";
 import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { MessageService } from "primeng/api";
 import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
+import { ViewGlobalItem } from "../service/dtos/view-global.dtos";
 
 @Component({
     selector: 'app-offline-devices',

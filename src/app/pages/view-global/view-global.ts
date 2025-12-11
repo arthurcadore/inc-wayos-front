@@ -6,7 +6,7 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
-import { EaceService, ViewGlobalItem } from '../service/eace.service';
+import { EaceService } from '../service/eace.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
@@ -14,6 +14,8 @@ import { RouterLink } from "@angular/router";
 import { SiteModelView } from './view-model';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
+import { ViewGlobalItem } from '../service/dtos/view-global.dtos';
+
 @Component({
     selector: 'app-view-global',
     standalone: true,
