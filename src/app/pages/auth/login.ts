@@ -62,7 +62,7 @@ export class Login {
                 }
             },
             error: (error) => {
-                console.error('Erro no login:', error);
+                this.loadingModalService.hide();
                 this.messageService.add({ 
                     severity: 'error', 
                     summary: 'Erro', 

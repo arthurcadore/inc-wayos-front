@@ -80,6 +80,7 @@ export class OfflineDevices implements OnInit {
                 this.offlineDevices = offlineDevices;
             },
             error: (err) => {
+                this.loadingModalService.hide();
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',

@@ -15,7 +15,7 @@ export class EaceService {
 
     constructor(private httpService: HttpService) {}
 
-    public getLastMomentOffline(sceneId: string): Observable<WayosAlarmLogItem[]> {
+    public getLastMomentOffline(sceneId: number): Observable<WayosAlarmLogItem[]> {
         return this.httpService.get<WayosAlarmLogItem[]>(`/v1/alarm-logs/last-moment-offline/${sceneId}`).pipe(
             tap(data => {
                 if (environment.enableDebug) {

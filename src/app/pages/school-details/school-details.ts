@@ -90,6 +90,7 @@ export class SchoolDetails implements OnInit {
                 }
             },
             error: (err) => {
+                this.loadingModalService.show();
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
