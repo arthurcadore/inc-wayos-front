@@ -33,7 +33,7 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
                         <div class="mt-3 p-2 rounded-md border border-red-300 bg-red-50">
                             <div class="text-center mb-1">
                                 <i class="pi pi-clock"></i>&nbsp;
-                                {{ item.offlineTimeStr | date:'dd/MM/yyyy HH:mm:ss' }}
+                                {{ item.offlineTime | date:'dd/MM/yyyy HH:mm:ss' }}
                             </div>
                         </div>
                      }
