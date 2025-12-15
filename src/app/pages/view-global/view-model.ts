@@ -16,6 +16,7 @@ export interface OfflineDevice {
 export class SiteModelView {
     refreshedAt: Date | null;
     inep: string;
+    city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'
     aps: IncCloudDevice[]; // devType === 'CLOUDAP'
@@ -23,14 +24,10 @@ export class SiteModelView {
     constructor(value: ViewGlobalItem, refreshedAt: string) {
         this.refreshedAt = refreshedAt ? new Date(refreshedAt) : null;
         this.inep = value.inep;
+        this.city = value.city;
         this.router = value.router;
         this.switches = value.switches;
         this.aps = value.aps;
-    }
-
-    get city(): string {
-        // Extraia a cidade do INEP ou retorne 'n/d' se não disponível
-        return 'n/d';
     }
 
     get onlineSwitches(): number {
