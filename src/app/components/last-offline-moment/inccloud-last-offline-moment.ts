@@ -41,7 +41,7 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
                     <div class="mt-4 p-4 rounded-md border border-blue-300 bg-blue-50">
                         <div class="bg-blue-100 p-4 rounded-md">
                             <div class="text-blue-500 text-2xl font-bold text-center mb-3">Nenhum dado de último momento offline encontrado.</div>
-                            <div class="text-center">O roteador pode estar online ou não há registros de offline recentes.</div>
+                            <div class="text-center">O {{ deviceModel }} pode estar online ou não há registros de offline.</div>
                         </div>
                     </div>
                 }
