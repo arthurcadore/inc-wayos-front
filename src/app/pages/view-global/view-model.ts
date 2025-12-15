@@ -10,7 +10,7 @@ export interface OfflineDevice {
     devType: DeviceType;
     name: string;
     inep: string;
-    lastMomentOnline: string;
+    data: WayosRouterInfo | IncCloudDevice;
 }
 
 export class SiteModelView {
@@ -53,41 +53,6 @@ export class SiteModelView {
         return this.router.online;
     }
 
-    // Função para determinar o quanto tempo o dispositivo está offline
-    public getOfflineDuration(): string {
-        // Implementação paliativa: Retorna a diferença entre o horário atual e o horário de atualização se algum dos dispositivos estiver offline
-
-        if (this.refreshedAt === null) {
-            return '-';
-        }
-        
-        //Checar se algum dispositivo está offline
-        if (!this.hasOfflineDevices()) {
-            return '-';
-        }
-
-        // Calcule a diferença entre o horário atual e o horário de atualização
-        const now = new Date();
-        const diffMs = now.getTime() - this.refreshedAt.getTime();
-        const diffMins = Math.floor(diffMs / 60000);
-
-        // Se a doferença for menor que 5 minuto, retorne 'Agora mesmo'
-        // Se a diferença for menor que 60 minutos, retorne em minutos
-        // Se a diferença for maior que 60 minutos, retorne em horas
-        // Se a diferença for maior que 24 horas, retorne em dias
-        if (diffMins < 5) {
-            return 'Agora mesmo';
-        } else if (diffMins < 60) {
-            return `${diffMins} minutos atrás`;
-        } else if (diffMins < 1440) {
-            const hours = Math.floor(diffMins / 60);
-            return `${hours} horas atrás`;
-        } else {
-            const days = Math.floor(diffMins / 1440);
-            return `${days} dias atrás`;
-        }
-    }
-
     public hasOfflineDevices(): boolean {
         return !this.router.online ||
             this.switches.some(sw => !sw.online) ||
@@ -112,7 +77,7 @@ export class SiteModelView {
                 devType: DeviceType.ROUTER,
                 name: this.router.model || 'Roteador',
                 inep: this.inep,
-                lastMomentOnline: this.getOfflineDuration(),
+                data: this.router,
             }
             return this.router.online ? [] : [route];
         } else if (deviceType === DeviceType.SWITCH) {
@@ -120,15 +85,15 @@ export class SiteModelView {
                 devType: DeviceType.SWITCH,
                 name: sw.aliasName || 'Switch',
                 inep: this.inep,
-                lastMomentOnline: this.getOfflineDuration(),
-            }));
+                data: sw,
+            } as OfflineDevice));
         } else if (deviceType === DeviceType.ACCESS_POINT) {
             return this.aps.filter(ap => !ap.online).map(ap => ({
                 devType: DeviceType.ACCESS_POINT,
                 name: ap.aliasName || 'Access Point',
                 inep: this.inep,
-                lastMomentOnline: this.getOfflineDuration(),
-            }));
+                data: ap,
+            } as OfflineDevice));
         } else {
             return [];
         }

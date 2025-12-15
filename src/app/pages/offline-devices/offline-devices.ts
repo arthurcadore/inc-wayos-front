@@ -11,7 +11,10 @@ import { EaceService } from "../service/eace.service";
 import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { MessageService } from "primeng/api";
 import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
-import { ViewGlobalItem } from "../service/dtos/view-global.dtos";
+import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/dtos/view-global.dtos";
+import { IncCloudLastOfflineMoment } from "@/components/last-offline-moment/inccloud-last-offline-moment";
+import { DialogService } from "primeng/dynamicdialog";
+import { WayosLastOfflineMoment } from "@/components/last-offline-moment/wayos-last-offline-moment";
 
 @Component({
     selector: 'app-offline-devices',
@@ -25,6 +28,7 @@ import { ViewGlobalItem } from "../service/dtos/view-global.dtos";
         CommonModule,
         IconFieldModule,
     ],
+    providers: [MessageService, DialogService],
     styles: [`
     .capsule {
         color: white;
@@ -38,7 +42,7 @@ import { ViewGlobalItem } from "../service/dtos/view-global.dtos";
 })
 export class OfflineDevices implements OnInit {
     @ViewChild('dt2') dt2!: Table;
-    
+
     deviceType: DeviceType = DeviceType.ROUTER;
     sites: SiteModelView[] = [];
     offlineDevices: OfflineDevice[] = [];
@@ -47,7 +51,8 @@ export class OfflineDevices implements OnInit {
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
         private readonly loadingModalService: LoadingModalService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly dialogService: DialogService,
     ) { }
 
     deviceTypeMapping = {
@@ -67,7 +72,7 @@ export class OfflineDevices implements OnInit {
         this.loadingModalService.show();
         this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
-                this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));                
+                this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
                 const offlineDevices: OfflineDevice[] = [];
 
                 for (const site of this.sites) {
@@ -100,12 +105,11 @@ export class OfflineDevices implements OnInit {
     }
 
     exportCSV() {
-        // Preparar dados para exportação com as colunas: Tipo, Nome, INEP, Último momento online
+        // Preparar dados para exportação com as colunas: Tipo, Nome, INEP
         const exportData = this.offlineDevices.map(device => ({
             'Tipo': device.devType,
             'Nome': device.name,
             'INEP': device.inep,
-            'Último momento online': device.lastMomentOnline,
         }));
 
         // Criar CSV manualmente
@@ -126,7 +130,7 @@ export class OfflineDevices implements OnInit {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        
+
         // Formatar nome do arquivo: offline-device_dd-MM-yyyy_HH-mm
         const now = new Date();
         const day = String(now.getDate()).padStart(2, '0');
@@ -135,11 +139,44 @@ export class OfflineDevices implements OnInit {
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
-        
+
         link.setAttribute('download', `offline-device_${formattedDate}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    seeLastMomentOffline(device: OfflineDevice): void {
+        if (device.devType === DeviceType.ROUTER) {
+            this.dialogService.open(WayosLastOfflineMoment, {
+                header: `Último Momento Offline - Roteador`,
+                width: '45vw',
+                data: {
+                    shopId: (device.data as WayosRouterInfo).sceneId,
+                    inep: device.inep,
+                    deviceStatus: (device.data as WayosRouterInfo).online,
+                    deviceSerial: (device.data as WayosRouterInfo).sn,
+                    deviceModel: (device.data as WayosRouterInfo).model,
+                },
+                closable: true,
+                dismissableMask: true,
+                style: { 'background-color': '#f1f5f9' },
+            });
+        } else {
+            this.dialogService.open(IncCloudLastOfflineMoment, {
+                header: `Último Momento Offline - ${device.devType}`,
+                width: '45vw',
+                data: {
+                    inep: device.inep,
+                    deviceStatus: (device.data as IncCloudDevice).online,
+                    deviceSerial: (device.data as IncCloudDevice).sn,
+                    deviceModel: (device.data as IncCloudDevice).aliasName,
+                },
+                closable: true,
+                dismissableMask: true,
+                style: { 'background-color': '#f1f5f9' },
+            });
+        }
     }
 }

@@ -15,8 +15,8 @@ import { SiteModelView } from './view-model';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
 import { ViewGlobalItem } from '../service/dtos/view-global.dtos';
-import { DialogService, DynamicDialogRef } from 'primeng/dynamicdialog';
-import { LastMomentOffline } from '@/components/last-moment-offline/last-moment-offline';
+import { DialogService } from 'primeng/dynamicdialog';
+import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
 
 @Component({
     selector: 'app-view-global',
@@ -113,7 +113,6 @@ export class ViewGlobal implements OnInit, OnDestroy {
             'Switches': `${site.onlineSwitches}/${site.totalSwitches}`,
             'Access Points': `${site.onlineAccessPoints}/${site.totalAccessPoints}`,
             'Roteadores': site.routerIsOnline ? '1/1' : '0/1',
-            'Último offline': site.getOfflineDuration(),
         }));
 
         // Criar CSV manualmente
@@ -245,13 +244,18 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     seeLastMomentOffline(site: SiteModelView): void {
-        const ref: DynamicDialogRef = this.dialogService.open(LastMomentOffline, {
-            header: `Último Momento Offline`,
+        this.dialogService.open(WayosLastOfflineMoment, {
+            header: `Último Momento Offline - Roteador`,
             width: '45vw',
-            data: { site },
+            data: {
+                shopId: site.router.sceneId,
+                inep: site.inep,
+                deviceStatus: site.router.online,
+                deviceSerial: site.router.sn,
+                deviceModel: site.router.model,
+            },
             closable: true,
             dismissableMask: true,
-            // appendTo: document.body,
             style: { 'background-color': '#f1f5f9' },
         });
     }

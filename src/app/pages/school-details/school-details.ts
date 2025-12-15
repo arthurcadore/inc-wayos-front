@@ -85,7 +85,7 @@ export class SchoolDetails implements OnInit {
 
                     // Popule as informações da escola
                     this.inepInfo.online = this.siteModelView.hasOfflineDevices() ? false : true;
-                    this.inepInfo.lastMomentOnline = this.siteModelView.getOfflineDuration();
+                    this.inepInfo.lastMomentOnline = '💀'; // this.siteModelView.getOfflineDuration();
                     this.inepInfo.totalDevices = this.siteModelView.switches.length + this.siteModelView.aps.length + 1; // +1 para o roteador
                 }
             },

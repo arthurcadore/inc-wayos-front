@@ -4,7 +4,7 @@ import { Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 import { ViewGlobalResponse } from "./dtos/view-global.dtos";
-import { WayosAlarmLogItem } from "./dtos/alarm-log.dto";
+import { RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -15,11 +15,21 @@ export class EaceService {
 
     constructor(private httpService: HttpService) {}
 
-    public getLastMomentOffline(sceneId: number): Observable<WayosAlarmLogItem[]> {
+    public getWayosLastOfflineMomentList(sceneId: number): Observable<WayosAlarmLogItem[]> {
         return this.httpService.get<WayosAlarmLogItem[]>(`/v1/wayos-last-offline-moment-list/${sceneId}`).pipe(
             tap(data => {
                 if (environment.enableDebug) {
                     console.log('[EaceService] Fetched last moment offline data:', data);
+                }
+            })
+        );
+    }
+
+    public getIncCloudLastOfflineMomentList(sn: string): Observable<RegionDevice[]> {
+        return this.httpService.get<RegionDevice[]>(`/v1/inccloud-last-offline-moment-list/${sn}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched IncCloud last moment offline data:', data);
                 }
             })
         );

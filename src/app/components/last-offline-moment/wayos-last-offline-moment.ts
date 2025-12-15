@@ -1,14 +1,13 @@
 import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { WayosAlarmLogItem } from "@/pages/service/dtos/alarm-log.dto";
 import { EaceService } from "@/pages/service/eace.service";
-import { SiteModelView } from "@/pages/view-global/view-model";
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core"
 import { PanelModule } from 'primeng/panel';
 import { DynamicDialogConfig } from "primeng/dynamicdialog";
 
 @Component({
-    selector: 'app-last-moment-offline',
+    selector: 'app-wayos-last-offline-moment',
     standalone: true,
     imports: [
         CommonModule,
@@ -17,22 +16,20 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
     providers: [],
     template: `
         <div>
-            <div class="mb-2 text-lg">Site: {{ site?.inep }}</div>
-            <p-panel header="Dados do Roteador" [toggleable]="true">
-                <div class="mb-2 text-lg">SceneId: {{ site?.router?.sceneId }}</div>
+            <p-panel header="Site: {{ inep }}" [toggleable]="true" class="mb-2">
                 <div class="mb-2 text-lg">
                     Status:
-                    @if(site?.router?.online) {
+                    @if(deviceStatus) {
                         <span class="text-green-600 font-bold">Online</span>
                     } @else {
                         <span class="text-red-600 font-bold">Offline</span>
                     }
                 </div>
-                <div class="mb-2 text-lg">Serial: {{ site?.router?.sn }}</div>
-                <div class="mb-2 text-lg">Modelo: {{ site?.router?.model || 'N/A' }}</div>
+                <div class="mb-2 text-lg">Serial: {{ deviceSerial }}</div>
+                <div class="mb-2 text-lg">Modelo: {{ deviceModel }}</div>
                 <hr>
-                @if(hasRouterOfflineMoments === 'has-data') {
-                     @for (item of routerOfflineMoments; track item) {
+                @if(hasOfflineMoments === 'has-data') {
+                     @for (item of offlineMoments; track item) {
                         <div class="mt-3 p-2 rounded-md border border-red-300 bg-red-50">
                             <div class="text-center mb-1">
                                 <i class="pi pi-clock"></i>&nbsp;
@@ -40,7 +37,7 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
                             </div>
                         </div>
                      }
-                } @else if (hasRouterOfflineMoments === 'no-data') {
+                } @else if (hasOfflineMoments === 'no-data') {
                     <div class="mt-4 p-4 rounded-md border border-blue-300 bg-blue-50">
                         <div class="bg-blue-100 p-4 rounded-md">
                             <div class="text-blue-500 text-2xl font-bold text-center mb-3">Nenhum dado de último momento offline encontrado.</div>
@@ -49,7 +46,6 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
                     </div>
                 }
             </p-panel>
-            
             @if(showError) {
                 <div class="p-4 rounded-md border border-red-300 bg-red-50">
                     <div class="bg-red-100 p-4 rounded-md">
@@ -63,11 +59,15 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
         </div>
     `,
 })
-export class LastMomentOffline implements OnInit {
-    site: SiteModelView | undefined;
+export class WayosLastOfflineMoment implements OnInit {
+    shopId: number = 0;
+    inep: string = 'n/d';
+    deviceStatus: boolean = false;
+    deviceSerial: string = 'n/d';
+    deviceModel: string = 'n/d';
 
-    hasRouterOfflineMoments: 'loading' | 'no-data' | 'has-data' = 'loading';
-    routerOfflineMoments: WayosAlarmLogItem[] = [];
+    hasOfflineMoments: 'loading' | 'no-data' | 'has-data' = 'loading';
+    offlineMoments: WayosAlarmLogItem[] = [];
 
     showError: boolean = false;
     errorMessage: string = '';
@@ -79,17 +79,20 @@ export class LastMomentOffline implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.site = this.config.data.site;
+        this.shopId = this.config.data.shopId;
+        this.inep = this.config.data.inep;
+        this.deviceStatus = this.config.data.deviceStatus;
+        this.deviceSerial = this.config.data.deviceSerial;
+        this.deviceModel = this.config.data.deviceModel;
         this.getData();
     }
 
     getData(): void {
         this.loadingModalService.show();
-
-        this.eaceService.getLastMomentOffline(this.site?.router.sceneId!).subscribe({
+        this.eaceService.getWayosLastOfflineMomentList(this.shopId).subscribe({
             next: (data: WayosAlarmLogItem[]) => {
-                this.routerOfflineMoments = data;
-                this.hasRouterOfflineMoments = data.length > 0 ? 'has-data' : 'no-data';
+                this.offlineMoments = data;
+                this.hasOfflineMoments = data.length > 0 ? 'has-data' : 'no-data';
             },
             error: (err) => {
                 this.loadingModalService.hide();                

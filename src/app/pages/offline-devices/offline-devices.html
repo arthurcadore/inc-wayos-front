@@ -29,37 +29,31 @@
                 <th pSortableColumn="name" style="width:16.66%">
                     <div class="font-extrabold">Nome <p-sortIcon field="name" /></div>
                 </th>
-                <th style="width:16.66%">
-                    <div class="font-extrabold">Status</div>
-                </th>
                 <th pSortableColumn="inep" style="width:16.66%">
                     <div class="font-extrabold">INEP <p-sortIcon field="inep" /></div>
                 </th>
-                <th pSortableColumn="lastMomentOnline" style="width: 16.66%">
-                    <div class="font-extrabold">Último momento online <p-sortIcon field="lastMomentOnline" /></div>
+                <th style="width: 16.66%">
+                    <div class="font-extrabold">Último Momento Offline</div>
                 </th>
                 <th style="width:16.66%">
                     <div class="font-extrabold">Ações</div>
                 </th>
             </tr>
         </ng-template>
-        <ng-template #body let-site>
+        <ng-template #body let-device>
             <tr>
                 <td>
                     <i class="pi pi-wifi" style="color:gray;"></i>&nbsp;
-                    <span>{{ site.devType }}</span>
+                    <span>{{ device.devType }}</span>
                 </td>
                 <td>
-                    <span>{{ site.name }}</span>
+                    <span>{{ device.name }}</span>
                 </td>
                 <td>
-                    <span class="capsule">Offiline</span>
+                    <span>{{ device.inep }}</span>
                 </td>
                 <td>
-                    <span>{{ site.inep }}</span>
-                </td>
-                <td>
-                    <span>{{ site.lastMomentOnline }}</span>
+                    <span class="text-green-500 cursor-pointer" (click)="seeLastMomentOffline(device)">Ver</span>
                 </td>
                 <td>
                     <div class="text-green-500 cursor-pointer">Alarmes</div>
