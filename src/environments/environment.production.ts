@@ -1,7 +1,7 @@
 ﻿export const environment = {
     production: true,
     name: 'production',
-    apiUrl: 'https://api.eace.com.br/api',
+    apiUrl: '/api', 
     enableDebug: false,
     logLevel: 'error',
     enableCache: true,
