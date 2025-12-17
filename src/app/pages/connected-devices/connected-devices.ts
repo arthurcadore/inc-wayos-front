@@ -9,6 +9,8 @@ import { TableModule } from "primeng/table";
 import { InputTextModule } from "primeng/inputtext";
 import { InputIconModule } from "primeng/inputicon";
 import { IconFieldModule } from "primeng/iconfield";
+import { environment } from "src/environments/environment";
+import { ExportFileService } from "@/services/export-file";
 
 @Component({
     selector: 'app-connected-devices',
@@ -131,7 +133,8 @@ export class ConnectedDevices implements OnInit {
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
         private readonly loadingModalService: LoadingModalService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly exportFileService: ExportFileService,
     ) { }
 
     ngOnInit(): void {
@@ -220,38 +223,6 @@ export class ConnectedDevices implements OnInit {
             'Endereço IP': device.ipAddress,
         }));
 
-        // Criar CSV manualmente
-        const headers = Object.keys(exportData[0] || {});
-        const csvContent = [
-            headers.join(','),
-            ...exportData.map(row => headers.map(header => {
-                const value = row[header as keyof typeof row];
-                // Escapar valores que contêm vírgula ou aspas
-                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
-                    ? `"${value.replace(/"/g, '""')}"`
-                    : value;
-            }).join(','))
-        ].join('\n');
-
-        // Criar blob e fazer download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        
-        // Formatar nome do arquivo: connected-devices_dd-MM-yyyy_HH-mm
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
-        
-        link.setAttribute('download', `connected-devices_${formattedDate}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.exportFileService.toCSV(exportData, environment.connectedDevicesExportFileName);
     }
 }

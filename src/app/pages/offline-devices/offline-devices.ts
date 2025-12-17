@@ -15,6 +15,8 @@ import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/dtos
 import { IncCloudLastOfflineMoment } from "@/components/last-offline-moment/inccloud-last-offline-moment";
 import { DialogService } from "primeng/dynamicdialog";
 import { WayosLastOfflineMoment } from "@/components/last-offline-moment/wayos-last-offline-moment";
+import { environment } from "src/environments/environment";
+import { ExportFileService } from "@/services/export-file";
 
 @Component({
     selector: 'app-offline-devices',
@@ -53,6 +55,7 @@ export class OfflineDevices implements OnInit {
         private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
+        private readonly exportFileService: ExportFileService,
     ) { }
 
     deviceTypeMapping = {
@@ -112,39 +115,7 @@ export class OfflineDevices implements OnInit {
             'INEP': device.inep,
         }));
 
-        // Criar CSV manualmente
-        const headers = Object.keys(exportData[0] || {});
-        const csvContent = [
-            headers.join(','),
-            ...exportData.map(row => headers.map(header => {
-                const value = row[header as keyof typeof row];
-                // Escapar valores que contêm vírgula ou aspas
-                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
-                    ? `"${value.replace(/"/g, '""')}`
-                    : value;
-            }).join(','))
-        ].join('\n');
-
-        // Criar blob e fazer download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-
-        // Formatar nome do arquivo: offline-device_dd-MM-yyyy_HH-mm
-        const now = new Date();
-        const day = String(now.getDate()).padStart(2, '0');
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const year = now.getFullYear();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
-
-        link.setAttribute('download', `offline-device_${formattedDate}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.exportFileService.toCSV(exportData, environment.offlineDevicesExportFileName);
     }
 
     seeLastMomentOffline(device: OfflineDevice): void {

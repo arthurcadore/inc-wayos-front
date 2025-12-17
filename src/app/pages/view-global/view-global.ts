@@ -17,6 +17,7 @@ import { FormsModule } from '@angular/forms';
 import { ViewGlobalItem } from '../service/dtos/view-global.dtos';
 import { DialogService } from 'primeng/dynamicdialog';
 import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
+import { ExportFileService } from '@/services/export-file';
 
 @Component({
     selector: 'app-view-global',
@@ -75,6 +76,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
         private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
+        private readonly exportFileService: ExportFileService,
     ) {
         // Converter minutos para segundos
         this.refreshIntervalSeconds = environment.refreshIntervalMinutes * 60;
@@ -114,30 +116,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
             'Access Points': `${site.onlineAccessPoints}/${site.totalAccessPoints}`,
         }));
 
-        // Criar CSV manualmente
-        const headers = Object.keys(exportData[0] || {});
-        const csvContent = [
-            headers.join(','),
-            ...exportData.map(row => headers.map(header => {
-                const value = row[header as keyof typeof row];
-                // Escapar valores que contêm vírgula ou aspas
-                return typeof value === 'string' && (value.includes(',') || value.includes('"'))
-                    ? `"${value.replace(/"/g, '""')}"`
-                    : value;
-            }).join(','))
-        ].join('\n');
-
-        // Criar blob e fazer download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        const formattedDate = this.refreshedAt.toISOString().replace(/[-:]/g, '').replace('T', '_').split('.')[0];
-        link.setAttribute('download', `sites-global-${formattedDate}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        this.exportFileService.toCSV(exportData, environment.viewGlobalExportFileName);
     }
 
     ngOnInit(): void {
@@ -150,7 +129,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
             this.isPageVisible = !document.hidden;
 
             // Se a página voltou a ser visível, atualizar dados imediatamente
-            if (!wasVisible && this.isPageVisible) {
+            if (!wasVisible && this.isPageVisible && !this.isLoading) {
                 this.getViewGlobal();
                 this.timeRemaining = this.refreshIntervalSeconds;
             }

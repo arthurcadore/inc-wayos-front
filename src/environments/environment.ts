@@ -8,5 +8,8 @@ export const environment = {
     logLevel: 'debug',
     enableCache: true,
     viewGlobalCacheTtlMinutes: 4,
-    refreshIntervalMinutes: 5
+    refreshIntervalMinutes: 5,
+    viewGlobalExportFileName: 'view-global_',
+    offlineDevicesExportFileName: 'offline-devices_',
+    connectedDevicesExportFileName: 'connected-devices_',
 };
