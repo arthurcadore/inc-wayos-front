@@ -224,7 +224,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
     seeLastMomentOffline(site: SiteModelView): void {
         this.dialogService.open(WayosLastOfflineMoment, {
             header: `Último Momento Offline - Roteador`,
-            width: '45vw',
+            styleClass: 'w-full md:w-[45%] mx-auto',
             data: {
                 shopId: site.router.sceneId,
                 inep: site.inep,

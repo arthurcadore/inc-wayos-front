@@ -122,7 +122,7 @@ export class OfflineDevices implements OnInit {
         if (device.devType === DeviceType.ROUTER) {
             this.dialogService.open(WayosLastOfflineMoment, {
                 header: `Último Momento Offline - Roteador`,
-                width: '45vw',
+                styleClass: 'w-full md:w-[45%] mx-auto',
                 data: {
                     shopId: (device.data as WayosRouterInfo).sceneId,
                     inep: device.inep,
@@ -137,7 +137,7 @@ export class OfflineDevices implements OnInit {
         } else {
             this.dialogService.open(IncCloudLastOfflineMoment, {
                 header: `Último Momento Offline - ${device.devType}`,
-                width: '45vw',
+                styleClass: 'w-full md:w-[45%] mx-auto',
                 data: {
                     inep: device.inep,
                     deviceStatus: (device.data as IncCloudDevice).online,
