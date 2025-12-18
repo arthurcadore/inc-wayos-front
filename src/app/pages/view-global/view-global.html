@@ -67,7 +67,7 @@
 </p-card>
 <p-divider />
 <p-card>
-    <p-table #dt2 [value]="filteredSites" dataKey="id" [paginator]="true" [globalFilterFields]="['inep', 'city']" [rows]="5" [rowsPerPageOptions]="[5, 10, 20]" [tableStyle]="{ 'min-width': '50rem' }">
+    <p-table #dt2 [value]="filteredSites" dataKey="id" [paginator]="true" [globalFilterFields]="['inep', 'city']" [rows]="10" [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]" [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #caption>
             <!-- Caption -->
             <div class="flex flex-col md:flex-row gap-4">

@@ -38,8 +38,8 @@ import { ExportFileService } from "@/services/export-file";
             dataKey="id"
             [paginator]="true"
             [globalFilterFields]="['type', 'operatingSystem', 'brand', 'macAddress', 'ipAddress']"
-            [rows]="5"
-            [rowsPerPageOptions]="[5, 10, 20]"
+            [rows]="10"
+            [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]"
             [tableStyle]="{ 'min-width': '50rem' }"
         >
             <ng-template #caption>

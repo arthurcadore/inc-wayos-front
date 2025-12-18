@@ -108,14 +108,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     exportCSV() {
-        // Preparar dados para exportação sem a coluna "Ações"
-        const exportData = this.filteredSites.map(site => ({
-            'Site': site.inep,
-            'Roteadores': site.routerIsOnline ? '1/1' : '0/1',
-            'Switches': `${site.onlineSwitches}/${site.totalSwitches}`,
-            'Access Points': `${site.onlineAccessPoints}/${site.totalAccessPoints}`,
-        }));
-
+        const exportData = this.filteredSites.map(site => site.toFlatTableData()).flat();
         this.exportFileService.toCSV(exportData, environment.viewGlobalExportFileName);
     }
 

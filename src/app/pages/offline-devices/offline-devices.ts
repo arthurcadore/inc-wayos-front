@@ -108,13 +108,8 @@ export class OfflineDevices implements OnInit {
     }
 
     exportCSV() {
-        // Preparar dados para exportação com as colunas: Tipo, Nome, INEP
-        const exportData = this.offlineDevices.map(device => ({
-            'Tipo': device.devType,
-            'Nome': device.name,
-            'INEP': device.inep,
-        }));
-
+        const selectedSites = this.sites.filter(site => site.getOfflineDevicesByType(this.deviceType).length > 0);
+        const exportData = selectedSites.map(site => site.toFlatTableData(this.deviceType)).flat();
         this.exportFileService.toCSV(exportData, environment.offlineDevicesExportFileName);
     }
 

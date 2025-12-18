@@ -11,5 +11,5 @@ export const environment = {
     refreshIntervalMinutes: 5,
     viewGlobalExportFileName: 'view-global_',
     offlineDevicesExportFileName: 'offline-devices_',
-    connectedDevicesExportFileName: 'connected-devices_',
+    connectedDevicesExportFileName: 'online-devices_',
 };
