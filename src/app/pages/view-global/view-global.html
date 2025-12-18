@@ -111,35 +111,35 @@
                 </td>
                 <td>
                     @if (site.routerIsOnline) {
-                    <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
-                    <span>1 / 1</span>
+                        <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                        <span>1 / 1</span>
                     } @else {
-                    <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
-                    <span>0 / 1</span>
+                        <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                        <span>0 / 1</span>
                     }
                 </td>
                 <td>
                     @if (site.onlineSwitches === 0 && site.totalSwitches === 0) {
                     <span class="text-gray-400">-</span>
                     } @else {
-                    @if (site.onlineSwitches === site.totalSwitches) {
-                    <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
-                    } @else {
-                    <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
-                    }
-                    <span>{{ site.onlineSwitches }}</span> / <span>{{ site.totalSwitches }}</span>
+                        @if (site.onlineSwitches === site.totalSwitches) {
+                            <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                        } @else {
+                            <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                        }
+                        <span>{{ site.onlineSwitches }}</span> / <span>{{ site.totalSwitches }}</span>
                     }
                 </td>
                 <td>
                     @if (site.onlineAccessPoints === 0 && site.totalAccessPoints === 0) {
                     <span class="text-gray-400">-</span>
                     } @else {
-                    @if (site.onlineAccessPoints === site.totalAccessPoints) {
-                    <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
-                    } @else {
-                    <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
-                    }
-                    <span>{{ site.onlineAccessPoints }}</span> / <span>{{ site.totalAccessPoints }}</span>
+                        @if (site.onlineAccessPoints === site.totalAccessPoints) {
+                            <i class="pi pi-circle-fill" style="color:#28C75A;font-size:0.7rem;"></i>&nbsp;
+                        } @else {
+                            <i class="pi pi-circle-fill" style="color:red;font-size:0.7rem;"></i>&nbsp;
+                        }
+                        <span>{{ site.onlineAccessPoints }}</span> / <span>{{ site.totalAccessPoints }}</span>
                     }
                 </td>
                 <td>
