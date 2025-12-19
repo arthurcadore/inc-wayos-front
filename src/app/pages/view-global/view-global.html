@@ -1,9 +1,17 @@
 <div class="flex flex-row justify-between items-center mb-3">
     <div>
-        <div class="text-3xl font-extrabold">Visão Global da Rede</div>
+        <div class="text-2xl md:text-3xl font-extrabold">Visão Global da Rede</div>
         <span class="text-sm text-gray-400">{{ getTimeRemainingText() }}</span>
     </div>
-    <p-button label="Exportar Excel" (onClick)="exportCSV()" />
+    <div class="flex">
+        <p-button label="Exportar Excel" (onClick)="exportCSV()" />
+        <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" severity="info" (click)="op.toggle($event)" />
+        <p-popover #op>
+            <div class="flex flex-col gap-4 w-[25rem]">
+                <p>Exporta os dados da tabela para um arquivo CSV. O filtro selecionado (Todos, Online ou Offline) será considerado na exportação.</p>
+            </div>
+        </p-popover>
+    </div>
 </div>
 <p-card header="Status do dispositivo">
     <p class="text-gray-400">Atualizado: {{ refreshedAtFormat }}</p>

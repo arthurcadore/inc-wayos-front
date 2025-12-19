@@ -1,6 +1,14 @@
 <div class="flex flex-row justify-between items-center mb-3">
-    <div class="text-3xl font-extrabold">Dispositivos Offline</div>
-    <p-button label="Exportar Excel" (onClick)="exportCSV()" />
+    <div class="text-2xl md:text-3xl font-extrabold">Dispositivos Offline</div>
+    <div class="flex">
+        <p-button label="Exportar Excel" (onClick)="exportCSV()" />
+        <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" severity="info" (click)="op.toggle($event)" />
+        <p-popover #op>
+            <div class="flex flex-col gap-4 w-[25rem]">
+                <p>Exporta os dados visíveis na tabela para um arquivo CSV. Mac Address e serial serão incluidos na exportação.</p>
+            </div>
+        </p-popover>
+    </div>
 </div>
 <p-card>
     <p-table #dt2 [value]="offlineDevices" dataKey="id" [paginator]="true" [globalFilterFields]="['inep']" [rows]="10"

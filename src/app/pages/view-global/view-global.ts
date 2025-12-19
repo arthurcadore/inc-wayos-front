@@ -18,6 +18,7 @@ import { ViewGlobalItem } from '../service/dtos/view-global.dtos';
 import { DialogService } from 'primeng/dynamicdialog';
 import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
 import { ExportFileService } from '@/services/export-file';
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
     selector: 'app-view-global',
@@ -33,6 +34,7 @@ import { ExportFileService } from '@/services/export-file';
         RouterLink,
         SelectButtonModule,
         FormsModule,
+        PopoverModule,
     ],
     providers: [MessageService, DialogService],
     templateUrl: './view-global.html',

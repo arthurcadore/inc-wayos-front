@@ -17,6 +17,7 @@ import { DialogService } from "primeng/dynamicdialog";
 import { WayosLastOfflineMoment } from "@/components/last-offline-moment/wayos-last-offline-moment";
 import { environment } from "src/environments/environment";
 import { ExportFileService } from "@/services/export-file";
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
     selector: 'app-offline-devices',
@@ -29,6 +30,7 @@ import { ExportFileService } from "@/services/export-file";
         InputIconModule,
         CommonModule,
         IconFieldModule,
+        PopoverModule,
     ],
     providers: [MessageService, DialogService],
     styles: [`
