@@ -7,6 +7,12 @@ export enum DeviceType {
     ALL = 'All',
 }
 
+export enum DeviceStatus {
+    ONLINE = 'online',
+    OFFLINE = 'offline',
+    ALL = 'all',
+}
+
 export interface OfflineDevice {
     devType: DeviceType;
     name: string;
@@ -57,18 +63,6 @@ export class SiteModelView {
             this.aps.some(ap => !ap.online);
     }
 
-    // public hasOfflineDevicesByType(deviceType: DeviceType): boolean {
-    //     if (deviceType === DeviceType.ROUTER) {
-    //         return !this.router.online;
-    //     } else if (deviceType === DeviceType.SWITCH) {
-    //         return this.switches.some(sw => !sw.online);
-    //     } else if (deviceType === DeviceType.ACCESS_POINT) {
-    //         return this.aps.some(ap => !ap.online);
-    //     } else {
-    //         return false;
-    //     }
-    // }
-
     public getOfflineDevicesByType(deviceType: DeviceType): OfflineDevice[] {
         if (deviceType === DeviceType.ROUTER) {
             const route: OfflineDevice = {
@@ -101,43 +95,49 @@ export class SiteModelView {
      * @description Converte os dados do site em um array de objetos para exportação CSV
      * @returns Array de objetos representando as linhas de dados para exportação CSV 
      */
-    public toFlatTableData(deviceType: DeviceType = DeviceType.ALL): FlatDataRow[] {
+    public toFlatTableData(deviceType: DeviceType = DeviceType.ALL, status: DeviceStatus = DeviceStatus.ALL): FlatDataRow[] {
         const rows: FlatDataRow[] = [];
 
+        // Adicionar o roteador
         if (deviceType === DeviceType.ROUTER || deviceType === DeviceType.ALL) {
-            // Adicionar o roteador
-            rows.push({
-                'INEP': this.inep,
-                'Online Status': this.router.online ? 'Online' : 'Offline',
-                'Device Type': DeviceType.ROUTER,
-                'Device SN': this.router.sn || 'N/A',
-                'LAN Port MAC': this.router.lanMac || 'N/A',
-            });
+            if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && this.router.online) || (status === DeviceStatus.OFFLINE && !this.router.online)) {
+                rows.push({
+                    'INEP': this.inep,
+                    'Online Status': this.router.online ? 'Online' : 'Offline',
+                    'Device Type': DeviceType.ROUTER,
+                    'Device SN': this.router.sn || 'N/A',
+                    'LAN Port MAC': this.router.lanMac || 'N/A',
+                });
+            }
         }
 
+        // Adicionar os switches
         if (deviceType === DeviceType.SWITCH || deviceType === DeviceType.ALL) {
-            // Adicionar os switches
             this.switches.forEach(switche => {
-                rows.push({
-                    'INEP': this.inep,
-                    'Online Status': switche.online ? 'Online' : 'Offline',
-                    'Device Type': DeviceType.SWITCH,
-                    'Device SN': switche.sn || 'N/A',
-                    'LAN Port MAC': 'N/A', // Switches não possuem LAN Port MAC no IncCloudDevice
-                });
+                if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && switche.online) || (status === DeviceStatus.OFFLINE && !switche.online)) {
+                    rows.push({
+                        'INEP': this.inep,
+                        'Online Status': switche.online ? 'Online' : 'Offline',
+                        'Device Type': DeviceType.SWITCH,
+                        'Device SN': switche.sn || 'N/A',
+                        'LAN Port MAC': 'N/A', // Switches não possuem LAN Port MAC no IncCloudDevice
+                    });
+                }
             });
         }
 
+        // Adicionar os access points
         if (deviceType === DeviceType.ACCESS_POINT || deviceType === DeviceType.ALL) {
-            // Adicionar os access points
             this.aps.forEach(ap => {
-                rows.push({
-                    'INEP': this.inep,
-                    'Online Status': ap.online ? 'Online' : 'Offline',
-                    'Device Type': DeviceType.ACCESS_POINT,
-                    'Device SN': ap.sn || 'N/A',
-                    'LAN Port MAC': 'N/A', // Access Points não possuem LAN Port MAC no IncCloudDevice
-                });
+                if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && ap.online) || (status === DeviceStatus.OFFLINE && !ap.online)) {
+                    rows.push({
+                        'INEP': this.inep,
+                        'Online Status': ap.online ? 'Online' : 'Offline',
+                        'Device Type': DeviceType.ACCESS_POINT,
+                        'Device SN': ap.sn || 'N/A',
+                        'LAN Port MAC': 'N/A', // Access Points não possuem LAN Port MAC no IncCloudDevice
+                    });
+                }
             });
         }
 

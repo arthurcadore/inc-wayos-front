@@ -11,7 +11,7 @@ import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
 import { RouterLink } from "@angular/router";
-import { SiteModelView } from './view-model';
+import { DeviceStatus, DeviceType, SiteModelView } from './view-model';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
 import { ViewGlobalItem } from '../service/dtos/view-global.dtos';
@@ -108,7 +108,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     exportCSV() {
-        const exportData = this.filteredSites.map(site => site.toFlatTableData()).flat();
+        const exportData = this.filteredSites.map(site => site.toFlatTableData(DeviceType.ALL, this.value as DeviceStatus)).flat();
         this.exportFileService.toCSV(exportData, environment.viewGlobalExportFileName);
     }
 

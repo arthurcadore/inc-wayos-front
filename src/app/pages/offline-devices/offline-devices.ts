@@ -10,7 +10,7 @@ import { ActivatedRoute } from '@angular/router';
 import { EaceService } from "../service/eace.service";
 import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { MessageService } from "primeng/api";
-import { DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
+import { DeviceStatus, DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
 import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/dtos/view-global.dtos";
 import { IncCloudLastOfflineMoment } from "@/components/last-offline-moment/inccloud-last-offline-moment";
 import { DialogService } from "primeng/dynamicdialog";
@@ -109,7 +109,7 @@ export class OfflineDevices implements OnInit {
 
     exportCSV() {
         const selectedSites = this.sites.filter(site => site.getOfflineDevicesByType(this.deviceType).length > 0);
-        const exportData = selectedSites.map(site => site.toFlatTableData(this.deviceType)).flat();
+        const exportData = selectedSites.map(site => site.toFlatTableData(this.deviceType, DeviceStatus.OFFLINE)).flat();
         this.exportFileService.toCSV(exportData, environment.offlineDevicesExportFileName);
     }
 
