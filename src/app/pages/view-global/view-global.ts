@@ -110,8 +110,8 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     exportCSV() {
-        const exportData = this.filteredSites.map(site => site.toFlatTableData(DeviceType.ALL, this.value as DeviceStatus)).flat();
-        this.exportFileService.toCSV(exportData, environment.viewGlobalExportFileName);
+        const filteredSites = this.sites.map(site => site.toFlatTableData(DeviceType.ALL, this.value as DeviceStatus)).flat();
+        this.exportFileService.toCSV(filteredSites, environment.viewGlobalExportFileName);
     }
 
     ngOnInit(): void {
