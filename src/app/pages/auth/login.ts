@@ -9,6 +9,7 @@ import { RippleModule } from 'primeng/ripple';
 import { AuthService } from '../service/auth.service';
 import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
+import { environment } from '../../../environments/environment';
 
 @Component({
     selector: 'app-login',
@@ -26,6 +27,8 @@ import { MessageService } from 'primeng/api';
     templateUrl: './login.html',
 })
 export class Login {
+    version: string = environment.version;
+    
     form = new FormGroup({
         email: new FormControl('', [Validators.required, Validators.email]),
         password: new FormControl('', [Validators.required, Validators.minLength(4)]),

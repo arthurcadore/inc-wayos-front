@@ -8,6 +8,7 @@ import { Schools } from '@/pages/schools/schools';
 import { authGuard } from '@/pages/auth/auth.guard';
 import { OfflineDevices } from '@/pages/offline-devices/offline-devices';
 import { ConnectedDevices } from '@/pages/connected-devices/connected-devices';
+import { ChangelogPage } from '@/pages/changelog/changelog';
 
 export const appRoutes: Routes = [
 
@@ -22,6 +23,7 @@ export const appRoutes: Routes = [
             { path: 'school-details', component: SchoolDetails },
             { path: 'offline-devices', component: OfflineDevices },
             { path: 'connected-devices', component: ConnectedDevices },
+            { path: 'changelog', component: ChangelogPage },
         ],
     },
     { path: 'notfound', component: Notfound },

@@ -5,6 +5,7 @@ import { provideRouter, withEnabledBlockingInitialNavigation, withInMemoryScroll
 import Aura from '@primeuix/themes/aura';
 import { providePrimeNG } from 'primeng/config';
 import { MessageService } from 'primeng/api';
+import { provideMarkdown } from 'ngx-markdown';
 import { appRoutes } from './app.routes';
 import { authInterceptor } from './app/services/auth.interceptor';
 
@@ -14,6 +15,7 @@ export const appConfig: ApplicationConfig = {
         provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
         provideAnimationsAsync(),
         providePrimeNG({ theme: { preset: Aura, options: { darkModeSelector: '.app-dark' } } }),
+        provideMarkdown(),
         MessageService
     ]
 };

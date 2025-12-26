@@ -7,7 +7,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
 import { IconFieldModule } from 'primeng/iconfield';
 import { EaceService } from '../service/eace.service';
-import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { environment } from '../../../environments/environment';
 import { RouterLink } from "@angular/router";
@@ -57,13 +56,13 @@ export class ViewGlobal implements OnInit, OnDestroy {
     sites: SiteModelView[] = [];
     filteredSites: SiteModelView[] = [];
 
+    private viewGlobalSubscription: any = null;
+
     // Variáveis de controle do timer de atualização
     private refreshInterval: any = null;
     private timeRemaining: number = 0;
-    private isPageVisible: boolean = true;
     private isLoading: boolean = false;
     private readonly refreshIntervalSeconds: number;
-    private visibilityChangeListener: any;
 
     // Opções do filtro de status
     stateOptions: any[] = [
@@ -75,7 +74,6 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
     constructor(
         private readonly eaceService: EaceService,
-        private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
         private readonly exportFileService: ExportFileService,
@@ -118,29 +116,14 @@ export class ViewGlobal implements OnInit, OnDestroy {
         // Carregar dados inicialmente
         this.getViewGlobal();
 
-        // Configurar listener de visibilidade da página
-        this.visibilityChangeListener = () => {
-            const wasVisible = this.isPageVisible;
-            this.isPageVisible = !document.hidden;
-
-            // Se a página voltou a ser visível, atualizar dados imediatamente
-            if (!wasVisible && this.isPageVisible && !this.isLoading) {
-                this.getViewGlobal();
-                this.timeRemaining = this.refreshIntervalSeconds;
-            }
-        };
-
-        document.addEventListener('visibilitychange', this.visibilityChangeListener);
-
         // Iniciar timer de atualização
         this.startRefreshTimer();
     }
 
     getViewGlobal(): void {
-        // Pausar o contador durante o carregamento
         this.isLoading = true;
-        this.loadingModalService.show();
-        this.eaceService.getViewGlobalData().subscribe({
+        this.refreshedAtFormat = 'Atualizando...';
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
                 this.refreshedAtFormat = data.refreshedAtFormat;
                 this.refreshedAt = new Date(data.refreshedAt);
@@ -158,7 +141,6 @@ export class ViewGlobal implements OnInit, OnDestroy {
                 this.applyFilter();
             },
             error: (err) => {
-                this.loadingModalService.hide();
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
@@ -166,17 +148,12 @@ export class ViewGlobal implements OnInit, OnDestroy {
                 });
             },
             complete: () => {
-                this.loadingModalService.hide();
-                // Reiniciar contador após finalização do carregamento
                 this.isLoading = false;
                 this.timeRemaining = this.refreshIntervalSeconds;
             },
         });
     }
 
-    /**
-     * Inicia o timer de atualização automática
-     */
     private startRefreshTimer(): void {
         // Limpar qualquer intervalo anterior
         if (this.refreshInterval) {
@@ -185,14 +162,16 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
         // Criar novo intervalo que executa a cada segundo
         this.refreshInterval = setInterval(() => {
-            // Só decrementar se a página estiver visível E não estiver carregando
-            if (this.isPageVisible && !this.isLoading) {
+            // Só decrementar se não estiver carregando
+            if (!this.isLoading) {
                 this.timeRemaining--;
 
                 // Quando chegar a zero, atualizar dados
                 if (this.timeRemaining <= 0) {
                     this.getViewGlobal();
                 }
+            } else {
+                this.refreshedAtFormat = 'Atualizando...';
             }
         }, 1000);
     }
@@ -234,15 +213,13 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        // Limpar intervalo de atualização
         if (this.refreshInterval) {
             clearInterval(this.refreshInterval);
             this.refreshInterval = null;
         }
 
-        // Remover listener de visibilidade
-        if (this.visibilityChangeListener) {
-            document.removeEventListener('visibilitychange', this.visibilityChangeListener);
+        if (this.viewGlobalSubscription) {
+            this.viewGlobalSubscription.unsubscribe();
         }
     }
 }

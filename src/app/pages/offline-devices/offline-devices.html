@@ -28,6 +28,9 @@
                         placeholder="Pesquisar por INEP" />
                 </p-iconfield>
             </div>
+            @if (isLoading) {
+                <p class="text-gray-500">Atualizando...</p>
+            }
         </ng-template>
         <ng-template #header>
             <tr>

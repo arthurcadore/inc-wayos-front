@@ -1,5 +1,5 @@
 import { CommonModule } from "@angular/common";
-import { Component, OnInit, ViewChild } from "@angular/core";
+import { Component, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ButtonModule } from "primeng/button";
 import { CardModule } from "primeng/card";
 import { IconFieldModule } from "primeng/iconfield";
@@ -8,7 +8,6 @@ import { InputTextModule } from "primeng/inputtext";
 import { Table, TableModule } from "primeng/table";
 import { ActivatedRoute } from '@angular/router';
 import { EaceService } from "../service/eace.service";
-import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { MessageService } from "primeng/api";
 import { DeviceStatus, DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
 import { IncCloudDevice, ViewGlobalItem, WayosRouterInfo } from "../service/dtos/view-global.dtos";
@@ -44,17 +43,19 @@ import { PopoverModule } from 'primeng/popover';
     `],
     templateUrl: './offline-devices.html',
 })
-export class OfflineDevices implements OnInit {
+export class OfflineDevices implements OnInit, OnDestroy {
     @ViewChild('dt2') dt2!: Table;
 
     deviceType: DeviceType = DeviceType.ROUTER;
     sites: SiteModelView[] = [];
     offlineDevices: OfflineDevice[] = [];
 
+    isLoading: boolean = false;
+    private viewGlobalSubscription: any = null;
+
     constructor(
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
-        private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
         private readonly exportFileService: ExportFileService,
@@ -74,8 +75,8 @@ export class OfflineDevices implements OnInit {
     }
 
     async loadData(): Promise<void> {
-        this.loadingModalService.show();
-        this.eaceService.getViewGlobalData().subscribe({
+        this.isLoading = true;
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
                 this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
                 const offlineDevices: OfflineDevice[] = [];
@@ -90,7 +91,6 @@ export class OfflineDevices implements OnInit {
                 this.offlineDevices = offlineDevices;
             },
             error: (err) => {
-                this.loadingModalService.hide();
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
@@ -98,7 +98,7 @@ export class OfflineDevices implements OnInit {
                 });
             },
             complete: () => {
-                this.loadingModalService.hide();
+                this.isLoading = false;
             },
         });
     }
@@ -145,6 +145,12 @@ export class OfflineDevices implements OnInit {
                 dismissableMask: true,
                 style: { 'background-color': '#f1f5f9' },
             });
+        }
+    }
+
+    ngOnDestroy(): void {
+        if (this.viewGlobalSubscription) {
+            this.viewGlobalSubscription.unsubscribe();
         }
     }
 }
