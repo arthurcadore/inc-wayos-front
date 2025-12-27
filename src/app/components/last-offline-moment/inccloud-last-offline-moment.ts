@@ -1,4 +1,3 @@
-import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { RegionDevice } from "@/pages/service/dtos/alarm-log.dto";
 import { EaceService } from "@/pages/service/eace.service";
 import { CommonModule } from "@angular/common";
@@ -44,6 +43,12 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
                     </div>
                 </div>
             }
+            @if (isLoading) {
+                <div class="flex justify-center items-center mt-4">
+                    <i class="pi pi-spin pi-spinner text-gray-500"></i>&nbsp;&nbsp;
+                    <span class="text-gray-500">Atualizando...</span>
+                </div>
+            }
         </p-panel>
         @if(showError) {
             <div class="p-4 rounded-md border border-red-300 bg-red-50">
@@ -69,9 +74,10 @@ export class IncCloudLastOfflineMoment implements OnInit {
     showError: boolean = false;
     errorMessage: string = '';
 
+    isLoading: boolean = false;
+
     constructor(
         private readonly eaceService: EaceService,
-        private readonly loadingModalService: LoadingModalService,
         private readonly config: DynamicDialogConfig,
     ) {}
 
@@ -84,20 +90,19 @@ export class IncCloudLastOfflineMoment implements OnInit {
     }
 
     getData(): void {
-        this.loadingModalService.show();
-
+        this.isLoading = true;
         this.eaceService.getIncCloudLastOfflineMomentList(this.deviceSerial!).subscribe({
             next: (data: RegionDevice[]) => {
                 this.offlineMoments = data;
                 this.hasOfflineMoments = data.length > 0 ? 'has-data' : 'no-data';
             },
             error: (err) => {
-                this.loadingModalService.hide();                
+                this.isLoading = false;
                 this.showError = true;
                 this.errorMessage = err.error.message ||  err.message || 'Erro desconhecido ao buscar dados do último momento offline.';
             },
             complete: () => {
-                this.loadingModalService.hide();
+                this.isLoading = false;
             },
         });
     }

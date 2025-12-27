@@ -7,6 +7,16 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.2.0] - 2025-12-27
+
+### Status
+**BETA** - Versão inicial em desenvolvimento
+
+### Alterações
+- Alterado mecanismo de loading (modias Último Momento Offline - Roteador, Switches e APs) para uma tipo discreto sem bloquear a página.
+
+---
+
 ## [0.1.0] - 2025-12-26
 
 ### Status
@@ -29,7 +39,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Página para apresentar as CHANGELOG (Acessível pelo link no rodapé "versão: X.X.X")
 
 ### Alterações
-- Alterado mecanismo de loading para uma tipo discreto sem bloquear a página.
+- Alterado mecanismo de loading (página Visão Global da Rede) para uma tipo discreto sem bloquear a página.
 
 ### Tecnologias
 - Angular 18+
