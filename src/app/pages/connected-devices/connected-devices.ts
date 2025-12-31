@@ -1,7 +1,6 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnDestroy, OnInit } from "@angular/core";
 import { ButtonModule } from "primeng/button";
 import { EaceService } from "../service/eace.service";
-import { LoadingModalService } from "@/layout/component/app.loading-modal";
 import { MessageService } from "primeng/api";
 import { ActivatedRoute } from "@angular/router";
 import { CardModule } from "primeng/card";
@@ -23,103 +22,10 @@ import { ExportFileService } from "@/services/export-file";
         InputIconModule,
         IconFieldModule,
     ],
-    template: `
-    <div class="flex flex-row justify-between items-center mb-3">
-        <div>
-            <div class="text-3xl font-extrabold">Dispositivos Conectados</div>
-            <div class="font-normal">Total de dispositivos: {{totalDevices}}</div>
-        </div>
-        <p-button label="Exportar Excel" (onClick)="exportCSV()" />
-    </div>
-    <p-card>
-        <p-table
-            #dt2
-            [value]="devices"
-            dataKey="id"
-            [paginator]="true"
-            [globalFilterFields]="['type', 'operatingSystem', 'brand', 'macAddress', 'ipAddress']"
-            [rows]="10"
-            [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]"
-            [tableStyle]="{ 'min-width': '50rem' }"
-        >
-            <ng-template #caption>
-                <div class="flex">
-                    <p-iconfield iconPosition="left" class="ml-auto">
-                        <p-inputicon>
-                            <i class="pi pi-search"></i>
-                        </p-inputicon>
-                        <input pInputText type="text" (input)="dt2.filterGlobal(getTargetValue($event), 'contains')" placeholder="Pesquisar por Site" />
-                    </p-iconfield>
-                </div>
-            </ng-template>
-            <ng-template #header>
-                <tr>
-                    <th pSortableColumn="type" style="width:20%">
-                        <div class="font-extrabold">Tipo <p-sortIcon field="type" /></div>
-                    </th>
-                    <th pSortableColumn="operatingSystem" style="width:20%">
-                        <div class="font-extrabold">Sistema Operacional <p-sortIcon field="operatingSystem" /></div>
-                    </th>
-                    <th pSortableColumn="brand" style="width:20%">
-                        <div class="font-extrabold">Marca <p-sortIcon field="brand" /></div>
-                    </th>
-                    <th pSortableColumn="macAddress" style="width:20%">
-                        <div class="font-extrabold">Endereço MAC <p-sortIcon field="macAddress" /></div>
-                    </th>
-                    <th pSortableColumn="ipAddress" style="width:20%">
-                        <div class="font-extrabold">Endereço IP <p-sortIcon field="ipAddress" /></div>
-                    </th>
-                </tr>
-            </ng-template>
-            <ng-template #body let-device>
-                <tr>
-                    <td>
-                        @switch (device.type) {
-                            @case('notebook') {
-                                <!-- <i class="pi pi-table text-green-500"></i>&nbsp; -->
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" style="width: 14px;display: inline-block;">
-                                    <path fill="#22c55e" d="m 31.635443,22.521604 v 1.771075 c 0,1.103822 -0.888637,1.992459 -1.992458,1.992459 H 2.3241545 c -1.1038224,0 -1.99245914,-0.888637 -1.99245914,-1.992459 V 22.521604 Z M 3.5865206,4.7908101 A 0.9832075,0.9832075 0 0 0 2.6034113,5.7739194 V 21.257889 H 4.5696298 V 6.7570285 H 27.334751 V 21.257889 H 29.30097 V 5.7739194 A 0.9832075,0.9832075 0 0 0 28.31786,4.7908101 Z"/>
-                                </svg>&nbsp;
-                            }
-                            @case('desktop') {
-                                <i class="pi pi-desktop text-green-500"></i>&nbsp;
-                            }
-                            @case('tablet') {
-                                <i class="pi pi-tablet text-green-500"></i>&nbsp;
-                            }
-                            @case('smartphone') {
-                                <i class="pi pi-mobile text-green-500"></i>&nbsp;
-                            }
-                            @case('smart-tv') {
-                                <i class="pi pi-desktop text-green-500"></i>&nbsp;
-                            }
-                            @default {
-                                <i class="pi pi-question-circle text-green-500"></i>&nbsp;
-                            }
-                        }
-                        <span>{{ device.type }}</span>
-                    </td>
-                    <td>{{ device.operatingSystem }}</td>
-                    <td>{{ device.brand }}</td>
-                    <td>{{ device.macAddress }}</td>
-                    <td>{{ device.ipAddress }}</td>
-                </tr>
-            </ng-template>
-            <ng-template #emptymessage>
-                <tr>
-                    <td colspan="6">
-                        <div class="text-center text-red-400">
-                            Não há dados disponíveis.
-                        </div>
-                    </td>
-                </tr>
-            </ng-template>
-        </p-table>
-    </p-card>
-    `
+    templateUrl: './connected-devices.html',
 })
-export class ConnectedDevices implements OnInit {
-    inep: string = '';
+export class ConnectedDevices implements OnInit, OnDestroy {
+    devSn: string = '';
     totalDevices: number = 0;
     devices: {
         type: 'notebook' | 'desktop' | 'tablet' | 'smartphone' | 'smart-tv' | 'other';
@@ -129,17 +35,19 @@ export class ConnectedDevices implements OnInit {
         ipAddress: string;
     }[] = [];
 
+    private cinnedtedDevicesSubscription: any = null;
+    isLoading: boolean = false;
+
     constructor(
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
-        private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService,
         private readonly exportFileService: ExportFileService,
     ) { }
 
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
-            this.inep = params['inep'] || '';
+            this.devSn = params['devSn'] || '';
             this.loadData();
         });
     }
@@ -151,66 +59,29 @@ export class ConnectedDevices implements OnInit {
     }
 
     loadData(): void {
-        this.loadingModalService.show();
-        setTimeout(() => {
-            // Simulated data fetch
-            this.devices = [
-                {
-                    type: 'notebook',
-                    operatingSystem: 'Windows 10',
-                    brand: 'Dell',
-                    macAddress: '00:1A:2B:3C:4D:5E',
-                    ipAddress: '192.168.1.100'
-                },
-                {
-                    type: 'smartphone',
-                    operatingSystem: 'Android 11',
-                    brand: 'Samsung',
-                    macAddress: '11:22:33:44:55:66',
-                    ipAddress: '192.168.1.101'
-                },
-                {
-                    type: 'tablet',
-                    operatingSystem: 'iOS 14',
-                    brand: 'Apple',
-                    macAddress: 'AA:BB:CC:DD:EE:FF',
-                    ipAddress: '192.168.1.102'
-                },
-                {
-                    type: 'desktop',
-                    operatingSystem: 'Ubuntu 20.04',
-                    brand: 'HP',
-                    macAddress: '77:88:99:AA:BB:CC',
-                    ipAddress: '192.168.1.103'
-                },
-                {
-                    type: 'smart-tv',
-                    operatingSystem: 'Tizen',
-                    brand: 'LG',
-                    macAddress: 'DD:EE:FF:00:11:22',
-                    ipAddress: '192.168.1.104'
-                },
-            ];
-            this.totalDevices = this.devices.length;
-            this.loadingModalService.hide();            
-        }, 1500);
-
-        // this.loadingModalService.show();
-        // this.eaceService.getViewGlobalData().subscribe({
-        //     next: (data) => {
-        //         // Extrair o parâmetro 'inep' da URL
-        //     },
-        //     error: (err) => {
-        //         this.messageService.add({
-        //             severity: 'error',
-        //             summary: 'Erro',
-        //             detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
-        //         });
-        //     },
-        //     complete: () => {
-        //         this.loadingModalService.hide();
-        //     },
-        // });
+        this.isLoading = true;
+        this.cinnedtedDevicesSubscription = this.eaceService.getConnectedDevices(this.devSn).subscribe({
+            next: (data) => {
+                this.devices = data.map(device => ({
+                    type: 'other',
+                    operatingSystem: 'n/d',
+                    brand: 'n/d',
+                    macAddress: device.mac,
+                    ipAddress: device.ip,
+                }));
+            },
+            error: (err) => {
+                this.isLoading = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                });
+            },
+            complete: () => {
+                this.isLoading = false;
+            },
+        });
     }
 
     exportCSV(): void {
@@ -224,5 +95,11 @@ export class ConnectedDevices implements OnInit {
         }));
 
         this.exportFileService.toCSV(exportData, environment.connectedDevicesExportFileName);
+    }
+
+    ngOnDestroy(): void {
+        if (this.cinnedtedDevicesSubscription) {
+            this.cinnedtedDevicesSubscription.unsubscribe();
+        }
     }
 }

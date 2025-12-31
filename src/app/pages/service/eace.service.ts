@@ -5,6 +5,7 @@ import { tap } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 import { ViewGlobalResponse } from "./dtos/view-global.dtos";
 import { RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
+import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -30,6 +31,16 @@ export class EaceService {
             tap(data => {
                 if (environment.enableDebug) {
                     console.log('[EaceService] Fetched IncCloud last moment offline data:', data);
+                }
+            })
+        );
+    }
+
+    public getConnectedDevices(sn: string): Observable<WayosGetDeviceOnlineUser[]> {
+        return this.httpService.get<WayosGetDeviceOnlineUser[]>(`/v1/connected-devices/${sn}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched connected devices data:', data);
                 }
             })
         );

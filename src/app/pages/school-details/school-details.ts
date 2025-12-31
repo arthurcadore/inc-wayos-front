@@ -39,16 +39,10 @@ import { CommonModule } from '@angular/common';
     templateUrl: './school-details.html',
 })
 export class SchoolDetails implements OnInit {
-    stateInfo: any = {
-        name: 'n/d',
-        online: false,
-        lastMomentOnline: 'n/d',
-        totalDevices: 0,
-    };
-
     inepInfo: any = {
         cityName: 'n/d',
         inep: 'n/d',
+        devSn: 'n/d',
         online: false,
         lastMomentOnline: 'n/d',
         totalDevices: 0,
@@ -83,6 +77,7 @@ export class SchoolDetails implements OnInit {
 
                     // Popule as informações da escola
                     this.inepInfo.cityName = this.siteModelView.city;
+                    this.inepInfo.devSn = this.siteModelView.router.sn;
                     this.inepInfo.online = this.siteModelView.hasOfflineDevices() ? false : true;
                     this.inepInfo.lastMomentOnline = 'Atualizando...';
                     this.inepInfo.totalDevices = this.siteModelView.switches.length + this.siteModelView.aps.length + 1; // +1 para o roteador

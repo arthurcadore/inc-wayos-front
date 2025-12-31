@@ -141,6 +141,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
                 this.applyFilter();
             },
             error: (err) => {
+                this.isLoading = false;
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
