@@ -7,6 +7,17 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.3.0] - 2025-12-31
+
+### Status
+**BETA** - Versão inicial em desenvolvimento
+
+### Adicionado
+- Página de Detalhes por Escolas
+- Adicionado informações de IP dos dispositivos da Inc (Switches e Access Points)
+
+---
+
 ## [0.2.0] - 2025-12-27
 
 ### Status

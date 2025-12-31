@@ -6,11 +6,14 @@
 </div>
 <p-card>
     <div class="text-xl font-extrabold mb-2">Hierarquia da Escola</div>
+    @if(isLoading) {
+        <p class="text-gray-500 mb-2">Atualizando...</p>
+    }
     <hr>
     <div class="grid grid-cols-5">
         <!-- Localidade -->
 
-        <div class="margin-padding font-bold">
+        <!-- <div class="margin-padding font-bold">
             <i class="pi pi-sitemap text-green-600"></i>&nbsp;
             <span>{{stateInfo.name}}</span>
         </div>
@@ -23,24 +26,18 @@
         </div>
         <div class="margin-padding">Última atualização: {{stateInfo.lastMomentOnline}}</div>
         <div class="margin-padding">Dispositivos: {{stateInfo.totalDevices}}</div>
+        <div class="margin-padding"></div> -->
+
+        <div class="margin-padding font-bold">
+            <i class="pi pi-map text-green-600"></i>&nbsp;
+            <span>{{inepInfo.cityName}}</span>
+        </div>
+        <div class="margin-padding"></div>
+        <div class="margin-padding"></div>
+        <div class="margin-padding"></div>
         <div class="margin-padding"></div>
 
         <div class="margin-padding font-bold" style="margin-left: 1rem;">
-            <i class="pi pi-map text-green-600"></i>&nbsp;
-            <span>{{cityInfo.name}}</span>
-        </div>
-        <div class="margin-padding">
-            @if(cityInfo.online) {
-            <span>Online</span>
-            } @else {
-            <span class="text-red-600">Offline</span>
-            }
-        </div>
-        <div class="margin-padding">Última atualização: {{cityInfo.lastMomentOnline}}</div>
-        <div class="margin-padding">Dispositivos: {{cityInfo.totalDevices}}</div>
-        <div class="margin-padding"></div>
-
-        <div class="margin-padding font-bold" style="margin-left: 2rem;">
             <i class="pi pi-graduation-cap text-green-600"></i>&nbsp;
             <span>{{inepInfo.inep}}</span>
         </div>
@@ -51,7 +48,20 @@
             <span class="text-red-600">Offline</span>
             }
         </div>
-        <div class="margin-padding">Última atualização: {{inepInfo.lastMomentOnline}}</div>
+        <div class="margin-padding">
+            <div>Último Momento Offline: </div>
+            @if(isLoadingLastMoment) {
+                <div class="text-gray-500">
+                    <i class="pi pi-spin pi-spinner text-gray-500"></i>&nbsp;&nbsp;
+                    <span class="text-gray-500">Atualizando...</span>
+                </div>
+            } @else {
+                <div class="text-gray-500">
+                    <i class="pi pi-clock"></i>&nbsp;
+                    {{inepInfo.lastMomentOnline | date:'dd/MM/yyyy HH:mm:ss'}}
+                </div>
+            }
+        </div>
         <div class="margin-padding">Dispositivos: {{inepInfo.totalDevices}}</div>
         <div class="margin-padding text-green-500 cursor-pointer">
             <a [routerLink]="['/connected-devices']" [queryParams]="{ inep: inepInfo.inep }">Dispositivos Online</a>
@@ -60,7 +70,7 @@
         <!-- Dispositivos da Escola -->
         <!-- Roteadores -->
         @if (siteModelView?.router) {
-        <div class="border-left margin-padding" style="margin-left: 3rem;">{{siteModelView?.router?.model || 'n/d'}}
+        <div class="border-left margin-padding" style="margin-left: 2rem;">{{siteModelView?.router?.model || 'n/d'}}
         </div>
         <div class="border-center margin-padding">
             @if(siteModelView?.router?.online) {
@@ -76,7 +86,7 @@
 
         <!-- Switches -->
         @for (item of siteModelView?.switches; track item) {
-        <div class="border-left margin-padding" style="margin-left: 3rem;">{{item.aliasName || 'n/d'}}</div>
+        <div class="border-left margin-padding" style="margin-left: 2rem;">{{item.aliasName || 'n/d'}}</div>
         <div class="border-center margin-padding">
             @if(item.online) {
             <span>Online</span>
@@ -84,14 +94,14 @@
             <span class="text-red-600">Offline</span>
             }
         </div>
-        <div class="border-center margin-padding">IP: (campo n/d)</div>
+        <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
         }
 
         <!-- Access Points -->
         @for (item of siteModelView?.aps; track item) {
-        <div class="border-left margin-padding" style="margin-left: 3rem;">{{item.aliasName || 'n/d'}}</div>
+        <div class="border-left margin-padding" style="margin-left: 2rem;">{{item.aliasName || 'n/d'}}</div>
         <div class="border-center margin-padding">
             @if(item.online) {
             <span>Online</span>
@@ -99,7 +109,7 @@
             <span class="text-red-600">Offline</span>
             }
         </div>
-        <div class="border-center margin-padding">IP: (campo n/d)</div>
+        <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
         }

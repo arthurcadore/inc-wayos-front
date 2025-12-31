@@ -2,9 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
-import { LoadingModalService } from '@/layout/component/app.loading-modal';
 import { MessageService } from 'primeng/api';
 import { SiteModelView } from '../view-global/view-model';
+import { CommonModule } from '@angular/common';
 
 @Component({
     selector: 'app-school-details',
@@ -12,6 +12,7 @@ import { SiteModelView } from '../view-global/view-model';
     imports: [
         CardModule,
         RouterLink,
+        CommonModule,
     ],
     styles: `
     .margin-padding {
@@ -45,14 +46,8 @@ export class SchoolDetails implements OnInit {
         totalDevices: 0,
     };
 
-    cityInfo: any = {
-        name: 'n/d',
-        online: false,
-        lastMomentOnline: 'n/d',
-        totalDevices: 0,
-    };
-
     inepInfo: any = {
+        cityName: 'n/d',
         inep: 'n/d',
         online: false,
         lastMomentOnline: 'n/d',
@@ -60,11 +55,14 @@ export class SchoolDetails implements OnInit {
     };
 
     siteModelView: SiteModelView | null = null;
+    isLoading: boolean = false;
+    private viewGlobalSubscription: any = null;
+    isLoadingLastMoment: boolean = false;
+    private lastMomentSubscription: any = null;
 
     constructor(
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
-        private readonly loadingModalService: LoadingModalService,
         private readonly messageService: MessageService
     ) { }
 
@@ -76,21 +74,23 @@ export class SchoolDetails implements OnInit {
     }
 
     async loadData(): Promise<void> {
-        this.loadingModalService.show();
-        this.eaceService.getViewGlobalData().subscribe({
+        this.isLoading = true;
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
             next: (data) => {
                 const devices = data.data.find(item => item.inep === this.inepInfo.inep);
                 if (devices) {
                     this.siteModelView = new SiteModelView(devices, data.refreshedAt);
 
                     // Popule as informações da escola
+                    this.inepInfo.cityName = this.siteModelView.city;
                     this.inepInfo.online = this.siteModelView.hasOfflineDevices() ? false : true;
-                    this.inepInfo.lastMomentOnline = '💀'; // this.siteModelView.getOfflineDuration();
+                    this.inepInfo.lastMomentOnline = 'Atualizando...';
                     this.inepInfo.totalDevices = this.siteModelView.switches.length + this.siteModelView.aps.length + 1; // +1 para o roteador
+                    this.loadLastMomentOnline();
                 }
             },
             error: (err) => {
-                this.loadingModalService.show();
+                this.isLoading = false;
                 this.messageService.add({
                     severity: 'error',
                     summary: 'Erro',
@@ -98,8 +98,38 @@ export class SchoolDetails implements OnInit {
                 });
             },
             complete: () => {
-                this.loadingModalService.hide();
+                this.isLoading = false;
             },
         });
+    }
+
+    async loadLastMomentOnline(): Promise<void> {
+        this.isLoadingLastMoment = true;
+        this.lastMomentSubscription = this.lastMomentSubscription = this.eaceService.getWayosLastOfflineMomentList(this.siteModelView?.router.sceneId!).subscribe({
+            next: (data) => {
+                this.inepInfo.lastMomentOnline = data.at(0)?.happen_at || 'n/d';
+            },
+            error: (err) => {
+                this.isLoadingLastMoment = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: `Falha ao buscar último momento online - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                });
+            },
+            complete: () => {
+                this.isLoadingLastMoment = false;
+            },
+        });
+    }
+
+    async ngOnDestroy(): Promise<void> {
+        if (this.viewGlobalSubscription) {
+            this.viewGlobalSubscription.unsubscribe();
+        }
+
+        if (this.lastMomentSubscription) {
+            this.lastMomentSubscription.unsubscribe();
+        }
     }
 }

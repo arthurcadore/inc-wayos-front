@@ -16,6 +16,7 @@ export interface IncCloudDevice {
     onlineTime: number;
     firstOnlineTime: number;
     aliasName: string;
+    devIp: string;
 }
 
 export interface ViewGlobalItem {
