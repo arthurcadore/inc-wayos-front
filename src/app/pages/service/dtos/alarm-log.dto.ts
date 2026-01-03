@@ -68,3 +68,18 @@ export interface RegionDevice {
     addTimeStr: string;
     firstOnlineTimeStr: string;
 }
+
+export interface AlarmCommentViewModel {
+    id: string;
+    text: string;
+    timestamp: string;
+    editedAt: string | null;
+}
+
+export interface AlarmViewModel {
+    id: string;
+    title: string;
+    timestamp: string;
+    isSolved: boolean;
+    comments: AlarmCommentViewModel[];
+}

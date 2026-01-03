@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
@@ -38,7 +38,7 @@ import { CommonModule } from '@angular/common';
     `,
     templateUrl: './school-details.html',
 })
-export class SchoolDetails implements OnInit {
+export class SchoolDetails implements OnInit, OnDestroy {
     inepInfo: any = {
         cityName: 'n/d',
         inep: 'n/d',

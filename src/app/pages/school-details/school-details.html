@@ -49,7 +49,7 @@
         </div>
         <div class="margin-padding">Dispositivos: {{inepInfo.totalDevices}}</div>
         <div class="margin-padding text-green-500 cursor-pointer">
-            <a [routerLink]="['/connected-devices']" [queryParams]="{ devSn: inepInfo.devSn }">Dispositivos Online</a>
+            <a [routerLink]="['/connected-devices']" [queryParams]="{ deviceType: inepInfo.devSn }">Dispositivos Online</a>
         </div>
 
         <!-- Dispositivos da Escola -->
@@ -66,7 +66,9 @@
         </div>
         <div class="border-center margin-padding">IP: {{siteModelView?.router?.lanIp}}</div>
         <div class="border-center margin-padding text-green-500 cursor-pointer">Template do Firewall</div>
-        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">
+            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'router', value: siteModelView?.router?.sceneId}">Alarmes</a>
+        </div>
         }
 
         <!-- Switches -->
@@ -81,7 +83,9 @@
         </div>
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
-        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">
+            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'switch', value: item.sn }">Alarmes</a>
+        </div>
         }
 
         <!-- Access Points -->
@@ -96,7 +100,9 @@
         </div>
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
-        <div class="border-right margin-padding text-green-500 cursor-pointer">Alarmes</div>
+        <div class="border-right margin-padding text-green-500 cursor-pointer">
+            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'ap', value: item.sn }">Alarmes</a>
+        </div>
         }
     </div>
 </p-card>

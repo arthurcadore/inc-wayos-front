@@ -4,7 +4,7 @@ import { Observable, of } from "rxjs";
 import { tap } from "rxjs/operators";
 import { environment } from "../../../environments/environment";
 import { ViewGlobalResponse } from "./dtos/view-global.dtos";
-import { RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
+import { AlarmViewModel, RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
 import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
 
 @Injectable({
@@ -15,6 +15,16 @@ export class EaceService {
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
     constructor(private httpService: HttpService) {}
+
+    public getAlarms(deviceType: string, value: number | string, dayRange: number): Observable<AlarmViewModel[]> {
+        return this.httpService.get<AlarmViewModel[]>(`/v1/alarms/device-type/${deviceType}/value/${value}/day-range/${dayRange}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched alarms data:', data);
+                }
+            })
+        );
+    }
 
     public getWayosLastOfflineMomentList(sceneId: number): Observable<WayosAlarmLogItem[]> {
         return this.httpService.get<WayosAlarmLogItem[]>(`/v1/wayos-last-offline-moment-list/${sceneId}`).pipe(

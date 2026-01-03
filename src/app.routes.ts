@@ -9,6 +9,7 @@ import { authGuard } from '@/pages/auth/auth.guard';
 import { OfflineDevices } from '@/pages/offline-devices/offline-devices';
 import { ConnectedDevices } from '@/pages/connected-devices/connected-devices';
 import { ChangelogPage } from '@/pages/changelog/changelog';
+import { AlarmDetails } from '@/pages/alarm-details/alarm-details';
 
 export const appRoutes: Routes = [
 
@@ -23,6 +24,7 @@ export const appRoutes: Routes = [
             { path: 'school-details', component: SchoolDetails },
             { path: 'offline-devices', component: OfflineDevices },
             { path: 'connected-devices', component: ConnectedDevices },
+            { path: 'alarm-details', component: AlarmDetails },
             { path: 'changelog', component: ChangelogPage },
         ],
     },
