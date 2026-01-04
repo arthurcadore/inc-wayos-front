@@ -34,7 +34,7 @@ import { AddComment } from './components/add-comment';
         SelectButtonModule,
         FormsModule,
     ],
-    providers: [MessageService, DialogService],
+    providers: [DialogService],
     templateUrl: './alarm-details.html',
 })
 export class AlarmDetails implements OnInit, OnDestroy {
@@ -66,6 +66,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
         { label: 'Fechados', value: 'solved' },
     ];
     selectedFilterOption: string = 'all';
+    currentSearchText: string = '';
 
     isAlarmsLoading: boolean = false;
     private alarmSubscription: any = null;
@@ -75,6 +76,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
 
     selectedAlarm: AlarmViewModel | null = null;
     alarms: AlarmViewModel[] = [];
+    filteredAlarms: AlarmViewModel[] = [];
 
     menuItens: MenuItem[] = [];
 
@@ -86,20 +88,36 @@ export class AlarmDetails implements OnInit, OnDestroy {
     ) { }
 
     applyFilter(): void {
-        // if (this.value === 'all') {
-        //     this.filteredSites = [...this.sites];
-        // } else if (this.value === 'online') {
-        //     // Sites online = sites SEM nenhum device offline
-        //     this.filteredSites = this.sites.filter(site => !site.hasOfflineDevices());
-        // } else if (this.value === 'offline') {
-        //     // Sites offline = sites COM pelo menos um device offline
-        //     this.filteredSites = this.sites.filter(site => site.hasOfflineDevices());
-        // }
+        let filtered = [...this.alarms];
+
+        // Aplicar filtro de status baseado em selectedFilterOption
+        if (this.selectedFilterOption === 'open') {
+            filtered = filtered.filter(alarm => alarm.isSolved === false);
+        } else if (this.selectedFilterOption === 'solved') {
+            filtered = filtered.filter(alarm => alarm.isSolved === true);
+        }
+        // 'all' mostra todos os alarmes, sem filtro adicional
+
+        // Aplicar filtro de texto se houver busca ativa
+        if (this.currentSearchText && this.currentSearchText.trim() !== '') {
+            const searchLower = this.currentSearchText.toLowerCase().trim();
+            filtered = filtered.filter(alarm => {
+                // Buscar no título do alarme
+                const titleMatch = alarm.title.toLowerCase().includes(searchLower);
+                // Buscar no texto de qualquer comentário
+                const commentMatch = alarm.comments.some(comment =>
+                    comment.text.toLowerCase().includes(searchLower)
+                );
+                return titleMatch || commentMatch;
+            });
+        }
+
+        this.filteredAlarms = filtered;
     }
 
     searchAlarms(event: any): void {
-        // Placeholder for search functionality
-        console.log('Search input:', event.target.value);
+        this.currentSearchText = event.target.value || '';
+        this.applyFilter();
     }
 
     async getDeviceDetails(): Promise<void> {
@@ -134,6 +152,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     severity: 'error',
                     summary: 'Erro',
                     detail: `Falha ao buscar dados do dispositivo - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                    life: 5000,
                 });
             },
             complete: () => {
@@ -148,6 +167,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
             next: (data) => {
                 this.isAlarmsLoading = false;
                 this.alarms = data;
+                this.applyFilter();
             },
             error: (err) => {
                 this.isAlarmsLoading = false;
@@ -199,7 +219,8 @@ export class AlarmDetails implements OnInit, OnDestroy {
                             style: { 'background-color': '#f1f5f9' },
                         }).onClose.subscribe((result) => {
                             if (result) {
-                                // Handle result if needed
+                                this.getDeviceDetails();
+                                this.getData();
                             }
                             console.log('Comment added:', result);
                         });

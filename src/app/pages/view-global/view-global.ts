@@ -35,7 +35,7 @@ import { PopoverModule } from 'primeng/popover';
         FormsModule,
         PopoverModule,
     ],
-    providers: [MessageService, DialogService],
+    providers: [DialogService],
     templateUrl: './view-global.html',
 })
 export class ViewGlobal implements OnInit, OnDestroy {
@@ -146,6 +146,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
                     severity: 'error',
                     summary: 'Erro',
                     detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                    life: 5000,
                 });
             },
             complete: () => {

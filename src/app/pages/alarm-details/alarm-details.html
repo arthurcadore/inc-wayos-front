@@ -51,7 +51,7 @@
         </p-iconfield>
     </div>
 
-    @for (item of alarms; track item) {
+    @for (item of filteredAlarms; track item) {
     <p-panel [toggleable]="true" [collapsed]="item.isSolved === true" class="mb-4" [style]="{ background: '#ffdddd' }">
         <ng-template #header>
             <div class="flex justify-between items-center">
