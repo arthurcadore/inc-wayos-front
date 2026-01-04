@@ -82,4 +82,7 @@ export interface AlarmViewModel {
     timestamp: string;
     isSolved: boolean;
     comments: AlarmCommentViewModel[];
+
+    // Campos adicionais para exibição
+    collapsed?: boolean;
 }

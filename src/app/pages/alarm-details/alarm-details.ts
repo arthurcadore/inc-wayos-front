@@ -16,24 +16,26 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
 import { DialogService } from 'primeng/dynamicdialog';
 import { AddComment } from './components/add-comment';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
     selector: 'app-alarm-details',
     standalone: true,
     imports: [
-        CommonModule,
-        RouterLink,
-        PanelModule,
-        CardModule,
-        TagModule,
-        ButtonModule,
-        MenuModule,
-        InputTextModule,
-        InputIconModule,
-        IconFieldModule,
-        SelectButtonModule,
-        FormsModule,
-    ],
+    CommonModule,
+    RouterLink,
+    PanelModule,
+    CardModule,
+    TagModule,
+    ButtonModule,
+    MenuModule,
+    InputTextModule,
+    InputIconModule,
+    IconFieldModule,
+    SelectButtonModule,
+    FormsModule,
+    TooltipModule
+],
     providers: [DialogService],
     templateUrl: './alarm-details.html',
 })
@@ -166,6 +168,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
         this.alarmSubscription = this.eaceService.getAlarms(this.deviceType!, this.value!, 15).subscribe({
             next: (data) => {
                 this.isAlarmsLoading = false;
+                data.forEach(alarm => alarm.collapsed = alarm.isSolved === true);
                 this.alarms = data;
                 this.applyFilter();
             },
@@ -200,6 +203,10 @@ export class AlarmDetails implements OnInit, OnDestroy {
         if (this.viewGlobalSubscription) {
             this.viewGlobalSubscription.unsubscribe();
         }
+    }
+
+    collapseAlarms(): void {
+        this.filteredAlarms.forEach(alarm => alarm.collapsed = true);
     }
 
     buildMenu(alarm: AlarmViewModel): MenuItem[] {
