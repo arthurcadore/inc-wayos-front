@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
-import { MenuItem, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
@@ -18,6 +18,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { AddComment } from './components/add-comment';
 import { TooltipModule } from 'primeng/tooltip';
 import { EditComment } from './components/edit-comment';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
 
 @Component({
     selector: 'app-alarm-details',
@@ -35,9 +36,10 @@ import { EditComment } from './components/edit-comment';
     IconFieldModule,
     SelectButtonModule,
     FormsModule,
-    TooltipModule
+    TooltipModule,
+    ConfirmPopupModule,
 ],
-    providers: [DialogService],
+    providers: [DialogService, ConfirmationService],
     templateUrl: './alarm-details.html',
 })
 export class AlarmDetails implements OnInit, OnDestroy {
@@ -88,6 +90,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
         private readonly eaceService: EaceService,
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
+        private readonly confirmationService: ConfirmationService,
     ) { }
 
     applyFilter(): void {
@@ -274,6 +277,45 @@ export class AlarmDetails implements OnInit, OnDestroy {
                 this.getData();
             }
             console.log('Comment edited:', result);
+        });
+    }
+
+    removeComment(alarm: AlarmViewModel, alarmComment: AlarmCommentViewModel, event: Event): void {
+        this.confirmationService.confirm({
+            target: event.target as EventTarget,
+            message: 'Tem certeza que deseja remover este comentário?',
+            header: 'Confirmação',
+            icon: 'pi pi-exclamation-triangle',
+            rejectButtonProps: {
+                label: 'Não',
+                severity: 'secondary',
+                outlined: true
+            },
+            acceptButtonProps: {
+                label: 'Sim',
+                severity: 'danger',                
+            },
+            accept: () => {
+                this.isAlarmsLoading = true;
+                this.eaceService.deleteComment({ alarmId: alarm.id, alarmCommentId: alarmComment.id }).subscribe({
+                    next: () => {
+                        this.isAlarmsLoading = false;
+                        this.getDeviceDetails();
+                        this.getData();
+                    },
+                    error: (err) => {
+                        this.isAlarmsLoading = false;
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: `Falha ao remover comentário - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                        });
+                    },
+                    complete: () => {
+                        this.isAlarmsLoading = false;
+                    },
+                });
+            }
         });
     }
 }

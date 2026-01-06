@@ -16,6 +16,16 @@ export class EaceService {
 
     constructor(private httpService: HttpService) { }
 
+    public deleteComment({ alarmId, alarmCommentId }: { alarmId: string, alarmCommentId: string }): Observable<void> {
+        return this.httpService.delete<void>(`/v1/alarm/alarm-comments/alarmId/${alarmId}/alarmCommentId/${alarmCommentId}`).pipe(
+            tap(() => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Comment deleted');
+                }
+            })
+        );
+    }
+
     public updateComment({ alarmId, alarmCommentId, text }: { alarmId: string, alarmCommentId: string, text: string }): Observable<void> {
         return this.httpService.patch<void>(`/v1/alarm/alarm-comments`, { alarmId, alarmCommentId, text }).pipe(
             tap(() => {

@@ -86,8 +86,9 @@
                 </div>
                 @if (item.isSolved === false) {
                 <div>
-                    <p-button icon="pi pi-pencil" variant="text" severity="success" size="small" (onClick)="editComment(item, comment)"/>
-                    <p-button icon="pi pi-times" variant="text" severity="danger" size="small" />
+                    <p-button icon="pi pi-pencil" variant="text" severity="success" size="small" (click)="editComment(item, comment)"/>
+                    <p-button icon="pi pi-times" variant="text" severity="danger" size="small" (onClick)="removeComment(item, comment, $event)" />
+                    <p-confirmpopup />
                 </div>
                 }
             </div>
