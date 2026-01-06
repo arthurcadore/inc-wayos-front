@@ -14,7 +14,17 @@ export class EaceService {
     private readonly CACHE_KEY = 'view_global_cache';
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
-    constructor(private httpService: HttpService) {}
+    constructor(private httpService: HttpService) { }
+
+    public createComment({ alarmId, text }: { alarmId: string, text: string }): Observable<void> {
+        return this.httpService.post<void>(`/v1/alarm/alarm-comments`, { text, alarmId }).pipe(
+            tap(() => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Comment created for alarmId:', alarmId);
+                }
+            })
+        );
+    }
 
     public getAlarms(deviceType: string, value: number | string, dayRange: number): Observable<AlarmViewModel[]> {
         return this.httpService.get<AlarmViewModel[]>(`/v1/alarms/device-type/${deviceType}/value/${value}/day-range/${dayRange}`).pipe(
