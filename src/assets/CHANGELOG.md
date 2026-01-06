@@ -13,9 +13,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 **BETA** - Versão inicial em desenvolvimento
 
 ### Adicionado
-- Página de Detalhes por Escolas
-- Adicionado informações de IP dos dispositivos da Inc (Switches e Access Points)
+- Detalhes por Escolas
+- Informações de IP dos dispositivos da Inc (Switches e Access Points)
 - Página de Dispositivos Conectados
+- Página de Detalhes dos Alarmes
 
 ---
 
