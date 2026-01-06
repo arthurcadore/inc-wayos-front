@@ -1,0 +1,183 @@
+<div class="flex flex-row justify-between items-center mb-3">
+    <div>
+        <div class="text-3xl font-extrabold mb-2">Topologia de Rede</div>
+        <div class="font-normal">Visão detalhada da infraestrutura e conectividade</div>
+    </div>
+    <div class="flex gap-2">
+        <p-button 
+            icon="pi pi-plus" 
+            (onClick)="zoomIn()" 
+            [outlined]="true"
+            pTooltip="Aumentar zoom"
+            tooltipPosition="bottom"
+            severity="secondary" />
+        <p-button 
+            icon="pi pi-minus" 
+            (onClick)="zoomOut()" 
+            [outlined]="true"
+            pTooltip="Diminuir zoom"
+            tooltipPosition="bottom"
+            severity="secondary" />
+        <p-button 
+            icon="pi pi-arrows-alt" 
+            (onClick)="togglePanMode()" 
+            [outlined]="!isPanMode"
+            [pTooltip]="isPanMode ? 'Desativar modo pan' : 'Ativar modo pan (ou use o botão do meio do mouse)'"
+            tooltipPosition="bottom"
+            [severity]="isPanMode ? 'info' : 'secondary'" />
+        <p-button 
+            icon="pi pi-refresh" 
+            (onClick)="resetZoom()" 
+            [outlined]="true"
+            pTooltip="Resetar visualização"
+            tooltipPosition="bottom"
+            severity="secondary" />
+        <p-button 
+            icon="pi pi-file-pdf" 
+            (onClick)="exportToPdf()" 
+            [outlined]="true"
+            pTooltip="Exportar para PNG"
+            tooltipPosition="bottom"
+            severity="secondary" />
+    </div>
+</div>
+
+<p-card>
+    <div class="w-full overflow-auto border border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900">
+        <svg 
+            #topologySvg
+            [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
+            preserveAspectRatio="xMidYMin meet"
+            class="w-full h-auto bg-surface-0 dark:bg-surface-950"
+            [class.cursor-grab]="isPanMode && !isPanning"
+            [class.cursor-grabbing]="isPanning"
+            (mousedown)="onSvgMouseDown($event)"
+            (mousemove)="onSvgMouseMove($event)"
+            (mouseup)="onSvgMouseUp($event)"
+            (mouseleave)="onSvgMouseLeave($event)"
+            (contextmenu)="$event.preventDefault()">
+            <defs>
+                <!-- Definição de marcadores para setas -->
+                <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="10"
+                    refX="9"
+                    refY="3"
+                    orient="auto">
+                    <polygon 
+                        points="0 0, 10 3, 0 6" 
+                        fill="#6B7280" />
+                </marker>
+            </defs>
+            
+            <g [attr.transform]="getTransform()">
+                <!-- Linhas de conexão -->
+                <g *ngFor="let conn of connections">
+                    <line
+                        [attr.x1]="conn.from.x"
+                        [attr.y1]="conn.from.y + nodeHeight / 2"
+                        [attr.x2]="conn.to.x"
+                        [attr.y2]="conn.to.y - nodeHeight / 2"
+                        stroke="#6B7280"
+                        stroke-width="2"
+                        marker-end="url(#arrowhead)"
+                        class="transition-all" />
+                </g>
+                
+                <!-- Nós -->
+                <g *ngFor="let node of positionedNodes">
+                    <!-- Retângulo do nó -->
+                    <g 
+                        (click)="onNodeClick(node, $event)"
+                        [class.cursor-pointer]="!isPanMode"
+                        [attr.transform]="'translate(' + (node.x - nodeWidth/2) + ',' + (node.y - nodeHeight/2) + ')'">
+                        
+                        <!-- Sombra -->
+                        <rect
+                            x="2"
+                            y="2"
+                            [attr.width]="nodeWidth"
+                            [attr.height]="nodeHeight"
+                            rx="8"
+                            fill="rgba(0,0,0,0.1)" />
+                        
+                        <!-- Background do nó -->
+                        <rect
+                            [attr.width]="nodeWidth"
+                            [attr.height]="nodeHeight"
+                            rx="8"
+                            [attr.fill]="getNodeColor(node)"
+                            [attr.stroke]="selectedNode?.id === node.id ? '#fff' : 'none'"
+                            [attr.stroke-width]="selectedNode?.id === node.id ? '3' : '0'"
+                            class="transition-all" />
+                        
+                        <!-- Ícone -->
+                        <text
+                            [attr.x]="nodeWidth / 2"
+                            y="30"
+                            font-size="24"
+                            text-anchor="middle"
+                            fill="white"
+                            font-family="primeicons"
+                            class="pointer-events-none select-none">
+                            {{ getNodeIcon(node) }}
+                        </text>
+                        
+                        <!-- Descrição (multilinha) -->
+                        <foreignObject
+                            x="5"
+                            y="40"
+                            [attr.width]="nodeWidth - 10"
+                            [attr.height]="nodeHeight - 45">
+                            <div 
+                                xmlns="http://www.w3.org/1999/xhtml"
+                                class="text-white text-xs text-center font-medium px-1 whitespace-pre-line pointer-events-none select-none">
+                                {{ node.description }}
+                            </div>
+                        </foreignObject>
+                    </g>
+                </g>
+            </g>
+        </svg>
+    </div>
+    
+    <!-- Informações do nó selecionado -->
+    <div *ngIf="selectedNode" class="mt-4 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
+        <div class="flex justify-between items-start">
+            <div>
+                <h3 class="text-lg font-semibold mb-2">
+                    <i [class]="'pi ' + getNodeIcon(selectedNode) + ' mr-2'" [style.color]="getNodeColor(selectedNode)"></i>
+                    {{ selectedNode.description.split('\n')[0] }}
+                </h3>
+                <div class="text-sm text-surface-600 dark:text-surface-400">
+                    <p><strong>ID:</strong> {{ selectedNode.id }}</p>
+                    <p><strong>Nível:</strong> {{ selectedNode.level }}</p>
+                    <p *ngIf="selectedNode.parentId"><strong>Conectado a:</strong> {{ selectedNode.parentId }}</p>
+                </div>
+            </div>
+            <p-button
+                icon="pi pi-times"
+                (onClick)="selectedNode = null"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary" />
+        </div>
+    </div>
+    
+    <!-- Legenda -->
+    <div class="mt-4 flex gap-6 flex-wrap">
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded" style="background-color: #3B82F6;"></div>
+            <span class="text-sm">Roteadores</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded" style="background-color: #10B981;"></div>
+            <span class="text-sm">Switches</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded" style="background-color: #F59E0B;"></div>
+            <span class="text-sm">Access Points</span>
+        </div>
+    </div>
+</p-card>

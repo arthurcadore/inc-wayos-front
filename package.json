@@ -28,6 +28,7 @@
         "@primeuix/themes": "^1.2.1",
         "@tailwindcss/postcss": "^4.1.11",
         "chart.js": "4.4.2",
+        "jspdf": "^4.0.0",
         "marked": "^16.0.0",
         "ngx-markdown": "^20.1.0",
         "primeclt": "^0.1.5",

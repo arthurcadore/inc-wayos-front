@@ -10,6 +10,7 @@ import { OfflineDevices } from '@/pages/offline-devices/offline-devices';
 import { ConnectedDevices } from '@/pages/connected-devices/connected-devices';
 import { ChangelogPage } from '@/pages/changelog/changelog';
 import { AlarmDetails } from '@/pages/alarm-details/alarm-details';
+import { NetworkTopology } from '@/pages/network-topology/network-topology';
 
 export const appRoutes: Routes = [
 
@@ -25,6 +26,7 @@ export const appRoutes: Routes = [
             { path: 'offline-devices', component: OfflineDevices },
             { path: 'connected-devices', component: ConnectedDevices },
             { path: 'alarm-details', component: AlarmDetails },
+            { path: 'network-topology', component: NetworkTopology },
             { path: 'changelog', component: ChangelogPage },
         ],
     },
