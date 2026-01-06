@@ -60,7 +60,7 @@
             <div class="flex justify-between items-center">
                 <span class="pi pi-circle-fill mr-2" [style]="{ color: 'red' }"></span>
                 <span class="font-bold mr-2">{{ item.title }}</span>
-                <span class="text-gray-500 mr-2">{{ item.timestamp | date:'dd/MM/yyyy, HH:mm' }}</span>
+                <span class="text-gray-500 mr-2">{{ item.createdAt | date:'dd/MM/yyyy, HH:mm' }}</span>
                 @if (item.isSolved === false) {
                 <p-tag severity="danger" [style]="{ border: 'solid white 1px' }" [rounded]="true" value="Aberto" />
                 }
@@ -79,14 +79,14 @@
         <p-card class="mb-2">
             <div class="flex justify-between items-center">
                 <div>
-                    <span class="text-gray-400 mr-1">{{ comment.timestamp | date:'dd/MM/yyyy, HH:mm' }}</span>
-                    @if (comment.editedAt) {
+                    <span class="text-gray-400 mr-1">{{ comment.createdAt | date:'dd/MM/yyyy, HH:mm' }}</span>
+                    @if (comment.createdAt !== comment.updatedAt) {
                     <span class="text-gray-400 text-sm italic">(editado)</span>
                     }
                 </div>
                 @if (item.isSolved === false) {
                 <div>
-                    <p-button icon="pi pi-pencil" variant="text" severity="success" size="small" />
+                    <p-button icon="pi pi-pencil" variant="text" severity="success" size="small" (onClick)="editComment(item, comment)"/>
                     <p-button icon="pi pi-times" variant="text" severity="danger" size="small" />
                 </div>
                 }

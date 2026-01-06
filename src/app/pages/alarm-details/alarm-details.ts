@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenuModule } from 'primeng/menu';
-import { AlarmViewModel } from '../service/dtos/alarm-log.dto';
+import { AlarmCommentViewModel, AlarmViewModel } from '../service/dtos/alarm-log.dto';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { FormsModule } from '@angular/forms';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -17,6 +17,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { DialogService } from 'primeng/dynamicdialog';
 import { AddComment } from './components/add-comment';
 import { TooltipModule } from 'primeng/tooltip';
+import { EditComment } from './components/edit-comment';
 
 @Component({
     selector: 'app-alarm-details',
@@ -216,7 +217,6 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     label: 'Comentar',
                     icon: 'pi pi-comment',
                     command: () => {
-                        console.log('Open add comment dialog');
                         this.dialogService.open(AddComment, {
                             header: 'Adicionar Comentário',
                             styleClass: 'w-full md:w-[45%] mx-auto',
@@ -258,5 +258,22 @@ export class AlarmDetails implements OnInit, OnDestroy {
         this.selectedAlarm = alarm;
         this.menuItens = this.buildMenu(alarm); // Atualiza os itens aqui
         menu.toggle(event);
+    }
+
+    editComment(alarm: AlarmViewModel, alarmComment: AlarmCommentViewModel): void {
+        this.dialogService.open(EditComment, {
+            header: 'Editar Comentário',
+            styleClass: 'w-full md:w-[45%] mx-auto',
+            data: { alarmId: alarm.id, alarmCommentId: alarmComment.id, text: alarmComment.text },
+            closable: true,
+            dismissableMask: true,
+            style: { 'background-color': '#f1f5f9' },
+        }).onClose.subscribe((result) => {
+            if (result) {
+                this.getDeviceDetails();
+                this.getData();
+            }
+            console.log('Comment edited:', result);
+        });
     }
 }

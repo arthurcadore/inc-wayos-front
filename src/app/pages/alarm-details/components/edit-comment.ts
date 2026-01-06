@@ -1,13 +1,13 @@
 import { EaceService } from "@/pages/service/eace.service";
-import { Component, OnInit } from "@angular/core"
+import { Component, OnInit } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
 import { MessageService } from "primeng/api";
 import { ButtonModule } from "primeng/button";
 import { DynamicDialogConfig, DynamicDialogRef } from "primeng/dynamicdialog";
-import { TextareaModule } from 'primeng/textarea';
+import { TextareaModule } from "primeng/textarea";
 
 @Component({
-    selector: 'app-add-comment',
+    selector: 'app-edit-comment',
     standalone: true,
     imports: [
         ReactiveFormsModule,
@@ -30,7 +30,7 @@ import { TextareaModule } from 'primeng/textarea';
         </form>
     `,
 })
-export class AddComment implements OnInit {
+export class EditComment implements OnInit {
     isLoading = false;
     form!: FormGroup;
 
@@ -44,7 +44,7 @@ export class AddComment implements OnInit {
 
     async handlePost(): Promise<void> {
         this.isLoading = true;
-        this.eaceService.createComment(this.form.value as any).subscribe({
+        this.eaceService.updateComment(this.form.value as any).subscribe({
             next: () => {
                 this.isLoading = false;
                 // No action needed here, handled in complete
@@ -53,8 +53,8 @@ export class AddComment implements OnInit {
                 this.isLoading = false;
                 this.messageService.add({
                     severity: 'error',
-                    summary: 'Erro ao adicionar comentário',
-                    detail: err?.message || 'Ocorreu um erro ao tentar adicionar o comentário. Por favor, tente novamente mais tarde.',
+                    summary: 'Erro ao editar comentário',
+                    detail: err?.message || 'Ocorreu um erro ao tentar editar o comentário. Por favor, tente novamente mais tarde.',
                     life: 5000,
                 });
             },
@@ -62,7 +62,7 @@ export class AddComment implements OnInit {
                 this.isLoading = false;
                 this.messageService.add({
                     severity: 'success',
-                    summary: 'Comentário adicionado com sucesso!',
+                    summary: 'Comentário editado com sucesso!',
                     detail: 'A lista será atualizada automaticamente em alguns segundos.',
                     life: 3000,
                 });
@@ -74,14 +74,15 @@ export class AddComment implements OnInit {
     handleCancel(): void {
         this.ref.close();
     }
-
+    
     ngOnInit(): void {
         this.form = this.fb.group({
             text: this.fb.control<string>('', { validators: [Validators.required, Validators.minLength(1), Validators.maxLength(5000)] }),
             alarmId: this.fb.control<string>('', { validators: [Validators.required] }),
+            alarmCommentId: this.fb.control<string>('', { validators: [Validators.required] }),
         });
         
-        const alarmId = this.config.data.alarmId;
-        this.form.patchValue({ alarmId });
+        const { alarmId, alarmCommentId, text } = this.config.data;
+        this.form.patchValue({ alarmId, alarmCommentId, text });
     }
 }

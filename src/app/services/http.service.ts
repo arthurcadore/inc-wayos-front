@@ -52,6 +52,17 @@ export class HttpService {
     }
 
     /**
+     * Requisição PATCH
+     */
+    patch<T>(endpoint: string, body: any): Observable<T> {
+        return this.http
+            .patch<T>(`${this.baseUrl}${endpoint}`, body, {
+                headers: this.getHeaders()
+            })
+            .pipe(catchError(this.handleError));
+    }
+
+    /**
      * Requisição DELETE
      */
     delete<T>(endpoint: string): Observable<T> {

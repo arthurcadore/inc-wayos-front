@@ -16,6 +16,16 @@ export class EaceService {
 
     constructor(private httpService: HttpService) { }
 
+    public updateComment({ alarmId, alarmCommentId, text }: { alarmId: string, alarmCommentId: string, text: string }): Observable<void> {
+        return this.httpService.patch<void>(`/v1/alarm/alarm-comments`, { alarmId, alarmCommentId, text }).pipe(
+            tap(() => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Comment updated');
+                }
+            })
+        );
+    }
+
     public createComment({ alarmId, text }: { alarmId: string, text: string }): Observable<void> {
         return this.httpService.post<void>(`/v1/alarm/alarm-comments`, { text, alarmId }).pipe(
             tap(() => {
