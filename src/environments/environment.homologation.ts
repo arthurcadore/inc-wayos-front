@@ -6,7 +6,6 @@ export const environment = {
     apiUrl: 'https://hml-api.eace.com.br/api',
     enableDebug: true,
     logLevel: 'info',
-    enableCache: true,
     viewGlobalCacheTtlMinutes: 5,
     refreshIntervalMinutes: 5,
     viewGlobalExportFileName: 'view-global_',

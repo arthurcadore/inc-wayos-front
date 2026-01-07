@@ -67,7 +67,9 @@
                     <span class="text-green-500 cursor-pointer" (click)="seeLastMomentOffline(device)">Ver</span>
                 </td>
                 <td>
-                    <div class="text-green-500 cursor-pointer">Alarmes</div>
+                    <div class="text-green-500 cursor-pointer">
+                        <a [routerLink]="['/alarm-details']" [queryParams]="buildQueryParams(device)">Alarmes</a>
+                    </div>
                 </td>
             </tr>
         </ng-template>

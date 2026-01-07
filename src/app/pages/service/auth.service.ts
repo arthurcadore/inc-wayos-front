@@ -28,6 +28,8 @@ export interface LoginCredentials {
 export class AuthService {
     private readonly TOKEN_KEY = 'auth_token';
     private readonly USER_KEY = 'auth_user';
+    private readonly VIEW_GLOBAL_CACHE_KEY = 'view_global_cache';
+    private readonly VIEW_GLOBAL_CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
     private readonly AUTH_ENDPOINT = `${environment.apiUrl}/v1/auth/login`;
 
     constructor(
@@ -73,8 +75,8 @@ export class AuthService {
     logout(): void {
         localStorage.removeItem(this.TOKEN_KEY);
         localStorage.removeItem(this.USER_KEY);
-        localStorage.removeItem('view_global_cache');
-        localStorage.removeItem('view_global_cache_timestamp');
+        localStorage.removeItem(this.VIEW_GLOBAL_CACHE_KEY);
+        localStorage.removeItem(this.VIEW_GLOBAL_CACHE_TIMESTAMP_KEY);
         this.router.navigate(['/login']);
     }
 

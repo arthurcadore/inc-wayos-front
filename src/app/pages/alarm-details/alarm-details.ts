@@ -128,7 +128,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
 
     async getDeviceDetails(): Promise<void> {
         this.isViewGlobalLoading = true;
-        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
             next: (data) => {
                 this.isViewGlobalLoading = false;
                 let device: any = null;

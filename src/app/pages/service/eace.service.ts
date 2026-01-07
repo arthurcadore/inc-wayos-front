@@ -16,6 +16,11 @@ export class EaceService {
 
     constructor(private httpService: HttpService) { }
 
+    /**
+     * @description Deleta um comentário específico de um alarme
+     * @param alarmId ID do alarme
+     * @param alarmCommentId ID do comentário do alarme
+     */
     public deleteComment({ alarmId, alarmCommentId }: { alarmId: string, alarmCommentId: string }): Observable<void> {
         return this.httpService.delete<void>(`/v1/alarm/alarm-comments/alarmId/${alarmId}/alarmCommentId/${alarmCommentId}`).pipe(
             tap(() => {
@@ -26,6 +31,12 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Atualiza um comentário existente para um alarme específico
+     * @param alarmId ID do alarme
+     * @param alarmCommentId ID do comentário do alarme
+     * @param text Texto do comentário
+     */
     public updateComment({ alarmId, alarmCommentId, text }: { alarmId: string, alarmCommentId: string, text: string }): Observable<void> {
         return this.httpService.patch<void>(`/v1/alarm/alarm-comments`, { alarmId, alarmCommentId, text }).pipe(
             tap(() => {
@@ -36,6 +47,11 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Cria um novo comentário para um alarme específico
+     * @param alarmId ID do alarme
+     * @param text Texto do comentário
+     */
     public createComment({ alarmId, text }: { alarmId: string, text: string }): Observable<void> {
         return this.httpService.post<void>(`/v1/alarm/alarm-comments`, { text, alarmId }).pipe(
             tap(() => {
@@ -46,6 +62,13 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Obtém a lista de alarmes com base no tipo de dispositivo, valor e intervalo de dias
+     * @param deviceType Tipo do dispositivo
+     * @param value Valor do dispositivo (pode ser string ou number)
+     * @param dayRange Intervalo de dias para filtrar os alarmes
+     * @returns Observable com a lista de alarmes
+     */
     public getAlarms(deviceType: string, value: number | string, dayRange: number): Observable<AlarmViewModel[]> {
         return this.httpService.get<AlarmViewModel[]>(`/v1/alarms/device-type/${deviceType}/value/${value}/day-range/${dayRange}`).pipe(
             tap(data => {
@@ -56,6 +79,11 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Obtém a lista de últimos momentos offline para dispositivos Wayos
+     * @param sceneId ID da cena do dispositivo
+     * @returns Observable com a lista de momentos offline
+     */
     public getWayosLastOfflineMomentList(sceneId: number): Observable<WayosAlarmLogItem[]> {
         return this.httpService.get<WayosAlarmLogItem[]>(`/v1/wayos-last-offline-moment-list/${sceneId}`).pipe(
             tap(data => {
@@ -66,6 +94,11 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Obtém a lista de últimos momentos offline para dispositivos IncCloud
+     * @param sn Número de série do dispositivo
+     * @returns Observable com a lista de momentos offline
+     */
     public getIncCloudLastOfflineMomentList(sn: string): Observable<RegionDevice[]> {
         return this.httpService.get<RegionDevice[]>(`/v1/inccloud-last-offline-moment-list/${sn}`).pipe(
             tap(data => {
@@ -76,6 +109,11 @@ export class EaceService {
         );
     }
 
+    /**
+     * @description Obtém a lista de dispositivos conectados para um determinado dispositivo
+     * @param sn Número de série do dispositivo
+     * @returns Observable com a lista de dispositivos conectados
+     */
     public getConnectedDevices(sn: string): Observable<WayosGetDeviceOnlineUser[]> {
         return this.httpService.get<WayosGetDeviceOnlineUser[]>(`/v1/connected-devices/${sn}`).pipe(
             tap(data => {
@@ -87,33 +125,55 @@ export class EaceService {
     }
 
     /**
-     * Obtém dados globais da visualização com cache local
-     * @returns 
+     * @description Obtém os dados da visão global, utilizando cache localStorage para otimizar desempenho
+     * @param ignoreCacheTimestamp Se verdadeiro, ignora o timestamp do cache e retorna os dados em cache diretamente
+     * @returns Observable com os dados da visão global
      */
-    public getViewGlobalData(): Observable<ViewGlobalResponse> {
-        // Verifique se o cache está habilitado no ambiente
-        if (!environment.enableCache) {
+    public getViewGlobalData(ignoreCacheTimestamp: boolean = false): Observable<ViewGlobalResponse> {
+        const cachedDataStr = localStorage.getItem(this.CACHE_KEY);
+        const cacheTimestampStr = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
+
+        // Se não houver dados em cache, buscar da API
+        if (!cachedDataStr || !cacheTimestampStr) {
             if (environment.enableDebug) {
-                console.log('[EaceService] Cache disabled in environment');
+                console.log('[EaceService] No cached data found, fetching from API');
             }
-            return this.httpService.get<ViewGlobalResponse>('/v1/view-global');
+
+            return this.httpService.get<ViewGlobalResponse>('/v1/view-global').pipe(
+                tap(data => {
+                    data.refreshedAtFormat = new Date(data.refreshedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    this.setCachedData(data);
+                })
+            );
         }
 
-        // Verifique se temos dados em cache válidos.
-        const cachedData = this.getCachedData();
-        if (cachedData) {
+        // Se ignorar timestamp de cache, retornar dados em cache diretamente
+        if (ignoreCacheTimestamp) {
             if (environment.enableDebug) {
-                console.log('[EaceService] Returning cached data');
+                console.log('[EaceService] Ignoring cache timestamp, returning cached data directly');
             }
+
+            const cachedData = JSON.parse(cachedDataStr);
             cachedData.refreshedAtFormat = new Date(cachedData.refreshedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - (do cache)';
             return of(cachedData);
         }
 
-        // Nenhum cache válido, buscar da API
-        if (environment.enableDebug) {
-            console.log('[EaceService] Cache miss or expired, fetching from API');
+        // Verifique se o cache ainda é válido
+        if (this.isCacheValid(parseInt(cacheTimestampStr))) {
+            if (environment.enableDebug) {
+                console.log('[EaceService] Returning valid cached data');
+            }
+
+            const cachedData = JSON.parse(cachedDataStr);
+            cachedData.refreshedAtFormat = new Date(cachedData.refreshedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - (do cache)';
+            return of(cachedData);
         }
 
+        // Cache expirado, buscar da API
+        if (environment.enableDebug) {
+            console.log('[EaceService] Cache expired, fetching from API');
+        }
+        
         return this.httpService.get<ViewGlobalResponse>('/v1/view-global').pipe(
             tap(data => {
                 data.refreshedAtFormat = new Date(data.refreshedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -123,38 +183,8 @@ export class EaceService {
     }
 
     /**
-     * Obtenha dados em cache se existirem e ainda forem válidos
-     */
-    private getCachedData(): ViewGlobalResponse | null {
-        try {
-            const cachedDataStr = localStorage.getItem(this.CACHE_KEY);
-            const cacheTimestampStr = localStorage.getItem(this.CACHE_TIMESTAMP_KEY);
-
-            if (!cachedDataStr || !cacheTimestampStr) {
-                return null;
-            }
-
-            // Verifique se o cache ainda é válido com base no TTL
-            if (!this.isCacheValid(parseInt(cacheTimestampStr))) {
-                if (environment.enableDebug) {
-                    console.log('[EaceService] Cache expired, clearing...');
-                }
-                this.clearCache();
-                return null;
-            }
-
-            return JSON.parse(cachedDataStr);
-        } catch (error) {
-            if (environment.enableDebug) {
-                console.error('[EaceService] Error reading cache:', error);
-            }
-            this.clearCache();
-            return null;
-        }
-    }
-
-    /**
-     * Salva dados no cache do localStorage
+     * @description Salva dados no cache do localStorage
+     * @param data Dados a serem armazenados
      */
     private setCachedData(data: ViewGlobalResponse): void {
         try {
@@ -173,7 +203,9 @@ export class EaceService {
     }
 
     /**
-     * Verifique se os dados em cache ainda são válidos com base no TTL
+     * @description Verifica se o cache ainda é válido com base no timestamp armazenado
+     * @param timestamp Timestamp em milissegundos
+     * @returns Verdadeiro se o cache for válido, falso caso contrário
      */
     private isCacheValid(timestamp: number): boolean {
         const now = Date.now();
@@ -186,24 +218,6 @@ export class EaceService {
         }
 
         return age < ttlMs;
-    }
-
-    /**
-     * Limpa o cache manualmente
-     */
-    public clearViewGlobalCache(): void {
-        this.clearCache();
-        if (environment.enableDebug) {
-            console.log('[EaceService] Cache cleared manually');
-        }
-    }
-
-    /**
-     * Remove cache do localStorage
-     */
-    private clearCache(): void {
-        localStorage.removeItem(this.CACHE_KEY);
-        localStorage.removeItem(this.CACHE_TIMESTAMP_KEY);
     }
 }
 

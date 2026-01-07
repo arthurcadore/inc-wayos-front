@@ -6,7 +6,6 @@ export const environment = {
     apiUrl: '/api', 
     enableDebug: false,
     logLevel: 'error',
-    enableCache: true,
     viewGlobalCacheTtlMinutes: 5,
     refreshIntervalMinutes: 5,
     viewGlobalExportFileName: 'view-global_',

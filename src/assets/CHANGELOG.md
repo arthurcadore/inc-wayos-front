@@ -18,6 +18,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Página de Dispositivos Conectados
 - Página de Detalhes dos Alarmes
 
+### Alterações
+- Removido a parametrização "enableCache", agora sempre estará ativo o uso do cache
+- O cache não será mas apagado no momento da atualização da página principal (Visão Global da Rede)
+
 ---
 
 ## [0.2.0] - 2025-12-27

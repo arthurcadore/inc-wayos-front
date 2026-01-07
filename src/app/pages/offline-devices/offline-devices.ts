@@ -6,7 +6,7 @@ import { IconFieldModule } from "primeng/iconfield";
 import { InputIconModule } from "primeng/inputicon";
 import { InputTextModule } from "primeng/inputtext";
 import { Table, TableModule } from "primeng/table";
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EaceService } from "../service/eace.service";
 import { MessageService } from "primeng/api";
 import { DeviceStatus, DeviceType, OfflineDevice, SiteModelView } from "../view-global/view-model";
@@ -30,6 +30,7 @@ import { PopoverModule } from 'primeng/popover';
         CommonModule,
         IconFieldModule,
         PopoverModule,
+        RouterLink,
     ],
     providers: [MessageService, DialogService],
     styles: [`
@@ -76,7 +77,7 @@ export class OfflineDevices implements OnInit, OnDestroy {
 
     async loadData(): Promise<void> {
         this.isLoading = true;
-        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
             next: (data) => {
                 this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
                 const offlineDevices: OfflineDevice[] = [];
@@ -145,6 +146,27 @@ export class OfflineDevices implements OnInit, OnDestroy {
                 dismissableMask: true,
                 style: { 'background-color': '#f1f5f9' },
             });
+        }
+    }
+
+    buildQueryParams(device: OfflineDevice): any {
+        if (device.devType === DeviceType.ROUTER) {
+            return {
+                deviceType: 'router',
+                value: (device.data as WayosRouterInfo).sceneId,
+            };
+        } else if (device.devType === DeviceType.SWITCH) {
+            return {
+                deviceType: 'switch',
+                value: (device.data as IncCloudDevice).sn,
+            };
+        } else if (device.devType === DeviceType.ACCESS_POINT) {
+            return {
+                deviceType: 'ap',
+                value: (device.data as IncCloudDevice).sn,
+            };
+        } else {
+            return {};
         }
     }
 

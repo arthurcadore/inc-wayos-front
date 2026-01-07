@@ -69,7 +69,7 @@ export class SchoolDetails implements OnInit, OnDestroy {
 
     async loadData(): Promise<void> {
         this.isLoading = true;
-        this.viewGlobalSubscription = this.eaceService.getViewGlobalData().subscribe({
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
             next: (data) => {
                 const devices = data.data.find(item => item.inep === this.inepInfo.inep);
                 if (devices) {
