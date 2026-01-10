@@ -74,7 +74,6 @@ export interface AlarmCommentViewModel {
     text: string;
     createdAt: string;
     updatedAt: string;
-    editedAt: string | null;
 }
 
 export interface AlarmViewModel {

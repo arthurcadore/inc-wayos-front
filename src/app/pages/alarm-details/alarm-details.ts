@@ -19,6 +19,7 @@ import { AddComment } from './components/add-comment';
 import { TooltipModule } from 'primeng/tooltip';
 import { EditComment } from './components/edit-comment';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
 @Component({
     selector: 'app-alarm-details',
@@ -38,6 +39,7 @@ import { ConfirmPopupModule } from 'primeng/confirmpopup';
     FormsModule,
     TooltipModule,
     ConfirmPopupModule,
+    ConfirmDialogModule,
 ],
     providers: [DialogService, ConfirmationService],
     templateUrl: './alarm-details.html',
@@ -169,7 +171,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
 
     async getData(): Promise<void> {
         this.isAlarmsLoading = true;
-        this.alarmSubscription = this.eaceService.getAlarms(this.deviceType!, this.value!, 15).subscribe({
+        this.alarmSubscription = this.eaceService.getAlarms(this.deviceType!, this.value!, 1).subscribe({
             next: (data) => {
                 this.isAlarmsLoading = false;
                 data.forEach(alarm => alarm.collapsed = alarm.isSolved === true);
@@ -213,7 +215,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
         this.filteredAlarms.forEach(alarm => alarm.collapsed = true);
     }
 
-    buildMenu(alarm: AlarmViewModel): MenuItem[] {
+    buildMenu(event: any): MenuItem[] {
         if (this.selectedAlarm?.isSolved === false) {
             return [
                 {
@@ -240,7 +242,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     label: 'Fechar alarme',
                     icon: 'pi pi-check-circle',
                     command: () => {
-                        // Placeholder for close alarm action
+                        this.toogleAlarmSolved(this.selectedAlarm!, event);
                     }
                 },
             ];
@@ -250,7 +252,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     label: 'Reabrir alarme',
                     icon: 'pi pi-exclamation-triangle',
                     command: () => {
-                        // Placeholder for comment action
+                        this.toogleAlarmSolved(this.selectedAlarm!, event);
                     }
                 },
             ];
@@ -259,7 +261,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
 
     showPopupMenu(menu: any, event: any, alarm: AlarmViewModel): void {
         this.selectedAlarm = alarm;
-        this.menuItens = this.buildMenu(alarm); // Atualiza os itens aqui
+        this.menuItens = this.buildMenu(event); // Atualiza os itens aqui
         menu.toggle(event);
     }
 
@@ -316,6 +318,45 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     },
                 });
             }
+        });
+    }
+
+    toogleAlarmSolved(alarm: AlarmViewModel, event: Event): void {
+        this.confirmationService.confirm({
+            target: event.target as EventTarget,
+            message: alarm.isSolved ? 'Tem certeza que deseja reabrir este alarme?' : 'Tem certeza que deseja fechar este alarme?',
+            header: 'Confirmação',
+            icon: 'pi pi-exclamation-triangle',
+            rejectButtonProps: {
+                label: 'Não',
+                severity: 'secondary',
+                outlined: true
+            },
+            acceptButtonProps: {
+                label: 'Sim',
+                severity: 'danger',                
+            },
+            accept: () => {
+                this.isAlarmsLoading = true;
+                this.eaceService.toogleAlarmSolved(alarm).subscribe({
+                    next: () => {
+                        this.isAlarmsLoading = false;
+                        this.getDeviceDetails();
+                        this.getData();
+                    },
+                    error: (err) => {
+                        this.isAlarmsLoading = false;
+                        this.messageService.add({
+                            severity: 'error',
+                            summary: 'Erro',
+                            detail: `Falha ao fechar alarme - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                        });
+                    },
+                    complete: () => {
+                        this.isAlarmsLoading = false;
+                    },
+                });
+            },
         });
     }
 }

@@ -22,6 +22,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Removido a parametrização "enableCache", agora sempre estará ativo o uso do cache
 - O cache não será mas apagado no momento da atualização da página principal (Visão Global da Rede)
 
+### Corrigido
+- Bug de duplicação do total de devices na tela "Visão Global da Rede" em "Status do dispositivo"
+
 ---
 
 ## [0.2.0] - 2025-12-27

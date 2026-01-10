@@ -88,7 +88,6 @@
                 <div>
                     <p-button icon="pi pi-pencil" variant="text" severity="success" size="small" (click)="editComment(item, comment)"/>
                     <p-button icon="pi pi-times" variant="text" severity="danger" size="small" (onClick)="removeComment(item, comment, $event)" />
-                    <p-confirmpopup />
                 </div>
                 }
             </div>
@@ -102,4 +101,5 @@
     } @empty {
     <div class="text-gray-500 text-center">Nenhum alarme disponível.</div>
     }
+    <p-confirmpopup />
 </p-card>

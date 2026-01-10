@@ -17,6 +17,20 @@ export class EaceService {
     constructor(private httpService: HttpService) { }
 
     /**
+     * @description Marca um alarme como resolvido
+     * @param alarm Alarme a ser resolvido
+     */
+    public toogleAlarmSolved(alarm: AlarmViewModel): Observable<void> {
+        return this.httpService.patch<void>(`/v1/alarm/toogle-alarm-solved`, { alarmId: alarm.id }).pipe(
+            tap(() => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Alarm solved for alarmId:', alarm.id);
+                }
+            })
+        );
+    }
+
+    /**
      * @description Deleta um comentário específico de um alarme
      * @param alarmId ID do alarme
      * @param alarmCommentId ID do comentário do alarme
