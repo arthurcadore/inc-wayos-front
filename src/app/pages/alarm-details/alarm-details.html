@@ -10,7 +10,9 @@
         <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" severity="info" (click)="op.toggle($event)" />
         <p-popover #op>
             <div class="flex flex-col gap-4 w-[25rem]">
-                <p>Os alarmes que estão apresentados nessa tela, são das últimas 24 horas que foram registradas no sistema.</p>
+                <p>- Os alarmes que estão apresentados nessa tela, são das últimas 24 horas que foram registradas no sistema.</p>
+                <p>- Todos os alarmes uma vez gerado, serão deletados após 24 horas.</p>
+                <p>- Use o botão "Exportar Alarms" para baixar um relatório completo dos alarmes filtrados.</p>
             </div>
         </p-popover>
     </div>
