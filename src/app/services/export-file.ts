@@ -44,4 +44,32 @@ export class ExportFileService {
         link.click();
         document.body.removeChild(link);
     }
+
+    /**
+     * @description Exporta conteúdo de texto para um arquivo TXT e inicia o download.
+     * @param content Conteúdo de texto a ser exportado.
+     * @param fileName Nome base do arquivo (sem extensão ou data).
+     */
+    toTXT(content: string, fileName: string): void {
+        // Criar blob e fazer download
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+
+        // Formatar nome do arquivo: alarm-logs_dd-MM-yyyy_HH-mm
+        const now = new Date();
+        const day = String(now.getDate()).padStart(2, '0');
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const year = now.getFullYear();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const formattedDate = `${day}-${month}-${year}_${hours}-${minutes}`;
+
+        link.setAttribute('download', `${fileName}${formattedDate}.txt`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
 }

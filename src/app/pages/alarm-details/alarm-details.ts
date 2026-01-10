@@ -2,7 +2,9 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
+import { ExportFileService } from '@/services/export-file';
+import { environment } from 'src/environments/environment';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
@@ -19,14 +21,14 @@ import { AddComment } from './components/add-comment';
 import { TooltipModule } from 'primeng/tooltip';
 import { EditComment } from './components/edit-comment';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { PopoverModule } from 'primeng/popover';
 
 @Component({
     selector: 'app-alarm-details',
     standalone: true,
     imports: [
     CommonModule,
-    RouterLink,
+    // RouterLink,
     PanelModule,
     CardModule,
     TagModule,
@@ -39,7 +41,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
     FormsModule,
     TooltipModule,
     ConfirmPopupModule,
-    ConfirmDialogModule,
+    PopoverModule,
 ],
     providers: [DialogService, ConfirmationService],
     templateUrl: './alarm-details.html',
@@ -93,6 +95,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
         private readonly messageService: MessageService,
         private readonly dialogService: DialogService,
         private readonly confirmationService: ConfirmationService,
+        private readonly exportFileService: ExportFileService,
     ) { }
 
     applyFilter(): void {
@@ -358,5 +361,50 @@ export class AlarmDetails implements OnInit, OnDestroy {
                 });
             },
         });
+    }
+
+    exportAlarms(): void {
+        // Formatar data no padrão brasileiro
+        const formatDate = (dateString: string): string => {
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        };
+
+        // Construir conteúdo do arquivo TXT
+        let content = `RELATÓRIO DE ALARMES\n`;
+        content += `Gerado em: ${formatDate(new Date().toISOString())}\n`;
+        content += `Total de alarmes: ${this.filteredAlarms.length}\n`;
+        content += `\n${'='.repeat(80)}\n\n`;
+
+        this.filteredAlarms.forEach((alarm, index) => {
+            content += `ALARME #${index + 1}\n`;
+            content += `-`.repeat(80) + `\n`;
+            content += `ID: ${alarm.id}\n`;
+            content += `Título: ${alarm.title}\n`;
+            content += `Status: ${alarm.isSolved ? 'Resolvido' : 'Aberto'}\n`;
+            content += `Criado em: ${formatDate(alarm.createdAt)}\n`;
+            content += `Atualizado em: ${formatDate(alarm.updatedAt)}\n`;
+            content += `\n`;
+
+            if (alarm.comments && alarm.comments.length > 0) {
+                content += `COMENTÁRIOS (${alarm.comments.length}):\n`;
+                alarm.comments.forEach((comment, commentIndex) => {
+                    content += `\n  [${commentIndex + 1}] ${formatDate(comment.createdAt)}\n`;
+                    content += `  ${comment.text.split('\n').join('\n  ')}\n`;
+                });
+            } else {
+                content += `COMENTÁRIOS: Nenhum comentário registrado\n`;
+            }
+
+            content += `\n${'='.repeat(80)}\n\n`;
+        });
+
+        // Exportar arquivo TXT
+        this.exportFileService.toTXT(content, environment.alarmLogsExportFileName);
     }
 }

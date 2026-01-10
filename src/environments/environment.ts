@@ -13,5 +13,6 @@ export const environment = {
     viewGlobalExportFileName: 'view-global_',
     offlineDevicesExportFileName: 'offline-devices_',
     connectedDevicesExportFileName: 'online-devices_',
+    alarmLogsExportFileName: 'alarm-logs_',
     version,
 };
