@@ -84,7 +84,7 @@
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">
-            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'switch', value: item.shopId }">Alarmes</a>
+            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'switch', value: item.sn}">Alarmes</a>
         </div>
         }
 
@@ -101,7 +101,7 @@
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
         <div class="border-center margin-padding"></div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">
-            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'ap', value: item.shopId }">Alarmes</a>
+            <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'ap', value: item.sn }">Alarmes</a>
         </div>
         }
     </div>

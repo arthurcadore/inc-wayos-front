@@ -11,6 +11,7 @@ import { ConnectedDevices } from '@/pages/connected-devices/connected-devices';
 import { ChangelogPage } from '@/pages/changelog/changelog';
 import { AlarmDetails } from '@/pages/alarm-details/alarm-details';
 import { NetworkTopology } from '@/pages/network-topology/network-topology';
+import { Eace } from '@/pages/view-global/eace/eace';
 
 export const appRoutes: Routes = [
 
@@ -21,6 +22,8 @@ export const appRoutes: Routes = [
         canActivate: [authGuard],
         children: [
             { path: '', component: ViewGlobal },
+            { path: 'eace', component: Eace },
+
             { path: 'schools', component: Schools },
             { path: 'school-details', component: SchoolDetails },
             { path: 'offline-devices', component: OfflineDevices },

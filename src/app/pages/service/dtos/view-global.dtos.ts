@@ -10,7 +10,6 @@ export interface WayosRouterInfo {
 }
 
 export interface IncCloudDevice {
-    shopId: number;
     devType: string;
     sn: string;
     online: boolean;
@@ -22,6 +21,7 @@ export interface IncCloudDevice {
 
 export interface ViewGlobalItem {
     inep: string;
+    shopId: number;
     city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'

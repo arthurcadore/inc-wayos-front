@@ -21,13 +21,10 @@ export class AppMenu {
     ngOnInit() {
         this.model = [
             {
-                // label: 'Principal',
                 items: [
                     { label: 'Visão Global', icon: 'pi pi-fw pi-globe', routerLink: ['/'] },
-                    // { label: 'Escolas', icon: 'pi pi-fw pi-graduation-cap', routerLink: ['/schools'] },
-
-                    // Remover essa página depois de testes
-                    // { label: 'Detalhes da Escola', icon: 'pi pi-fw pi-home', routerLink: ['/school-details'] }
+                    // { label: 'Eace', icon: 'pi pi-fw pi-angle-right', routerLink: ['/eace'] },
+                    // { label: 'Eace Entrega Física', icon: 'pi pi-fw pi-angle-right', routerLink: ['/'] },
                 ],
             },
 
