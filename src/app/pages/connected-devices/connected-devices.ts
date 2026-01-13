@@ -28,9 +28,8 @@ export class ConnectedDevices implements OnInit, OnDestroy {
     devSn: string = '';
     totalDevices: number = 0;
     devices: {
-        type: 'notebook' | 'desktop' | 'tablet' | 'smartphone' | 'smart-tv' | 'other';
-        operatingSystem: string;
-        brand: string;
+        type: string;
+        hostname: string;
         macAddress: string;
         ipAddress: string;
     }[] = [];
@@ -63,12 +62,12 @@ export class ConnectedDevices implements OnInit, OnDestroy {
         this.cinnedtedDevicesSubscription = this.eaceService.getConnectedDevices(this.devSn).subscribe({
             next: (data) => {
                 this.devices = data.map(device => ({
-                    type: 'other',
-                    operatingSystem: 'n/d',
-                    brand: 'n/d',
+                    type: device.ua || '(n/d)',
+                    hostname: device.name || '(n/d)',
                     macAddress: device.mac,
                     ipAddress: device.ip,
                 }));
+                this.totalDevices = this.devices.length;
             },
             error: (err) => {
                 this.isLoading = false;
@@ -88,8 +87,7 @@ export class ConnectedDevices implements OnInit, OnDestroy {
         // Preparar dados para exportação com as colunas: Tipo, Sistema Operacional, Marca, Endereço MAC, Endereço IP
         const exportData = this.devices.map(device => ({
             'Tipo': device.type,
-            'Sistema Operacional': device.operatingSystem,
-            'Marca': device.brand,
+            'Hostname': device.hostname,
             'Endereço MAC': device.macAddress,
             'Endereço IP': device.ipAddress,
         }));

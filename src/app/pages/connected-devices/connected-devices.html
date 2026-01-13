@@ -10,7 +10,7 @@
 </div>
 <p-card>
     <p-table #dt2 [value]="devices" dataKey="id" [paginator]="true"
-        [globalFilterFields]="['type', 'operatingSystem', 'brand', 'macAddress', 'ipAddress']" [rows]="10"
+        [globalFilterFields]="['macAddress', 'ipAddress']" [rows]="10"
         [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]" [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #caption>
             <div class="flex">
@@ -19,7 +19,7 @@
                         <i class="pi pi-search"></i>
                     </p-inputicon>
                     <input pInputText type="text" (input)="dt2.filterGlobal(getTargetValue($event), 'contains')"
-                        placeholder="Pesquisar por Site" />
+                        placeholder="Pesquisar" />
                 </p-iconfield>
             </div>
         </ng-template>
@@ -28,11 +28,8 @@
                 <th pSortableColumn="type" style="width:20%">
                     <div class="font-extrabold">Tipo <p-sortIcon field="type" /></div>
                 </th>
-                <th pSortableColumn="operatingSystem" style="width:20%">
-                    <div class="font-extrabold">Sistema Operacional <p-sortIcon field="operatingSystem" /></div>
-                </th>
-                <th pSortableColumn="brand" style="width:20%">
-                    <div class="font-extrabold">Marca <p-sortIcon field="brand" /></div>
+                <th pSortableColumn="" style="width:20%">
+                    <div class="font-extrabold">Hostname <p-sortIcon field="" /></div>
                 </th>
                 <th pSortableColumn="macAddress" style="width:20%">
                     <div class="font-extrabold">Endereço MAC <p-sortIcon field="macAddress" /></div>
@@ -44,36 +41,8 @@
         </ng-template>
         <ng-template #body let-device>
             <tr>
-                <td>
-                    @switch (device.type) {
-                    @case('notebook') {
-                    <!-- <i class="pi pi-table text-green-500"></i>&nbsp; -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"
-                        style="width: 14px;display: inline-block;">
-                        <path fill="#22c55e"
-                            d="m 31.635443,22.521604 v 1.771075 c 0,1.103822 -0.888637,1.992459 -1.992458,1.992459 H 2.3241545 c -1.1038224,0 -1.99245914,-0.888637 -1.99245914,-1.992459 V 22.521604 Z M 3.5865206,4.7908101 A 0.9832075,0.9832075 0 0 0 2.6034113,5.7739194 V 21.257889 H 4.5696298 V 6.7570285 H 27.334751 V 21.257889 H 29.30097 V 5.7739194 A 0.9832075,0.9832075 0 0 0 28.31786,4.7908101 Z" />
-                    </svg>&nbsp;
-                    }
-                    @case('desktop') {
-                    <i class="pi pi-desktop text-green-500"></i>&nbsp;
-                    }
-                    @case('tablet') {
-                    <i class="pi pi-tablet text-green-500"></i>&nbsp;
-                    }
-                    @case('smartphone') {
-                    <i class="pi pi-mobile text-green-500"></i>&nbsp;
-                    }
-                    @case('smart-tv') {
-                    <i class="pi pi-desktop text-green-500"></i>&nbsp;
-                    }
-                    @default {
-                    <i class="pi pi-question-circle text-green-500"></i>&nbsp;
-                    }
-                    }
-                    <span>{{ device.type }}</span>
-                </td>
-                <td>{{ device.operatingSystem }}</td>
-                <td>{{ device.brand }}</td>
+                <td>{{ device.type }}</td>
+                <td>{{ device.hostname }}</td>
                 <td>{{ device.macAddress }}</td>
                 <td>{{ device.ipAddress }}</td>
             </tr>

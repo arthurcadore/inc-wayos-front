@@ -7,6 +7,20 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.3.1] - 2025-12-31
+
+### Status
+**BETA** - Versão inicial em desenvolvimento
+
+### Corrigido
+- Agora são apresentados apenas alarmes do tipo "dev_offline" e não mais "dev_online"
+- Textos corrigidos na página "Detalhes dos Alarmes"
+- Exportação de arquivo ajustado (marcado comentário editado) na página "Detalhes dos Alarmes"
+- Textos corrigidos na página "Dispositivos Conectados"
+- Ajustes na página "Dispositivos Conectados"
+
+---
+
 ## [0.3.0] - 2025-12-31
 
 ### Status

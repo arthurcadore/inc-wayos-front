@@ -394,7 +394,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
             if (alarm.comments && alarm.comments.length > 0) {
                 content += `COMENTÁRIOS (${alarm.comments.length}):\n`;
                 alarm.comments.forEach((comment, commentIndex) => {
-                    content += `\n  [${commentIndex + 1}] ${formatDate(comment.createdAt)}\n`;
+                    content += `\n  [${commentIndex + 1}] ${formatDate(comment.createdAt)} ${comment.createdAt !== comment.updatedAt ? `(editado)` : ''}\n`;
                     content += `  ${comment.text.split('\n').join('\n  ')}\n`;
                 });
             } else {
