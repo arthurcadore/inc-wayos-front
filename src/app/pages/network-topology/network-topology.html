@@ -3,181 +3,183 @@
         <div class="text-3xl font-extrabold mb-2">Topologia de Rede</div>
         <div class="font-normal">Visão detalhada da infraestrutura e conectividade</div>
     </div>
-    <div class="flex gap-2">
-        <p-button 
-            icon="pi pi-plus" 
-            (onClick)="zoomIn()" 
-            [outlined]="true"
-            pTooltip="Aumentar zoom"
-            tooltipPosition="bottom"
-            severity="secondary" />
-        <p-button 
-            icon="pi pi-minus" 
-            (onClick)="zoomOut()" 
-            [outlined]="true"
-            pTooltip="Diminuir zoom"
-            tooltipPosition="bottom"
-            severity="secondary" />
-        <p-button 
-            icon="pi pi-arrows-alt" 
-            (onClick)="togglePanMode()" 
-            [outlined]="!isPanMode"
-            [pTooltip]="isPanMode ? 'Desativar modo pan' : 'Ativar modo pan (ou use o botão do meio do mouse)'"
-            tooltipPosition="bottom"
-            [severity]="isPanMode ? 'info' : 'secondary'" />
-        <p-button 
-            icon="pi pi-refresh" 
-            (onClick)="resetZoom()" 
-            [outlined]="true"
-            pTooltip="Resetar visualização"
-            tooltipPosition="bottom"
-            severity="secondary" />
-        <p-button 
-            icon="pi pi-file-pdf" 
-            (onClick)="exportToPdf()" 
-            [outlined]="true"
-            pTooltip="Exportar para PNG"
-            tooltipPosition="bottom"
-            severity="secondary" />
-    </div>
 </div>
 
 <p-card>
-    <div class="w-full overflow-auto border border-surface-300 dark:border-surface-600 rounded-lg bg-surface-50 dark:bg-surface-900">
+    <div class="topology-container">
+        <!-- Controles de Visualização -->
+        <div class="topology-controls">
+            <div class="control-group">
+                <p-button 
+                    icon="pi pi-plus" 
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="zoomIn()"
+                    pTooltip="Aumentar Zoom"
+                    tooltipPosition="left" />
+                <p-button 
+                    icon="pi pi-minus" 
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="zoomOut()"
+                    pTooltip="Diminuir Zoom"
+                    tooltipPosition="left" />
+                <p-button 
+                    icon="pi pi-refresh" 
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="resetZoom()"
+                    pTooltip="Restaurar Zoom 1:1"
+                    tooltipPosition="left" />
+            </div>
+            
+            <div class="control-group mt-2">
+                <p-button 
+                    [icon]="'pi pi-arrows-alt'" 
+                    [severity]="isPanMode ? 'success' : 'secondary'"
+                    [outlined]="!isPanMode"
+                    (onClick)="togglePanMode()"
+                    [pTooltip]="isPanMode ? 'Desativar Modo Pan (Arraste com Mouse)' : 'Ativar Modo Pan (Arraste com Mouse)'"
+                    tooltipPosition="left" />
+            </div>
+        </div>
+        
         <svg 
-            #topologySvg
             [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
-            preserveAspectRatio="xMidYMin meet"
-            class="w-full h-auto bg-surface-0 dark:bg-surface-950"
-            [class.cursor-grab]="isPanMode && !isPanning"
-            [class.cursor-grabbing]="isPanning"
-            (mousedown)="onSvgMouseDown($event)"
-            (mousemove)="onSvgMouseMove($event)"
-            (mouseup)="onSvgMouseUp($event)"
-            (mouseleave)="onSvgMouseLeave($event)"
-            (contextmenu)="$event.preventDefault()">
+            [attr.width]="svgWidth"
+            [attr.height]="svgHeight"
+            class="topology-svg"
+            [style.cursor]="getCursor()"
+            (mousedown)="onMouseDown($event)"
+            (mousemove)="onMouseMove($event)"
+            (mouseup)="onMouseUp($event)"
+            (mouseleave)="onMouseUp($event)">
+            
+            <!-- Definições (gradientes, filtros, etc) -->
             <defs>
-                <!-- Definição de marcadores para setas -->
-                <marker
-                    id="arrowhead"
-                    markerWidth="10"
-                    markerHeight="10"
-                    refX="9"
-                    refY="3"
-                    orient="auto">
-                    <polygon 
-                        points="0 0, 10 3, 0 6" 
-                        fill="#6B7280" />
-                </marker>
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+                </filter>
             </defs>
             
+            <!-- Grupo principal com transform para zoom e pan -->
             <g [attr.transform]="getTransform()">
-                <!-- Linhas de conexão -->
-                <g *ngFor="let conn of connections">
-                    <line
-                        [attr.x1]="conn.from.x"
-                        [attr.y1]="conn.from.y + nodeHeight / 2"
-                        [attr.x2]="conn.to.x"
-                        [attr.y2]="conn.to.y - nodeHeight / 2"
-                        stroke="#6B7280"
-                        stroke-width="2"
-                        marker-end="url(#arrowhead)"
-                        class="transition-all" />
-                </g>
-                
-                <!-- Nós -->
-                <g *ngFor="let node of positionedNodes">
-                    <!-- Retângulo do nó -->
-                    <g 
-                        (click)="onNodeClick(node, $event)"
-                        [class.cursor-pointer]="!isPanMode"
-                        [attr.transform]="'translate(' + (node.x - nodeWidth/2) + ',' + (node.y - nodeHeight/2) + ')'">
+                <!-- Conexões (linhas) - renderizadas primeiro para ficarem atrás dos nós -->
+                <g class="connections">
+                    <g *ngFor="let connection of connections" class="connection-group">
+                        <!-- Linha de conexão -->
+                        <path 
+                            [attr.d]="getConnectionPath(connection)"
+                            class="connection-line"
+                            stroke="#64748b"
+                            stroke-width="2"
+                            fill="none"
+                            marker-end="url(#arrowhead)" />
                         
-                        <!-- Sombra -->
-                        <rect
-                            x="2"
-                            y="2"
-                            [attr.width]="nodeWidth"
-                            [attr.height]="nodeHeight"
-                            rx="8"
-                            fill="rgba(0,0,0,0.1)" />
-                        
-                        <!-- Background do nó -->
-                        <rect
-                            [attr.width]="nodeWidth"
-                            [attr.height]="nodeHeight"
-                            rx="8"
-                            [attr.fill]="getNodeColor(node)"
-                            [attr.stroke]="selectedNode?.id === node.id ? '#fff' : 'none'"
-                            [attr.stroke-width]="selectedNode?.id === node.id ? '3' : '0'"
-                            class="transition-all" />
-                        
-                        <!-- Ícone -->
-                        <text
-                            [attr.x]="nodeWidth / 2"
-                            y="30"
-                            font-size="24"
-                            text-anchor="middle"
-                            fill="white"
-                            font-family="primeicons"
-                            class="pointer-events-none select-none">
-                            {{ getNodeIcon(node) }}
+                        <!-- Labels de portas -->
+                        <text 
+                            [attr.x]="getFromPortLabelPosition(connection).x"
+                            [attr.y]="getFromPortLabelPosition(connection).y"
+                            class="port-label"
+                            fill="#3b82f6">
+                            {{ connection.fromPort }}
                         </text>
                         
-                        <!-- Descrição (multilinha) -->
-                        <foreignObject
-                            x="5"
-                            y="40"
-                            [attr.width]="nodeWidth - 10"
-                            [attr.height]="nodeHeight - 45">
-                            <div 
-                                xmlns="http://www.w3.org/1999/xhtml"
-                                class="text-white text-xs text-center font-medium px-1 whitespace-pre-line pointer-events-none select-none">
-                                {{ node.description }}
-                            </div>
-                        </foreignObject>
+                        <text 
+                            [attr.x]="getToPortLabelPosition(connection).x"
+                            [attr.y]="getToPortLabelPosition(connection).y"
+                            class="port-label"
+                            fill="#3b82f6">
+                            {{ connection.toPort }}
+                        </text>
+                    </g>
+                </g>
+                
+                <!-- Nós (dispositivos) -->
+                <g class="nodes">
+                    <g *ngFor="let node of nodes" 
+                       [attr.transform]="'translate(' + (node.position?.x || 0) + ',' + (node.position?.y || 0) + ')'"
+                       class="node-group"
+                       [class]="getDeviceClass(node.type)">
+                        
+                        <!-- Retângulo do nó com borda -->
+                        <rect 
+                            x="0" 
+                            y="0" 
+                            [attr.width]="nodeWidth"
+                            [attr.height]="nodeHeight"
+                            class="node-rect"
+                            rx="8"
+                            ry="8"
+                            fill="white"
+                            stroke="#cbd5e1"
+                            stroke-width="2"
+                            filter="url(#shadow)" />
+                        
+                        <!-- Área do ícone (topo do retângulo) -->
+                        <g class="node-icon-area">
+                            <!-- Background do ícone -->
+                            <rect 
+                                x="0" 
+                                y="0" 
+                                [attr.width]="nodeWidth"
+                                height="60"
+                                class="icon-background"
+                                rx="8"
+                                ry="8"
+                                fill="#f1f5f9" />
+                            
+                            <!-- Ícone SVG (usando foreignObject para usar classes do PrimeIcons) -->
+                            <foreignObject 
+                                [attr.x]="nodeWidth / 2 - 20" 
+                                y="10" 
+                                width="40" 
+                                height="40">
+                                <div xmlns="http://www.w3.org/1999/xhtml" class="flex items-center justify-center h-full">
+                                    <i [class]="getDeviceIcon(node.type)" class="text-3xl text-gray-600"></i>
+                                </div>
+                            </foreignObject>
+                        </g>
+                        
+                        <!-- Texto - Nome do dispositivo -->
+                        <text 
+                            [attr.x]="nodeWidth / 2"
+                            y="75"
+                            class="node-name"
+                            text-anchor="middle"
+                            fill="#1e293b"
+                            font-weight="600"
+                            font-size="14">
+                            {{ node.name }}
+                        </text>
+                        
+                        <!-- Texto - Modelo -->
+                        <text 
+                            [attr.x]="nodeWidth / 2"
+                            y="92"
+                            class="node-model"
+                            text-anchor="middle"
+                            fill="#64748b"
+                            font-size="12">
+                            {{ node.model }}
+                        </text>
+                        
+                        <!-- Overlay para interatividade (hover/click) -->
+                        <rect 
+                            x="0" 
+                            y="0" 
+                            [attr.width]="nodeWidth"
+                            [attr.height]="nodeHeight"
+                            class="node-overlay"
+                            rx="8"
+                            ry="8"
+                            fill="transparent"
+                            stroke="transparent"
+                            stroke-width="2"
+                            style="cursor: pointer;" />
                     </g>
                 </g>
             </g>
         </svg>
-    </div>
-    
-    <!-- Informações do nó selecionado -->
-    <div *ngIf="selectedNode" class="mt-4 p-4 bg-surface-100 dark:bg-surface-800 rounded-lg">
-        <div class="flex justify-between items-start">
-            <div>
-                <h3 class="text-lg font-semibold mb-2">
-                    <i [class]="'pi ' + getNodeIcon(selectedNode) + ' mr-2'" [style.color]="getNodeColor(selectedNode)"></i>
-                    {{ selectedNode.description.split('\n')[0] }}
-                </h3>
-                <div class="text-sm text-surface-600 dark:text-surface-400">
-                    <p><strong>ID:</strong> {{ selectedNode.id }}</p>
-                    <p><strong>Nível:</strong> {{ selectedNode.level }}</p>
-                    <p *ngIf="selectedNode.parentId"><strong>Conectado a:</strong> {{ selectedNode.parentId }}</p>
-                </div>
-            </div>
-            <p-button
-                icon="pi pi-times"
-                (onClick)="selectedNode = null"
-                [text]="true"
-                [rounded]="true"
-                severity="secondary" />
-        </div>
-    </div>
-    
-    <!-- Legenda -->
-    <div class="mt-4 flex gap-6 flex-wrap">
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded" style="background-color: #3B82F6;"></div>
-            <span class="text-sm">Roteadores</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded" style="background-color: #10B981;"></div>
-            <span class="text-sm">Switches</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="w-4 h-4 rounded" style="background-color: #F59E0B;"></div>
-            <span class="text-sm">Access Points</span>
-        </div>
     </div>
 </p-card>

@@ -1,0 +1,156 @@
+// Estilos do componente de Topologia de Rede
+
+.topology-container {
+    position: relative;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+    border-radius: 8px;
+    padding: 2rem;
+    
+    .topology-svg {
+        display: block;
+        margin: 0 auto;
+    }
+}
+
+// Controles de visualização
+.topology-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    
+    .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        
+        .flex {
+            display: flex;
+        }
+        
+        .gap-1 {
+            gap: 0.25rem;
+        }
+    }
+}
+
+// Estilos dos nós de dispositivos
+.node-group {
+    transition: all 0.3s ease;
+    
+    &:hover {
+        .node-rect {
+            stroke: #3b82f6;
+            stroke-width: 3;
+            filter: url(#shadow) drop-shadow(0 4px 6px rgba(59, 130, 246, 0.3));
+        }
+        
+        .node-overlay {
+            stroke: #3b82f6;
+            stroke-width: 3;
+        }
+    }
+    
+    // Estilos específicos por tipo de dispositivo
+    &.device-router {
+        .icon-background {
+            fill: #dbeafe;
+        }
+        
+        &:hover .node-rect {
+            stroke: #2563eb;
+        }
+    }
+    
+    &.device-switch {
+        .icon-background {
+            fill: #d1fae5;
+        }
+        
+        &:hover .node-rect {
+            stroke: #10b981;
+        }
+    }
+    
+    &.device-ap {
+        .icon-background {
+            fill: #fce7f3;
+        }
+        
+        &:hover .node-rect {
+            stroke: #ec4899;
+        }
+    }
+}
+
+// Estilos dos textos dos nós
+.node-name {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+}
+
+.node-model {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+}
+
+// Estilos das conexões
+.connection-group {
+    .connection-line {
+        transition: all 0.3s ease;
+        stroke-dasharray: 0;
+    }
+    
+    &:hover {
+        .connection-line {
+            stroke: #3b82f6;
+            stroke-width: 3;
+        }
+        
+        .port-label {
+            fill: #1e40af;
+            font-weight: 600;
+        }
+    }
+}
+
+// Estilos dos labels de portas
+.port-label {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    user-select: none;
+    transition: all 0.3s ease;
+    
+    // Background branco semi-transparente para melhor legibilidade
+    paint-order: stroke fill;
+    stroke: white;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+// Responsividade
+@media (max-width: 1400px) {
+    .topology-container {
+        .topology-svg {
+            max-width: 100%;
+            height: auto;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .topology-container {
+        padding: 1rem;
+    }
+}

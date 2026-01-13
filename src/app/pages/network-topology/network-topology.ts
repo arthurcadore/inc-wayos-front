@@ -3,29 +3,46 @@ import { CommonModule } from "@angular/common";
 import { CardModule } from "primeng/card";
 import { ButtonModule } from "primeng/button";
 import { TooltipModule } from "primeng/tooltip";
-import jsPDF from 'jspdf';
 
-export interface NetworkNode {
+// Tipos de dispositivos na topologia
+export enum DeviceType {
+    ROUTER = 'ROUTER',
+    SWITCH = 'SWITCH',
+    ACCESS_POINT = 'ACCESS_POINT'
+}
+
+// Interface para definir uma conexão de porta
+export interface PortConnection {
+    portName: string;           // Ex: "GE 1/0/1"
+    connectedToDeviceId: string;
+    connectedToPort: string;
+}
+
+// Interface para um nó de dispositivo na topologia
+export interface TopologyNode {
     id: string;
-    description: string;
-    parentId?: string;
+    name: string;
+    model: string;
+    type: DeviceType;
+    image?: string;             // URL da imagem do dispositivo (opcional)
+    ports: PortConnection[];
+    position?: { x: number; y: number }; // Calculado dinamicamente
 }
 
-export interface PositionedNode extends NetworkNode {
-    x: number;
-    y: number;
-    level: number;
-}
-
-export interface NodeConnection {
-    from: PositionedNode;
-    to: PositionedNode;
+// Interface para uma conexão visual entre dispositivos
+export interface TopologyConnection {
+    fromDevice: string;
+    fromPort: string;
+    toDevice: string;
+    toPort: string;
+    path?: string;              // SVG path calculado
 }
 
 @Component({
     selector: "app-network-topology",
     standalone: true,
     templateUrl: "./network-topology.html",
+    styleUrls: ["./network-topology.scss"],
     imports: [
         CommonModule,
         CardModule,
@@ -34,230 +51,479 @@ export interface NodeConnection {
     ]
 })
 export class NetworkTopology implements OnInit, OnDestroy {
-    @ViewChild('topologySvg', { static: false }) svgElement?: ElementRef<SVGElement>;
     
-    topologyData: NetworkNode[] = [];
-    positionedNodes: PositionedNode[] = [];
-    connections: NodeConnection[] = [];
+    // Dados da topologia
+    nodes: TopologyNode[] = [];
+    connections: TopologyConnection[] = [];
     
     // Configurações do SVG
-    svgWidth = 1200;
+    svgWidth = 1600;
     svgHeight = 800;
-    nodeWidth = 140;
-    nodeHeight = 80;
-    levelHeight = 150;
-    nodeGap = 20; // Espaçamento mínimo entre nós
+    nodeWidth = 180;
+    nodeHeight = 120;
     
-    // Controles de zoom e pan
+    // Controles de visualização
     scale = 1;
     translateX = 0;
     translateY = 0;
+    zoomStep = 0.2;
     
-    // Controles de pan
-    isPanning = false;
+    // Controle de pan com mouse
     isPanMode = false;
+    isDragging = false;
     lastMouseX = 0;
     lastMouseY = 0;
     
-    selectedNode: PositionedNode | null = null;
-
-    constructor() { }
-    
     ngOnInit(): void {
-        this.loadSampleData();
+        this.loadMockData();
         this.calculateLayout();
+        this.calculateConnections();
     }
     
     ngOnDestroy(): void {
         // Cleanup logic here
     }
     
-    private loadSampleData(): void {
-        // Dados de exemplo para demonstração
-        this.topologyData = [
-            // Nível 0 - Roteador Principal
-            { id: 'router-1', description: 'Roteador Principal\n192.168.0.1' },
-            
-            // Nível 1 - Dispositivos conectados ao roteador
-            // Switches
-            { id: 'switch-1', description: 'Switch Andar 1\n192.168.1.1', parentId: 'router-1' },
-            { id: 'switch-2', description: 'Switch Andar 2\n192.168.2.1', parentId: 'router-1' },
-            { id: 'switch-3', description: 'Switch Andar 3\n192.168.3.1', parentId: 'router-1' },
-            // APs conectados diretamente ao roteador
-            { id: 'ap-direct-1', description: 'AP Recepção\n192.168.0.10', parentId: 'router-1' },
-            { id: 'ap-direct-2', description: 'AP Área Externa\n192.168.0.11', parentId: 'router-1' },
-            // { id: 'ap-direct-3', description: 'AP Área Externa\n192.168.0.12', parentId: 'router-1' },
-            // { id: 'ap-direct-4', description: 'AP Área Externa\n192.168.0.13', parentId: 'router-1' },
-            // { id: 'ap-direct-5', description: 'AP Área Externa\n192.168.0.14', parentId: 'router-1' },
-            // { id: 'ap-direct-6', description: 'AP Área Externa\n192.168.0.15', parentId: 'router-1' },
-            
-            // Nível 2 - Access Points conectados aos switches
-            { id: 'ap-1', description: 'AP Sala 101\n192.168.1.10', parentId: 'switch-1' },
-            { id: 'ap-2', description: 'AP Sala 102\n192.168.1.11', parentId: 'switch-1' },
-            { id: 'ap-3', description: 'AP Sala 201\n192.168.2.10', parentId: 'switch-2' },
-            { id: 'ap-4', description: 'AP Sala 202\n192.168.2.11', parentId: 'switch-2' },
-            { id: 'ap-5', description: 'AP Sala 301\n192.168.3.10', parentId: 'switch-3' },
-            { id: 'ap-6', description: 'AP Sala 302\n192.168.3.11', parentId: 'switch-3' },
+    /**
+     * Carrega dados mockados da topologia baseado na imagem de referência
+     */
+    private loadMockData(): void {
+        this.nodes = [
+            // Router no topo
+            {
+                id: 'router-1',
+                name: 'Router',
+                model: 'Model XPTO',
+                type: DeviceType.ROUTER,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/2', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 2/0/1' },
+                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-7', connectedToPort: 'GE 1/0/1' }
+                ]
+            },
+            // Switches no nível intermediário
+            {
+                id: 'switch-1',
+                name: 'SWITCH - 01',
+                model: 'Model 123ABC',
+                type: DeviceType.SWITCH,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-2', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-3', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/4', connectedToDeviceId: 'ap-4', connectedToPort: 'GE 1/0/1' }
+                ]
+            },
+            {
+                id: 'switch-2',
+                name: 'SWITCH - 02',
+                model: 'Model 123ABC',
+                type: DeviceType.SWITCH,
+                ports: [
+                    { portName: 'GE 2/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/2' },
+                    { portName: 'GE 7/0/2', connectedToDeviceId: 'ap-1', connectedToPort: 'GE 7/0/2' },
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'ap-5', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-6', connectedToPort: 'GE 1/0/1' }
+                ]
+            },
+            // Access Points no nível inferior
+            {
+                id: 'ap-1',
+                name: 'AP - 01',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 2/0/2', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 2/0/2' }
+                ]
+            },
+            {
+                id: 'ap-2',
+                name: 'AP - 02',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/2' }
+                ]
+            },
+            {
+                id: 'ap-3',
+                name: 'AP - 03',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/3' }
+                ]
+            },
+            {
+                id: 'ap-4',
+                name: 'AP - 04',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/4' }
+                ]
+            },
+            {
+                id: 'ap-5',
+                name: 'AP - 05',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/1' }
+                ]
+            },
+            {
+                id: 'ap-6',
+                name: 'AP - 06',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/2' }
+                ]
+            },
+            // Access Point conectado diretamente ao router (nível 2)
+            {
+                id: 'ap-7',
+                name: 'AP - 07',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/3' }
+                ]
+            }
         ];
     }
     
+    /**
+     * Calcula posições dos nós baseado na hierarquia
+     */
     private calculateLayout(): void {
-        if (this.topologyData.length === 0) {
-            return;
+        const layers = this.groupNodesByType();
+        const verticalSpacing = 220;
+        const horizontalSpacing = 250;
+        
+        let currentY = 80;
+        
+        // Router (topo)
+        if (layers.routers.length > 0) {
+            const totalWidth = layers.routers.length * this.nodeWidth + (layers.routers.length - 1) * horizontalSpacing;
+            let currentX = (this.svgWidth - totalWidth) / 2;
+            
+            layers.routers.forEach(node => {
+                node.position = { x: currentX, y: currentY };
+                currentX += this.nodeWidth + horizontalSpacing;
+            });
+            
+            currentY += verticalSpacing;
         }
         
-        // Organizar nós por nível hierárquico
-        const nodesByLevel = this.organizeByLevel();
-        
-        // Calcular largura necessária considerando o maior nível
-        let maxRequiredWidth = this.svgWidth;
-        nodesByLevel.forEach((nodes) => {
-            const nodesCount = nodes.length;
-            const requiredWidth = (nodesCount * this.nodeWidth) + ((nodesCount + 1) * this.nodeGap);
-            maxRequiredWidth = Math.max(maxRequiredWidth, requiredWidth);
-        });
-        
-        // Ajustar largura do SVG se necessário
-        this.svgWidth = Math.max(this.svgWidth, maxRequiredWidth);
-        
-        // Calcular posições
-        this.positionedNodes = [];
-        nodesByLevel.forEach((nodes, level) => {
-            const nodesCount = nodes.length;
-            const totalNodesWidth = nodesCount * this.nodeWidth;
-            const totalGapsWidth = (nodesCount + 1) * this.nodeGap;
-            const rowWidth = totalNodesWidth + totalGapsWidth;
+        // Nível 2: Switches e APs conectados diretamente ao router
+        const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
+        if (level2Nodes.length > 0) {
+            const totalWidth = level2Nodes.length * this.nodeWidth + (level2Nodes.length - 1) * horizontalSpacing;
+            let currentX = (this.svgWidth - totalWidth) / 2;
             
-            // Centralizar a linha se for menor que a largura total
-            const startX = (this.svgWidth - rowWidth) / 2 + this.nodeGap;
-            
-            nodes.forEach((node, index) => {
-                const x = startX + (index * (this.nodeWidth + this.nodeGap)) + (this.nodeWidth / 2);
-                const y = 100 + (level * this.levelHeight);
-                
-                this.positionedNodes.push({
-                    ...node,
-                    x,
-                    y,
-                    level
-                });
+            level2Nodes.forEach(node => {
+                node.position = { x: currentX, y: currentY };
+                currentX += this.nodeWidth + horizontalSpacing;
             });
-        });
+            
+            currentY += verticalSpacing;
+        }
         
-        // Calcular conexões
-        this.calculateConnections();
+        // Nível 3: Access Points conectados aos switches (base)
+        const level3APs = this.getLevel3AccessPoints(layers.accessPoints);
+        if (level3APs.length > 0) {
+            const apSpacing = 60;
+            const groupSpacing = 120; // Espaço entre grupos de APs
+            
+            // Agrupa APs por switch ao qual estão conectados
+            const apGroups = this.groupAPsBySwitch(level3APs, layers.switches);
+            
+            // Calcula largura total incluindo espaçamento entre grupos
+            const totalWidth = level3APs.length * this.nodeWidth + 
+                              (level3APs.length - 1) * apSpacing +
+                              (apGroups.length - 1) * groupSpacing;
+            
+            let currentX = (this.svgWidth - totalWidth) / 2;
+            
+            // Posiciona cada grupo de APs
+            apGroups.forEach((group, groupIndex) => {
+                group.forEach(node => {
+                    node.position = { x: currentX, y: currentY };
+                    currentX += this.nodeWidth + apSpacing;
+                });
+                
+                // Adiciona espaço extra entre grupos (exceto após o último)
+                if (groupIndex < apGroups.length - 1) {
+                    currentX += groupSpacing;
+                }
+            });
+        }
     }
     
-    private organizeByLevel(): Map<number, NetworkNode[]> {
-        const nodesByLevel = new Map<number, NetworkNode[]>();
-        const nodeMap = new Map<string, NetworkNode>();
-        const nodeLevels = new Map<string, number>();
-        
-        // Criar mapa de nós
-        this.topologyData.forEach(node => {
-            nodeMap.set(node.id, node);
-        });
-        
-        // Calcular níveis recursivamente
-        const calculateLevel = (nodeId: string): number => {
-            if (nodeLevels.has(nodeId)) {
-                return nodeLevels.get(nodeId)!;
-            }
-            
-            const node = nodeMap.get(nodeId);
-            if (!node || !node.parentId) {
-                nodeLevels.set(nodeId, 0);
-                return 0;
-            }
-            
-            const level = calculateLevel(node.parentId) + 1;
-            nodeLevels.set(nodeId, level);
-            return level;
+    /**
+     * Agrupa nós por tipo de dispositivo
+     */
+    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[] } {
+        return {
+            routers: this.nodes.filter(n => n.type === DeviceType.ROUTER),
+            switches: this.nodes.filter(n => n.type === DeviceType.SWITCH),
+            accessPoints: this.nodes.filter(n => n.type === DeviceType.ACCESS_POINT)
         };
-        
-        // Calcular nível de cada nó
-        this.topologyData.forEach(node => {
-            const level = calculateLevel(node.id);
-            
-            if (!nodesByLevel.has(level)) {
-                nodesByLevel.set(level, []);
-            }
-            nodesByLevel.get(level)!.push(node);
-        });
-        
-        return nodesByLevel;
     }
     
+    /**
+     * Retorna nós do nível 2: Switches + APs conectados diretamente ao router
+     */
+    private getLevel2Nodes(switches: TopologyNode[], accessPoints: TopologyNode[]): TopologyNode[] {
+        const routers = this.nodes.filter(n => n.type === DeviceType.ROUTER);
+        const routerIds = routers.map(r => r.id);
+        
+        // APs conectados diretamente ao router
+        const directAPs = accessPoints.filter(ap => {
+            return ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
+        });
+        
+        // Combina switches e APs diretos, ordenando: switches primeiro, depois APs
+        return [...switches, ...directAPs];
+    }
+    
+    /**
+     * Retorna APs do nível 3: APs conectados aos switches
+     */
+    private getLevel3AccessPoints(accessPoints: TopologyNode[]): TopologyNode[] {
+        const routers = this.nodes.filter(n => n.type === DeviceType.ROUTER);
+        const routerIds = routers.map(r => r.id);
+        
+        // APs que NÃO estão conectados diretamente ao router
+        return accessPoints.filter(ap => {
+            return !ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
+        });
+    }
+    
+    /**
+     * Agrupa Access Points pelo switch ao qual estão conectados
+     */
+    private groupAPsBySwitch(aps: TopologyNode[], switches: TopologyNode[]): TopologyNode[][] {
+        const groups: TopologyNode[][] = [];
+        
+        // Para cada switch, encontra os APs conectados a ele
+        switches.forEach(switchNode => {
+            const connectedAPs = aps.filter(ap => {
+                return ap.ports.some(port => port.connectedToDeviceId === switchNode.id);
+            });
+            
+            if (connectedAPs.length > 0) {
+                groups.push(connectedAPs);
+            }
+        });
+        
+        // Adiciona APs não conectados em um grupo separado (se houver)
+        const unconnectedAPs = aps.filter(ap => {
+            return !ap.ports.some(port => 
+                switches.some(sw => sw.id === port.connectedToDeviceId)
+            );
+        });
+        
+        if (unconnectedAPs.length > 0) {
+            groups.push(unconnectedAPs);
+        }
+        
+        return groups;
+    }
+    
+    /**
+     * Calcula as conexões entre dispositivos
+     */
     private calculateConnections(): void {
         this.connections = [];
         
-        this.positionedNodes.forEach(node => {
-            if (node.parentId) {
-                const parent = this.positionedNodes.find(n => n.id === node.parentId);
-                if (parent) {
-                    this.connections.push({ from: parent, to: node });
+        this.nodes.forEach(node => {
+            node.ports.forEach(port => {
+                const targetNode = this.nodes.find(n => n.id === port.connectedToDeviceId);
+                if (targetNode && node.position && targetNode.position) {
+                    // Verifica se a conexão já existe (evita duplicatas)
+                    const exists = this.connections.some(c => 
+                        (c.fromDevice === node.id && c.toDevice === targetNode.id) ||
+                        (c.fromDevice === targetNode.id && c.toDevice === node.id)
+                    );
+                    
+                    if (!exists) {
+                        this.connections.push({
+                            fromDevice: node.id,
+                            fromPort: port.portName,
+                            toDevice: targetNode.id,
+                            toPort: port.connectedToPort
+                        });
+                    }
                 }
-            }
+            });
         });
     }
     
-    getNodeIcon(node: PositionedNode): string {
-        if (node.id.startsWith('router')) {
-            return 'Roteador';
-        } else if (node.id.startsWith('switch')) {
-            return 'Switch';
-        } else if (node.id.startsWith('ap')) {
-            return 'AP';
-        }
-        return 'pi-circle';
+    /**
+     * Retorna o centro inferior de um nó (ponto de saída)
+     */
+    getNodeBottomCenter(node: TopologyNode): { x: number, y: number } {
+        return {
+            x: (node.position?.x || 0) + this.nodeWidth / 2,
+            y: (node.position?.y || 0) + this.nodeHeight
+        };
     }
     
-    getNodeColor(node: PositionedNode): string {
-        if (node.id.startsWith('router')) {
-            return '#3B82F6'; // blue-500
-        } else if (node.id.startsWith('switch')) {
-            return '#10B981'; // green-500
-        } else if (node.id.startsWith('ap')) {
-            return '#F59E0B'; // amber-500
-        }
-        return '#6B7280'; // gray-500
+    /**
+     * Retorna o centro superior de um nó (ponto de entrada)
+     */
+    getNodeTopCenter(node: TopologyNode): { x: number, y: number } {
+        return {
+            x: (node.position?.x || 0) + this.nodeWidth / 2,
+            y: node.position?.y || 0
+        };
     }
     
+    /**
+     * Gera o path SVG para uma conexão com linhas verticais e horizontais
+     */
+    getConnectionPath(connection: TopologyConnection): string {
+        const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
+        const toNode = this.nodes.find(n => n.id === connection.toDevice);
+        
+        if (!fromNode || !toNode || !fromNode.position || !toNode.position) {
+            return '';
+        }
+        
+        const start = this.getNodeBottomCenter(fromNode);
+        const end = this.getNodeTopCenter(toNode);
+        
+        // Calcula ponto médio vertical para criar conexões em forma de "T"
+        const midY = start.y + (end.y - start.y) / 2;
+        
+        // Cria path com linhas verticais e horizontais (sem diagonais)
+        // Formato: sai verticalmente do dispositivo de origem, 
+        // move horizontalmente até alinhar com o destino,
+        // e desce/sobe verticalmente até o dispositivo de destino
+        const path = `
+            M ${start.x} ${start.y}
+            L ${start.x} ${midY}
+            L ${end.x} ${midY}
+            L ${end.x} ${end.y}
+        `;
+        
+        return path.trim();
+    }
+    
+    /**
+     * Retorna a posição para o label da porta de origem
+     */
+    getFromPortLabelPosition(connection: TopologyConnection): { x: number, y: number } {
+        const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
+        if (!fromNode || !fromNode.position) return { x: 0, y: 0 };
+        
+        const point = this.getNodeBottomCenter(fromNode);
+        return { x: point.x - 30, y: point.y + 15 };
+    }
+    
+    /**
+     * Retorna a posição para o label da porta de destino
+     */
+    getToPortLabelPosition(connection: TopologyConnection): { x: number, y: number } {
+        const toNode = this.nodes.find(n => n.id === connection.toDevice);
+        if (!toNode || !toNode.position) return { x: 0, y: 0 };
+        
+        const point = this.getNodeTopCenter(toNode);
+        return { x: point.x - 30, y: point.y - 5 };
+    }
+    
+    /**
+     * Retorna a classe CSS baseada no tipo de dispositivo
+     */
+    getDeviceClass(type: DeviceType): string {
+        switch (type) {
+            case DeviceType.ROUTER:
+                return 'device-router';
+            case DeviceType.SWITCH:
+                return 'device-switch';
+            case DeviceType.ACCESS_POINT:
+                return 'device-ap';
+            default:
+                return '';
+        }
+    }
+    
+    /**
+     * Retorna o ícone PrimeIcons baseado no tipo de dispositivo
+     */
+    getDeviceIcon(type: DeviceType): string {
+        switch (type) {
+            case DeviceType.ROUTER:
+                return 'pi pi-server';
+            case DeviceType.SWITCH:
+                return 'pi pi-sitemap';
+            case DeviceType.ACCESS_POINT:
+                return 'pi pi-wifi';
+            default:
+                return 'pi pi-box';
+        }
+    }
+    
+    /**
+     * Retorna a transformação SVG para zoom e pan
+     */
     getTransform(): string {
         return `translate(${this.translateX}, ${this.translateY}) scale(${this.scale})`;
     }
     
+    /**
+     * Aumenta o zoom
+     */
     zoomIn(): void {
-        this.scale = Math.min(this.scale * 1.2, 3);
+        this.scale = Math.min(this.scale + this.zoomStep, 3); // Máximo 3x
     }
     
+    /**
+     * Diminui o zoom
+     */
     zoomOut(): void {
-        this.scale = Math.max(this.scale / 1.2, 0.5);
+        this.scale = Math.max(this.scale - this.zoomStep, 0.5); // Mínimo 0.5x
     }
     
+    /**
+     * Restaura o zoom para 1:1
+     */
     resetZoom(): void {
         this.scale = 1;
         this.translateX = 0;
         this.translateY = 0;
     }
     
+    /**
+     * Ativa/desativa o modo de pan com mouse
+     */
     togglePanMode(): void {
         this.isPanMode = !this.isPanMode;
-    }
-    
-    onSvgMouseDown(event: MouseEvent): void {
-        // Botão do meio do mouse (wheel) ou modo pan ativado com botão esquerdo
-        if (event.button === 1 || (this.isPanMode && event.button === 0)) {
-            event.preventDefault();
-            this.isPanning = true;
-            this.lastMouseX = event.clientX;
-            this.lastMouseY = event.clientY;
+        if (!this.isPanMode) {
+            this.isDragging = false;
         }
     }
     
-    onSvgMouseMove(event: MouseEvent): void {
-        if (this.isPanning) {
+    /**
+     * Inicia o arrasto do gráfico
+     */
+    onMouseDown(event: MouseEvent): void {
+        if (this.isPanMode) {
+            this.isDragging = true;
+            this.lastMouseX = event.clientX;
+            this.lastMouseY = event.clientY;
             event.preventDefault();
+        }
+    }
+    
+    /**
+     * Move o gráfico enquanto arrasta
+     */
+    onMouseMove(event: MouseEvent): void {
+        if (this.isPanMode && this.isDragging) {
             const deltaX = event.clientX - this.lastMouseX;
             const deltaY = event.clientY - this.lastMouseY;
             
@@ -266,103 +532,27 @@ export class NetworkTopology implements OnInit, OnDestroy {
             
             this.lastMouseX = event.clientX;
             this.lastMouseY = event.clientY;
-        }
-    }
-    
-    onSvgMouseUp(event: MouseEvent): void {
-        if (this.isPanning) {
             event.preventDefault();
-            this.isPanning = false;
         }
     }
     
-    onSvgMouseLeave(event: MouseEvent): void {
-        if (this.isPanning) {
-            this.isPanning = false;
+    /**
+     * Finaliza o arrasto do gráfico
+     */
+    onMouseUp(event: MouseEvent): void {
+        if (this.isPanMode) {
+            this.isDragging = false;
+            event.preventDefault();
         }
     }
     
-    onNodeClick(node: PositionedNode, event: MouseEvent): void {
-        // Não selecionar nó se estiver em modo pan ou arrastando
-        if (!this.isPanning && !this.isPanMode) {
-            event.stopPropagation();
-            this.selectedNode = this.selectedNode?.id === node.id ? null : node;
+    /**
+     * Retorna o cursor CSS baseado no modo de pan
+     */
+    getCursor(): string {
+        if (this.isPanMode) {
+            return this.isDragging ? 'grabbing' : 'grab';
         }
-    }
-    
-    exportToPdf(): void {
-        if (!this.svgElement) {
-            console.error('SVG element not found');
-            return;
-        }
-        
-        const svgEl = this.svgElement.nativeElement.cloneNode(true) as SVGElement;
-        
-        // Garantir que o SVG tenha atributos de dimensão explícitos
-        svgEl.setAttribute('width', this.svgWidth.toString());
-        svgEl.setAttribute('height', this.svgHeight.toString());
-        
-        // Serializar SVG
-        let svgData = new XMLSerializer().serializeToString(svgEl);
-        
-        // Adicionar namespace XML se não existir
-        if (!svgData.includes('xmlns="http://www.w3.org/2000/svg"')) {
-            svgData = svgData.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-        }
-        
-        // Criar canvas temporário
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-            console.error('Could not get canvas context');
-            return;
-        }
-        
-        // Configurar dimensões do canvas (alta qualidade)
-        const scaleFactor = 2;
-        canvas.width = this.svgWidth * scaleFactor;
-        canvas.height = this.svgHeight * scaleFactor;
-        
-        // Criar imagem do SVG usando data URL
-        const img = new Image();
-        
-        img.onload = () => {
-            // Fundo branco
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Desenhar SVG no canvas
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            
-            // Converter canvas para imagem
-            const imgData = canvas.toDataURL('image/png');
-            
-            // Calcular dimensões do PDF (converter pixels para mm)
-            // 96 DPI = 1 pixel = 0.264583 mm
-            const pdfWidth = this.svgWidth * 0.264583;
-            const pdfHeight = this.svgHeight * 0.264583;
-            
-            // Criar PDF com dimensões personalizadas
-            const pdf = new jsPDF({
-                orientation: pdfWidth > pdfHeight ? 'landscape' : 'portrait',
-                unit: 'mm',
-                format: [pdfWidth, pdfHeight]
-            });
-            
-            // Adicionar imagem ao PDF
-            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-            
-            // Salvar PDF
-            pdf.save(`topologia-rede-${new Date().getTime()}.pdf`);
-        };
-        
-        img.onerror = (error) => {
-            console.error('Error loading SVG image:', error);
-        };
-        
-        // Usar data URL em vez de blob URL para evitar problemas de CORS
-        const encodedData = encodeURIComponent(svgData);
-        img.src = 'data:image/svg+xml;charset=utf-8,' + encodedData;
+        return 'default';
     }
 }
