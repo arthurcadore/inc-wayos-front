@@ -3,7 +3,7 @@
 .topology-container {
     position: relative;
     width: 100%;
-    overflow-x: auto;
+    overflow-x: clip;
     overflow-y: hidden;
     background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
     border-radius: 8px;
@@ -51,13 +51,13 @@
     &:hover {
         .node-rect {
             stroke: #3b82f6;
-            stroke-width: 3;
+            stroke-width: 1;
             filter: url(#shadow) drop-shadow(0 4px 6px rgba(59, 130, 246, 0.3));
         }
         
         .node-overlay {
-            stroke: #3b82f6;
-            stroke-width: 3;
+            stroke: #6ca4ff;
+            stroke-width: 1;
         }
     }
     
@@ -109,18 +109,6 @@
     .connection-line {
         transition: all 0.3s ease;
         stroke-dasharray: 0;
-    }
-    
-    &:hover {
-        .connection-line {
-            stroke: #3b82f6;
-            stroke-width: 3;
-        }
-        
-        .port-label {
-            fill: #1e40af;
-            font-weight: 600;
-        }
     }
 }
 

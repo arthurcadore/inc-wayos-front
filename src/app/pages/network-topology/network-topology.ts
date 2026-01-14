@@ -427,11 +427,17 @@ export class NetworkTopology implements OnInit, OnDestroy {
      * Retorna a posição para o label da porta de origem
      */
     getFromPortLabelPosition(connection: TopologyConnection): { x: number, y: number } {
-        const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
-        if (!fromNode || !fromNode.position) return { x: 0, y: 0 };
+        const toNode = this.nodes.find(n => n.id === connection.toDevice);
+        if (!toNode || !toNode.position) return { x: 0, y: 0 };
         
-        const point = this.getNodeBottomCenter(fromNode);
-        return { x: point.x - 30, y: point.y + 15 };
+        const point = this.getNodeTopCenter(toNode);
+        return { x: point.x - 30, y: point.y - 48 };
+
+        // const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
+        // if (!fromNode || !fromNode.position) return { x: 0, y: 0 };
+        
+        // const point = this.getNodeBottomCenter(fromNode);
+        // return { x: point.x - 30, y: point.y + 15 };
     }
     
     /**
@@ -442,7 +448,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
         if (!toNode || !toNode.position) return { x: 0, y: 0 };
         
         const point = this.getNodeTopCenter(toNode);
-        return { x: point.x - 30, y: point.y - 5 };
+        return { x: point.x - 30, y: point.y - 20 };
     }
     
     /**

@@ -66,22 +66,42 @@
                     <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
                 </filter>
             </defs>
-            
-            <!-- Grupo principal com transform para zoom e pan -->
+
+            <!-- Marcador de seta para conexões -->
             <g [attr.transform]="getTransform()">
                 <!-- Conexões (linhas) - renderizadas primeiro para ficarem atrás dos nós -->
                 <g class="connections">
-                    <g *ngFor="let connection of connections" class="connection-group">
+                    @for (connection of connections; track connection) {
+                    <g class="connection-group">
                         <!-- Linha de conexão -->
                         <path 
                             [attr.d]="getConnectionPath(connection)"
                             class="connection-line"
-                            stroke="#64748b"
+                            stroke="#adadad"
                             stroke-width="2"
                             fill="none"
                             marker-end="url(#arrowhead)" />
-                        
+                    </g>
+                    }
+                </g>
+            </g>
+            
+            <!-- Grupo principal com transform para zoom e pan -->
+            <g [attr.transform]="getTransform()">
+                <g class="connections">
+                    @for (connection of connections; track connection) {
+                    <g  class="connection-group">
                         <!-- Labels de portas -->
+                        <rect 
+                            [attr.x]="getFromPortLabelPosition(connection).x - 10"
+                            [attr.y]="getFromPortLabelPosition(connection).y - 14"
+                            [attr.width]="80"
+                            [attr.height]="20"
+                            fill="white"
+                            stroke="#3b82f6"
+                            stroke-width="1"
+                            rx="8"
+                            ry="8" />
                         <text 
                             [attr.x]="getFromPortLabelPosition(connection).x"
                             [attr.y]="getFromPortLabelPosition(connection).y"
@@ -90,6 +110,16 @@
                             {{ connection.fromPort }}
                         </text>
                         
+                        <rect 
+                            [attr.x]="getToPortLabelPosition(connection).x - 10"
+                            [attr.y]="getToPortLabelPosition(connection).y - 14"
+                            [attr.width]="80"
+                            [attr.height]="20"
+                            fill="white"
+                            stroke="#3b82f6"
+                            stroke-width="1"
+                            rx="8"
+                            ry="8" />
                         <text 
                             [attr.x]="getToPortLabelPosition(connection).x"
                             [attr.y]="getToPortLabelPosition(connection).y"
@@ -98,6 +128,7 @@
                             {{ connection.toPort }}
                         </text>
                     </g>
+                    }
                 </g>
                 
                 <!-- Nós (dispositivos) -->
@@ -114,8 +145,8 @@
                             [attr.width]="nodeWidth"
                             [attr.height]="nodeHeight"
                             class="node-rect"
-                            rx="8"
-                            ry="8"
+                            rx="0"
+                            ry="0"
                             fill="white"
                             stroke="#cbd5e1"
                             stroke-width="2"
@@ -125,13 +156,13 @@
                         <g class="node-icon-area">
                             <!-- Background do ícone -->
                             <rect 
-                                x="0" 
-                                y="0" 
-                                [attr.width]="nodeWidth"
+                                x="2.5" 
+                                y="2.5" 
+                                [attr.width]="nodeWidth - 5"
                                 height="60"
                                 class="icon-background"
-                                rx="8"
-                                ry="8"
+                                rx="0"
+                                ry="0"
                                 fill="#f1f5f9" />
                             
                             <!-- Ícone/Imagem do dispositivo -->
@@ -147,7 +178,7 @@
                         <!-- Texto - Nome do dispositivo -->
                         <text 
                             [attr.x]="nodeWidth / 2"
-                            y="75"
+                            y="85"
                             class="node-name"
                             text-anchor="middle"
                             fill="#1e293b"
@@ -159,7 +190,7 @@
                         <!-- Texto - Modelo -->
                         <text 
                             [attr.x]="nodeWidth / 2"
-                            y="92"
+                            y="110"
                             class="node-model"
                             text-anchor="middle"
                             fill="#64748b"
@@ -174,11 +205,11 @@
                             [attr.width]="nodeWidth"
                             [attr.height]="nodeHeight"
                             class="node-overlay"
-                            rx="8"
-                            ry="8"
+                            rx="0"
+                            ry="0"
                             fill="transparent"
                             stroke="transparent"
-                            stroke-width="2"
+                            stroke-width="1"
                             style="cursor: pointer;"
                             (click)="showDeviceDetails($event, node)" />
                     </g>
