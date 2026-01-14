@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { CardModule } from "primeng/card";
 import { ButtonModule } from "primeng/button";
 import { TooltipModule } from "primeng/tooltip";
+import { Popover } from "primeng/popover";
 import { jsPDF } from 'jspdf';
 
 // Tipos de dispositivos na topologia
@@ -49,15 +50,21 @@ export interface TopologyConnection {
         CardModule,
         ButtonModule,
         TooltipModule,
+        Popover,
     ]
 })
 export class NetworkTopology implements OnInit, OnDestroy {
     
     @ViewChild('topologySvg', { read: ElementRef }) svgElement!: ElementRef;
+    @ViewChild('devicePopover') devicePopover!: Popover;
+    @ViewChild('popoverAnchor', { read: ElementRef }) popoverAnchor!: ElementRef;
     
     // Dados da topologia
     nodes: TopologyNode[] = [];
     connections: TopologyConnection[] = [];
+    
+    // Dispositivo selecionado para mostrar no popover
+    selectedDevice: TopologyNode | null = null;
     
     // Configurações do SVG
     svgWidth = 1600;
@@ -484,6 +491,58 @@ export class NetworkTopology implements OnInit, OnDestroy {
             default:
                 return '';
         }
+    }
+    
+    /**
+     * Retorna o nome do tipo de dispositivo formatado
+     */
+    getDeviceTypeName(type: DeviceType): string {
+        switch (type) {
+            case DeviceType.ROUTER:
+                return 'Roteador';
+            case DeviceType.SWITCH:
+                return 'Switch';
+            case DeviceType.ACCESS_POINT:
+                return 'Access Point';
+            default:
+                return 'Dispositivo';
+        }
+    }
+    
+    /**
+     * Retorna o nome do dispositivo conectado à porta
+     */
+    getConnectedDeviceName(deviceId: string): string {
+        const device = this.nodes.find(n => n.id === deviceId);
+        return device ? device.name : 'Desconhecido';
+    }
+    
+    /**
+     * Mostra o popover com detalhes do dispositivo
+     */
+    showDeviceDetails(event: MouseEvent, node: TopologyNode): void {
+        // Não mostra o popover se estiver em modo pan
+        if (this.isPanMode) {
+            return;
+        }
+        
+        this.selectedDevice = node;
+        
+        // Calcula a posição na tela do nó considerando zoom e pan
+        const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
+        const containerRect = this.svgElement.nativeElement.parentElement.getBoundingClientRect();
+        const nodeX = (node.position?.x || 0) * this.scale + this.translateX;
+        const nodeY = (node.position?.y || 0) * this.scale + this.translateY;
+        
+        // Posiciona o elemento âncora no centro do dispositivo
+        const anchorElement = this.popoverAnchor.nativeElement as HTMLElement;
+        anchorElement.style.left = `${nodeX + (this.nodeWidth * this.scale) / 2}px`;
+        anchorElement.style.top = `${nodeY + (this.nodeHeight * this.scale) / 2}px`;
+        
+        // Mostra o popover usando o elemento âncora como target
+        setTimeout(() => {
+            this.devicePopover.toggle(event, anchorElement);
+        }, 0);
     }
     
     /**

@@ -179,10 +179,53 @@
                             fill="transparent"
                             stroke="transparent"
                             stroke-width="2"
-                            style="cursor: pointer;" />
+                            style="cursor: pointer;"
+                            (click)="showDeviceDetails($event, node)" />
                     </g>
                 </g>
             </g>
         </svg>
+        
+        <!-- Âncora invisível para posicionar o popover -->
+        <div #popoverAnchor 
+             style="position: absolute; width: 1px; height: 1px; pointer-events: none;">
+        </div>
+        
+        <!-- Popover com detalhes do dispositivo -->
+        <p-popover #devicePopover [dismissable]="true">
+            <ng-template pTemplate="content">
+                <div *ngIf="selectedDevice" class="device-details">
+                    <div class="flex items-center gap-3 mb-3">
+                        <img [src]="getDeviceImage(selectedDevice.type)" 
+                             alt="Device" 
+                             class="w-12 h-12">
+                        <div>
+                            <h3 class="text-lg font-bold mb-1">{{ selectedDevice.name }}</h3>
+                            <p class="text-sm text-gray-600">{{ getDeviceTypeName(selectedDevice.type) }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <p class="text-sm font-semibold text-gray-700 mb-1">Modelo:</p>
+                        <p class="text-sm">{{ selectedDevice.model }}</p>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Conexões:</p>
+                        <div class="space-y-2">
+                            <div *ngFor="let port of selectedDevice.ports" 
+                                 class="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
+                                <span class="font-mono text-blue-600">{{ port.portName }}</span>
+                                <span class="text-gray-400">→</span>
+                                <div class="text-right">
+                                    <div class="font-medium">{{ getConnectedDeviceName(port.connectedToDeviceId) }}</div>
+                                    <div class="text-xs text-gray-500 font-mono">{{ port.connectedToPort }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </ng-template>
+        </p-popover>
     </div>
 </p-card>
