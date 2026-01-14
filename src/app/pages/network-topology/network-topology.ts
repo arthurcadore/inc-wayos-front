@@ -471,6 +471,22 @@ export class NetworkTopology implements OnInit, OnDestroy {
     }
     
     /**
+     * Retorna a imagem PNG baseada no tipo de dispositivo
+     */
+    getDeviceImage(type: DeviceType): string {
+        switch (type) {
+            case DeviceType.ROUTER:
+                return 'assets/imgs/router.png';
+            case DeviceType.SWITCH:
+                return 'assets/imgs/switche.png';
+            case DeviceType.ACCESS_POINT:
+                return 'assets/imgs/ap.png';
+            default:
+                return '';
+        }
+    }
+    
+    /**
      * Retorna a transformação SVG para zoom e pan
      */
     getTransform(): string {
@@ -560,6 +576,33 @@ export class NetworkTopology implements OnInit, OnDestroy {
     }
     
     /**
+     * Converte uma imagem para base64 Data URL
+     */
+    private async imageToDataURL(url: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0);
+                    resolve(canvas.toDataURL('image/png'));
+                } else {
+                    reject(new Error('Failed to get canvas context'));
+                }
+            };
+            
+            img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
+            img.src = url;
+        });
+    }
+    
+    /**
      * Exporta a topologia como PDF
      */
     async exportToPDF(): Promise<void> {
@@ -574,6 +617,28 @@ export class NetworkTopology implements OnInit, OnDestroy {
             if (mainGroup) {
                 mainGroup.removeAttribute('transform');
             }
+            
+            // Converte todas as imagens para base64
+            const images = svgClone.querySelectorAll('image');
+            const imagePromises: Promise<void>[] = [];
+            
+            images.forEach((imageElement) => {
+                const href = imageElement.getAttribute('href') || imageElement.getAttribute('xlink:href');
+                if (href && !href.startsWith('data:')) {
+                    const promise = this.imageToDataURL(href)
+                        .then(dataUrl => {
+                            imageElement.setAttribute('href', dataUrl);
+                            imageElement.removeAttribute('xlink:href');
+                        })
+                        .catch(error => {
+                            console.error('Error converting image:', error);
+                        });
+                    imagePromises.push(promise);
+                }
+            });
+            
+            // Aguarda todas as imagens serem convertidas
+            await Promise.all(imagePromises);
             
             // Serializa o SVG
             const serializer = new XMLSerializer();

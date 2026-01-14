@@ -134,16 +134,14 @@
                                 ry="8"
                                 fill="#f1f5f9" />
                             
-                            <!-- Ícone SVG (usando foreignObject para usar classes do PrimeIcons) -->
-                            <foreignObject 
-                                [attr.x]="nodeWidth / 2 - 20" 
-                                y="10" 
-                                width="40" 
-                                height="40">
-                                <div xmlns="http://www.w3.org/1999/xhtml" class="flex items-center justify-center h-full">
-                                    <i [class]="getDeviceIcon(node.type)" class="text-3xl text-gray-600"></i>
-                                </div>
-                            </foreignObject>
+                            <!-- Ícone/Imagem do dispositivo -->
+                            <image 
+                                [attr.x]="nodeWidth / 2 - 25" 
+                                y="5" 
+                                width="50" 
+                                height="50"
+                                [attr.href]="getDeviceImage(node.type)"
+                                preserveAspectRatio="xMidYMid meet" />
                         </g>
                         
                         <!-- Texto - Nome do dispositivo -->
