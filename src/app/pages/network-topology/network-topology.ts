@@ -3,6 +3,7 @@ import { CommonModule } from "@angular/common";
 import { CardModule } from "primeng/card";
 import { ButtonModule } from "primeng/button";
 import { TooltipModule } from "primeng/tooltip";
+import { jsPDF } from 'jspdf';
 
 // Tipos de dispositivos na topologia
 export enum DeviceType {
@@ -51,6 +52,8 @@ export interface TopologyConnection {
     ]
 })
 export class NetworkTopology implements OnInit, OnDestroy {
+    
+    @ViewChild('topologySvg', { read: ElementRef }) svgElement!: ElementRef;
     
     // Dados da topologia
     nodes: TopologyNode[] = [];
@@ -554,5 +557,81 @@ export class NetworkTopology implements OnInit, OnDestroy {
             return this.isDragging ? 'grabbing' : 'grab';
         }
         return 'default';
+    }
+    
+    /**
+     * Exporta a topologia como PDF
+     */
+    async exportToPDF(): Promise<void> {
+        try {
+            const svg = this.svgElement.nativeElement as SVGElement;
+            
+            // Clona o SVG para não afetar o original
+            const svgClone = svg.cloneNode(true) as SVGElement;
+            
+            // Remove o transform do grupo principal para exportar sem zoom/pan
+            const mainGroup = svgClone.querySelector('g[transform]');
+            if (mainGroup) {
+                mainGroup.removeAttribute('transform');
+            }
+            
+            // Serializa o SVG
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgClone);
+            
+            // Adiciona namespace se não existir
+            if (!svgString.includes('xmlns')) {
+                svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+            }
+            
+            // Converte SVG para Data URL diretamente
+            const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+            const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
+            
+            // Cria uma imagem a partir do SVG
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            
+            img.onload = () => {
+                canvas.width = this.svgWidth;
+                canvas.height = this.svgHeight;
+                
+                if (ctx) {
+                    // Fundo branco
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Desenha o SVG
+                    ctx.drawImage(img, 0, 0);
+                    
+                    // Converte canvas para imagem
+                    const imgData = canvas.toDataURL('image/png');
+                    
+                    // Cria o PDF
+                    const pdf = new jsPDF({
+                        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+                        unit: 'px',
+                        format: [canvas.width, canvas.height]
+                    });
+                    
+                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+                    pdf.save('topologia-de-rede.pdf');
+                }
+            };
+            
+            img.onerror = (error) => {
+                console.error('Erro ao carregar o SVG:', error);
+                alert('Erro ao exportar o PDF. Tente novamente.');
+            };
+            
+            // Usa Data URL em vez de Blob URL para evitar problemas de CORS
+            img.src = svgDataUrl;
+            
+        } catch (error) {
+            console.error('Erro ao exportar PDF:', error);
+            alert('Erro ao exportar o PDF. Tente novamente.');
+        }
     }
 }

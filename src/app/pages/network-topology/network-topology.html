@@ -31,9 +31,6 @@
                     (onClick)="resetZoom()"
                     pTooltip="Restaurar Zoom 1:1"
                     tooltipPosition="left" />
-            </div>
-            
-            <div class="control-group mt-2">
                 <p-button 
                     [icon]="'pi pi-arrows-alt'" 
                     [severity]="isPanMode ? 'success' : 'secondary'"
@@ -41,10 +38,18 @@
                     (onClick)="togglePanMode()"
                     [pTooltip]="isPanMode ? 'Desativar Modo Pan (Arraste com Mouse)' : 'Ativar Modo Pan (Arraste com Mouse)'"
                     tooltipPosition="left" />
+                <p-button 
+                    icon="pi pi-file-pdf" 
+                    severity="secondary"
+                    [outlined]="true"
+                    (onClick)="exportToPDF()"
+                    pTooltip="Exportar como PDF"
+                    tooltipPosition="left" />
             </div>
         </div>
         
         <svg 
+            #topologySvg
             [attr.viewBox]="'0 0 ' + svgWidth + ' ' + svgHeight"
             [attr.width]="svgWidth"
             [attr.height]="svgHeight"
