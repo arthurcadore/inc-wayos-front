@@ -196,9 +196,6 @@
             <ng-template pTemplate="content">
                 <div *ngIf="selectedDevice" class="device-details">
                     <div class="flex items-center gap-3 mb-3">
-                        <img [src]="getDeviceImage(selectedDevice.type)" 
-                             alt="Device" 
-                             class="w-12 h-12">
                         <div>
                             <h3 class="text-lg font-bold mb-1">{{ selectedDevice.name }}</h3>
                             <p class="text-sm text-gray-600">{{ getDeviceTypeName(selectedDevice.type) }}</p>
