@@ -106,9 +106,9 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'Model XPTO',
                 type: DeviceType.ROUTER,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/1' },
-                    { portName: 'GE 1/0/2', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 2/0/1' },
-                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-7', connectedToPort: 'GE 1/0/1' }
+                    { portName: '', connectedToDeviceId: 'switch-1', connectedToPort: '' },
+                    { portName: '', connectedToDeviceId: 'switch-2', connectedToPort: '' },
+                    { portName: '', connectedToDeviceId: 'ap-7', connectedToPort: '' }
                 ]
             },
             // Switches no nível intermediário
