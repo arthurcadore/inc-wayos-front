@@ -10,7 +10,8 @@ import { jsPDF } from 'jspdf';
 export enum DeviceType {
     ROUTER = 'ROUTER',
     SWITCH = 'SWITCH',
-    ACCESS_POINT = 'ACCESS_POINT'
+    ACCESS_POINT = 'ACCESS_POINT',
+    STATION = 'STATION'
 }
 
 // Interface para definir uma conexão de porta
@@ -108,7 +109,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 ports: [
                     { portName: '', connectedToDeviceId: 'switch-1', connectedToPort: '' },
                     { portName: '', connectedToDeviceId: 'switch-2', connectedToPort: '' },
-                    { portName: '', connectedToDeviceId: 'ap-7', connectedToPort: '' }
+                    { portName: '', connectedToDeviceId: 'ap-7', connectedToPort: '' },
+                    { portName: '', connectedToDeviceId: 'ap-8', connectedToPort: '' },
                 ]
             },
             // Switches no nível intermediário
@@ -118,10 +120,14 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'Model 123ABC',
                 type: DeviceType.SWITCH,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/1' },
-                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-2', connectedToPort: 'GE 1/0/1' },
-                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-3', connectedToPort: 'GE 1/0/1' },
-                    { portName: 'GE 1/0/4', connectedToDeviceId: 'ap-4', connectedToPort: 'GE 1/0/1' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: '' },
+                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-1', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-2', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/4', connectedToDeviceId: 'ap-3', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/5', connectedToDeviceId: 'ap-4', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/6', connectedToDeviceId: 'station-1', connectedToPort: 'ETH0' },
+                    { portName: 'GE 1/0/7', connectedToDeviceId: 'station-2', connectedToPort: 'ETH0' },
+                    { portName: 'GE 1/0/8', connectedToDeviceId: 'station-3', connectedToPort: 'ETH0' },
                 ]
             },
             {
@@ -130,10 +136,11 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'Model 123ABC',
                 type: DeviceType.SWITCH,
                 ports: [
-                    { portName: 'GE 2/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/2' },
-                    { portName: 'GE 7/0/2', connectedToDeviceId: 'ap-1', connectedToPort: 'GE 7/0/2' },
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'ap-5', connectedToPort: 'GE 1/0/1' },
-                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-6', connectedToPort: 'GE 1/0/1' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: '' },
+                    { portName: 'GE 1/0/2', connectedToDeviceId: 'ap-5', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/3', connectedToDeviceId: 'ap-6', connectedToPort: 'GE 1/0/1' },
+                    { portName: 'GE 1/0/4', connectedToDeviceId: 'station-4', connectedToPort: 'ETH0' },
+
                 ]
             },
             // Access Points no nível inferior
@@ -143,7 +150,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 2/0/2', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 2/0/2' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/2' }
                 ]
             },
             {
@@ -152,7 +159,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/2' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/3' }
                 ]
             },
             {
@@ -161,7 +168,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/3' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/4' }
                 ]
             },
             {
@@ -170,16 +177,18 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/4' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/5' }
                 ]
             },
+
+
             {
                 id: 'ap-5',
                 name: 'AP - 05',
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/1' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/2' }
                 ]
             },
             {
@@ -188,9 +197,49 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/2' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/3' }
                 ]
             },
+            
+            // Stations conectadas aos switches (nível 4)
+            {
+                id: 'station-1',
+                name: 'PC - 01',
+                model: 'Desktop',
+                type: DeviceType.STATION,
+                ports: [
+                    { portName: 'ETH0', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/6' }
+                ]
+            },
+            {
+                id: 'station-2',
+                name: 'PC - 02',
+                model: 'Desktop',
+                type: DeviceType.STATION,
+                ports: [
+                    { portName: 'ETH0', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/7' }
+                ]
+            },
+            {
+                id: 'station-3',
+                name: 'PC - 03',
+                model: 'Desktop',
+                type: DeviceType.STATION,
+                ports: [
+                    { portName: 'ETH0', connectedToDeviceId: 'switch-1', connectedToPort: 'GE 1/0/8' }
+                ]
+            },
+
+            {
+                id: 'station-4',
+                name: 'PC - 04',
+                model: 'Desktop',
+                type: DeviceType.STATION,
+                ports: [
+                    { portName: 'ETH0', connectedToDeviceId: 'switch-2', connectedToPort: 'GE 1/0/8' }
+                ]
+            },
+
             // Access Point conectado diretamente ao router (nível 2)
             {
                 id: 'ap-7',
@@ -198,88 +247,146 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 model: 'MODEL FOOBAR',
                 type: DeviceType.ACCESS_POINT,
                 ports: [
-                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: 'GE 1/0/3' }
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: '' }
                 ]
-            }
+            },
+            {
+                id: 'ap-8',
+                name: 'AP - 08',
+                model: 'MODEL FOOBAR',
+                type: DeviceType.ACCESS_POINT,
+                ports: [
+                    { portName: 'GE 1/0/1', connectedToDeviceId: 'router-1', connectedToPort: '' }
+                ]
+            },
         ];
     }
     
     /**
-     * Calcula posições dos nós baseado na hierarquia
+     * Calcula posições dos nós baseado na hierarquia (de baixo para cima)
      */
     private calculateLayout(): void {
         const layers = this.groupNodesByType();
-        const verticalSpacing = 220;
-        const horizontalSpacing = 250;
+        const nodeSpacing = 60;
+        const groupSpacing = 120;
         
-        let currentY = 80;
-        
-        // Router (topo)
-        if (layers.routers.length > 0) {
-            const totalWidth = layers.routers.length * this.nodeWidth + (layers.routers.length - 1) * horizontalSpacing;
-            let currentX = (this.svgWidth - totalWidth) / 2;
-            
-            layers.routers.forEach(node => {
-                node.position = { x: currentX, y: currentY };
-                currentX += this.nodeWidth + horizontalSpacing;
-            });
-            
-            currentY += verticalSpacing;
-        }
-        
-        // Nível 2: Switches e APs conectados diretamente ao router
-        const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
-        if (level2Nodes.length > 0) {
-            const totalWidth = level2Nodes.length * this.nodeWidth + (level2Nodes.length - 1) * horizontalSpacing;
-            let currentX = (this.svgWidth - totalWidth) / 2;
-            
-            level2Nodes.forEach(node => {
-                node.position = { x: currentX, y: currentY };
-                currentX += this.nodeWidth + horizontalSpacing;
-            });
-            
-            currentY += verticalSpacing;
-        }
-        
-        // Nível 3: Access Points conectados aos switches (base)
+        // NÍVEL 3: Access Points e Stations (base - começa aqui)
         const level3APs = this.getLevel3AccessPoints(layers.accessPoints);
-        if (level3APs.length > 0) {
-            const apSpacing = 60;
-            const groupSpacing = 120; // Espaço entre grupos de APs
-            
-            // Agrupa APs por switch ao qual estão conectados
-            const apGroups = this.groupAPsBySwitch(level3APs, layers.switches);
-            
-            // Calcula largura total incluindo espaçamento entre grupos
-            const totalWidth = level3APs.length * this.nodeWidth + 
-                              (level3APs.length - 1) * apSpacing +
-                              (apGroups.length - 1) * groupSpacing;
-            
-            let currentX = (this.svgWidth - totalWidth) / 2;
-            
-            // Posiciona cada grupo de APs
-            apGroups.forEach((group, groupIndex) => {
-                group.forEach(node => {
-                    node.position = { x: currentX, y: currentY };
-                    currentX += this.nodeWidth + apSpacing;
-                });
-                
-                // Adiciona espaço extra entre grupos (exceto após o último)
-                if (groupIndex < apGroups.length - 1) {
-                    currentX += groupSpacing;
-                }
+        const level3Nodes = [...level3APs, ...layers.stations];
+        
+        // Agrupa nós do nível 3 por switch pai
+        const level3Groups: { switchId: string, nodes: TopologyNode[] }[] = [];
+        
+        layers.switches.forEach(sw => {
+            const connectedNodes = level3Nodes.filter(n => {
+                return n.ports.some(port => port.connectedToDeviceId === sw.id);
             });
+            
+            if (connectedNodes.length > 0) {
+                level3Groups.push({ switchId: sw.id, nodes: connectedNodes });
+            }
+        });
+        
+        // Posiciona grupos do nível 3 sequencialmente
+        let currentX = 100; // Margem inicial
+        const level3Y = 520; // Y fixo para nível 3
+        
+        const groupCenters = new Map<string, number>(); // Armazena centro X de cada grupo
+        
+        level3Groups.forEach(group => {
+            const groupWidth = group.nodes.length * this.nodeWidth + (group.nodes.length - 1) * nodeSpacing;
+            const groupStartX = currentX;
+            const groupCenterX = groupStartX + groupWidth / 2;
+            
+            // Armazena o centro do grupo
+            groupCenters.set(group.switchId, groupCenterX);
+            
+            // Posiciona cada nó do grupo
+            let nodeX = groupStartX;
+            group.nodes.forEach(node => {
+                node.position = { x: nodeX, y: level3Y };
+                nodeX += this.nodeWidth + nodeSpacing;
+            });
+            
+            // Avança para o próximo grupo
+            currentX += groupWidth + groupSpacing;
+        });
+        
+        // NÍVEL 2: Switches (e APs diretos ao router)
+        const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
+        const level2Y = 300; // Y fixo para nível 2
+        
+        const level2Centers = new Map<string, number>(); // Armazena centro X de cada nó do nível 2
+        
+        // Posiciona switches baseado no centro de seus grupos de filhos
+        layers.switches.forEach(sw => {
+            const centerX = groupCenters.get(sw.id);
+            
+            if (centerX !== undefined) {
+                // Centraliza o switch sobre o grupo de filhos
+                const switchX = centerX - this.nodeWidth / 2;
+                sw.position = { x: switchX, y: level2Y };
+                level2Centers.set(sw.id, centerX);
+            }
+        });
+        
+        // Posiciona APs conectados diretamente ao router (nível 2)
+        const directAPs = level2Nodes.filter(n => n.type === DeviceType.ACCESS_POINT);
+        if (directAPs.length > 0) {
+            // Posiciona APs diretos à direita dos switches
+            const lastSwitch = layers.switches[layers.switches.length - 1];
+            let apX = lastSwitch && lastSwitch.position 
+                ? lastSwitch.position.x + this.nodeWidth + groupSpacing 
+                : currentX;
+            
+            directAPs.forEach(ap => {
+                ap.position = { x: apX, y: level2Y };
+                level2Centers.set(ap.id, apX + this.nodeWidth / 2);
+                apX += this.nodeWidth + groupSpacing;
+            });
+        }
+        
+        // NÍVEL 1: Router (topo)
+        if (layers.routers.length > 0) {
+            const level1Y = 80; // Y fixo para nível 1
+            
+            // Calcula o centro baseado nos switches conectados
+            const connectedSwitches = layers.switches.filter(sw => {
+                return sw.ports.some(port => 
+                    layers.routers.some(router => router.id === port.connectedToDeviceId)
+                );
+            });
+            
+            if (connectedSwitches.length > 0) {
+                // Encontra o centro entre o primeiro e último switch
+                const firstSwitch = connectedSwitches[0];
+                const lastSwitch = connectedSwitches[connectedSwitches.length - 1];
+                
+                if (firstSwitch.position && lastSwitch.position) {
+                    const minX = firstSwitch.position.x;
+                    const maxX = lastSwitch.position.x + this.nodeWidth;
+                    const centerX = (minX + maxX) / 2;
+                    
+                    // Centraliza o router
+                    const routerX = centerX - this.nodeWidth / 2;
+                    
+                    layers.routers.forEach(router => {
+                        router.position = { x: routerX, y: level1Y };
+                    });
+                }
+            }
         }
     }
     
     /**
      * Agrupa nós por tipo de dispositivo
      */
-    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[] } {
+    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[], stations: TopologyNode[] } {
         return {
             routers: this.nodes.filter(n => n.type === DeviceType.ROUTER),
             switches: this.nodes.filter(n => n.type === DeviceType.SWITCH),
-            accessPoints: this.nodes.filter(n => n.type === DeviceType.ACCESS_POINT)
+            accessPoints: this.nodes.filter(n => n.type === DeviceType.ACCESS_POINT),
+            stations: this.nodes.filter(n => n.type === DeviceType.STATION)
         };
     }
     
@@ -310,6 +417,25 @@ export class NetworkTopology implements OnInit, OnDestroy {
         return accessPoints.filter(ap => {
             return !ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
         });
+    }
+    
+    /**
+     * Agrupa Stations pelo switch ao qual estão conectados
+     */
+    private groupStationsBySwitch(stations: TopologyNode[], switches: TopologyNode[]): TopologyNode[][] {
+        const groups: TopologyNode[][] = [];
+        
+        switches.forEach(sw => {
+            const connectedStations = stations.filter(station => {
+                return station.ports.some(port => port.connectedToDeviceId === sw.id);
+            });
+            
+            if (connectedStations.length > 0) {
+                groups.push(connectedStations);
+            }
+        });
+        
+        return groups;
     }
     
     /**
@@ -462,6 +588,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 return 'device-switch';
             case DeviceType.ACCESS_POINT:
                 return 'device-ap';
+            case DeviceType.STATION:
+                return 'device-station';
             default:
                 return '';
         }
@@ -478,6 +606,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 return 'pi pi-sitemap';
             case DeviceType.ACCESS_POINT:
                 return 'pi pi-wifi';
+            case DeviceType.STATION:
+                return 'pi pi-desktop';
             default:
                 return 'pi pi-box';
         }
@@ -494,6 +624,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 return 'assets/imgs/switche.png';
             case DeviceType.ACCESS_POINT:
                 return 'assets/imgs/ap.png';
+            case DeviceType.STATION:
+                return 'assets/imgs/station.png';
             default:
                 return '';
         }
@@ -510,6 +642,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 return 'Switch';
             case DeviceType.ACCESS_POINT:
                 return 'Access Point';
+            case DeviceType.STATION:
+                return 'Estação';
             default:
                 return 'Dispositivo';
         }

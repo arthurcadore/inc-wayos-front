@@ -91,6 +91,16 @@
             stroke: #ec4899;
         }
     }
+    
+    &.device-station {
+        .icon-background {
+            fill: #fed7aa;
+        }
+        
+        &:hover .node-rect {
+            stroke: #f97316;
+        }
+    }
 }
 
 // Estilos dos textos dos nós
