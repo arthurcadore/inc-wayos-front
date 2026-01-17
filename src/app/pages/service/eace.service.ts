@@ -6,6 +6,7 @@ import { environment } from "../../../environments/environment";
 import { ViewGlobalResponse } from "./dtos/view-global.dtos";
 import { AlarmViewModel, RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
 import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
+import { TopologyNode } from "./dtos/network-topology.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -15,6 +16,21 @@ export class EaceService {
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
     constructor(private httpService: HttpService) { }
+
+    /**
+     * @description Obtém os dados da topologia de rede para uma loja específica
+     * @param shopId ID da loja
+     * @returns Observable com os dados da topologia de rede
+     */
+    public getNetworkTopologyData(shopId: number): Observable<TopologyNode[]> {
+        return this.httpService.get<TopologyNode[]>(`/v1/network-topology/${shopId}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched network topology data:', data);
+                }
+            })
+        );
+    }
 
     /**
      * @description Marca um alarme como resolvido

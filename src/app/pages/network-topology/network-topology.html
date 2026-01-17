@@ -2,6 +2,9 @@
     <div>
         <div class="text-3xl font-extrabold mb-2">Topologia de Rede</div>
         <div class="font-normal">Visão detalhada da infraestrutura e conectividade</div>
+        @if(isLoading) {
+            <p class="text-gray-500 mb-2">Atualizando...</p>
+        }
     </div>
 </div>
 
