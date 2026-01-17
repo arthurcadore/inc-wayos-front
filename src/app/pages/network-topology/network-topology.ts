@@ -60,6 +60,40 @@ export class NetworkTopology implements OnInit, OnDestroy {
     @ViewChild('devicePopover') devicePopover!: Popover;
     @ViewChild('popoverAnchor', { read: ElementRef }) popoverAnchor!: ElementRef;
     
+    // Configuração de dispositivos
+    private readonly DEVICE_CONFIG = {
+        [DeviceType.ROUTER]: {
+            className: 'device-router',
+            image: 'assets/imgs/router.png',
+            displayName: 'Roteador'
+        },
+        [DeviceType.SWITCH]: {
+            className: 'device-switch',
+            image: 'assets/imgs/switche.png',
+            displayName: 'Switch'
+        },
+        [DeviceType.ACCESS_POINT]: {
+            className: 'device-ap',
+            image: 'assets/imgs/ap.png',
+            displayName: 'Access Point'
+        },
+        [DeviceType.STATION]: {
+            className: 'device-station',
+            image: 'assets/imgs/station.png',
+            displayName: 'Estação'
+        }
+    };
+    
+    // Configuração de layout
+    private readonly LAYOUT_CONFIG = {
+        LEVEL_1_Y: 80,
+        LEVEL_2_Y: 300,
+        LEVEL_3_Y: 520,
+        NODE_SPACING: 25,
+        GROUP_SPACING: 25,
+        MARGIN: 25
+    };
+    
     // Dados da topologia
     nodes: TopologyNode[] = [];
     connections: TopologyConnection[] = [];
@@ -267,114 +301,110 @@ export class NetworkTopology implements OnInit, OnDestroy {
      */
     private calculateLayout(): void {
         const layers = this.groupNodesByType();
-        const nodeSpacing = 60;
-        const groupSpacing = 120;
-        
-        // NÍVEL 3: Access Points e Stations (base - começa aqui)
+        const groupCenters = this.positionLevel3Nodes(layers);
+        this.positionLevel2Nodes(layers, groupCenters);
+        this.positionLevel1Nodes(layers);
+    }
+    
+    /**
+     * Posiciona nós do nível 3 (APs e Stations conectados aos switches)
+     */
+    private positionLevel3Nodes(layers: ReturnType<typeof this.groupNodesByType>): Map<string, number> {
         const level3APs = this.getLevel3AccessPoints(layers.accessPoints);
         const level3Nodes = [...level3APs, ...layers.stations];
         
-        // Agrupa nós do nível 3 por switch pai
         const level3Groups: { switchId: string, nodes: TopologyNode[] }[] = [];
         
         layers.switches.forEach(sw => {
-            const connectedNodes = level3Nodes.filter(n => {
-                return n.ports.some(port => port.connectedToDeviceId === sw.id);
-            });
+            const connectedNodes = level3Nodes.filter(n => 
+                n.ports.some(port => port.connectedToDeviceId === sw.id)
+            );
             
             if (connectedNodes.length > 0) {
                 level3Groups.push({ switchId: sw.id, nodes: connectedNodes });
             }
         });
         
-        // Posiciona grupos do nível 3 sequencialmente
-        let currentX = 100; // Margem inicial
-        const level3Y = 520; // Y fixo para nível 3
-        
-        const groupCenters = new Map<string, number>(); // Armazena centro X de cada grupo
+        let currentX = this.LAYOUT_CONFIG.MARGIN;
+        const groupCenters = new Map<string, number>();
         
         level3Groups.forEach(group => {
-            const groupWidth = group.nodes.length * this.nodeWidth + (group.nodes.length - 1) * nodeSpacing;
-            const groupStartX = currentX;
-            const groupCenterX = groupStartX + groupWidth / 2;
-            
-            // Armazena o centro do grupo
+            const groupWidth = group.nodes.length * this.nodeWidth + 
+                              (group.nodes.length - 1) * this.LAYOUT_CONFIG.NODE_SPACING;
+            const groupCenterX = currentX + groupWidth / 2;
             groupCenters.set(group.switchId, groupCenterX);
             
-            // Posiciona cada nó do grupo
-            let nodeX = groupStartX;
+            let nodeX = currentX;
             group.nodes.forEach(node => {
-                node.position = { x: nodeX, y: level3Y };
-                nodeX += this.nodeWidth + nodeSpacing;
+                node.position = { x: nodeX, y: this.LAYOUT_CONFIG.LEVEL_3_Y };
+                nodeX += this.nodeWidth + this.LAYOUT_CONFIG.NODE_SPACING;
             });
             
-            // Avança para o próximo grupo
-            currentX += groupWidth + groupSpacing;
+            currentX += groupWidth + this.LAYOUT_CONFIG.GROUP_SPACING;
         });
         
-        // NÍVEL 2: Switches (e APs diretos ao router)
-        const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
-        const level2Y = 300; // Y fixo para nível 2
-        
-        const level2Centers = new Map<string, number>(); // Armazena centro X de cada nó do nível 2
-        
-        // Posiciona switches baseado no centro de seus grupos de filhos
+        return groupCenters;
+    }
+    
+    /**
+     * Posiciona nós do nível 2 (Switches e APs diretos ao router)
+     */
+    private positionLevel2Nodes(
+        layers: ReturnType<typeof this.groupNodesByType>, 
+        groupCenters: Map<string, number>
+    ): void {
+        // Posiciona switches centralizados sobre seus grupos de filhos
         layers.switches.forEach(sw => {
             const centerX = groupCenters.get(sw.id);
-            
             if (centerX !== undefined) {
-                // Centraliza o switch sobre o grupo de filhos
-                const switchX = centerX - this.nodeWidth / 2;
-                sw.position = { x: switchX, y: level2Y };
-                level2Centers.set(sw.id, centerX);
+                sw.position = { 
+                    x: centerX - this.nodeWidth / 2, 
+                    y: this.LAYOUT_CONFIG.LEVEL_2_Y 
+                };
             }
         });
         
-        // Posiciona APs conectados diretamente ao router (nível 2)
+        // Posiciona APs conectados diretamente ao router
+        const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
         const directAPs = level2Nodes.filter(n => n.type === DeviceType.ACCESS_POINT);
+        
         if (directAPs.length > 0) {
-            // Posiciona APs diretos à direita dos switches
             const lastSwitch = layers.switches[layers.switches.length - 1];
-            let apX = lastSwitch && lastSwitch.position 
-                ? lastSwitch.position.x + this.nodeWidth + groupSpacing 
-                : currentX;
+            let apX = lastSwitch?.position 
+                ? lastSwitch.position.x + this.nodeWidth + this.LAYOUT_CONFIG.GROUP_SPACING
+                : this.LAYOUT_CONFIG.MARGIN;
             
             directAPs.forEach(ap => {
-                ap.position = { x: apX, y: level2Y };
-                level2Centers.set(ap.id, apX + this.nodeWidth / 2);
-                apX += this.nodeWidth + groupSpacing;
+                ap.position = { x: apX, y: this.LAYOUT_CONFIG.LEVEL_2_Y };
+                apX += this.nodeWidth + this.LAYOUT_CONFIG.GROUP_SPACING;
             });
         }
+    }
+    
+    /**
+     * Posiciona nós do nível 1 (Router)
+     */
+    private positionLevel1Nodes(layers: ReturnType<typeof this.groupNodesByType>): void {
+        if (layers.routers.length === 0) return;
         
-        // NÍVEL 1: Router (topo)
-        if (layers.routers.length > 0) {
-            const level1Y = 80; // Y fixo para nível 1
+        const connectedSwitches = layers.switches.filter(sw =>
+            sw.ports.some(port => 
+                layers.routers.some(router => router.id === port.connectedToDeviceId)
+            )
+        );
+        
+        if (connectedSwitches.length === 0) return;
+        
+        const firstSwitch = connectedSwitches[0];
+        const lastSwitch = connectedSwitches[connectedSwitches.length - 1];
+        
+        if (firstSwitch.position && lastSwitch.position) {
+            const centerX = (firstSwitch.position.x + lastSwitch.position.x + this.nodeWidth) / 2;
+            const routerX = centerX - this.nodeWidth / 2;
             
-            // Calcula o centro baseado nos switches conectados
-            const connectedSwitches = layers.switches.filter(sw => {
-                return sw.ports.some(port => 
-                    layers.routers.some(router => router.id === port.connectedToDeviceId)
-                );
+            layers.routers.forEach(router => {
+                router.position = { x: routerX, y: this.LAYOUT_CONFIG.LEVEL_1_Y };
             });
-            
-            if (connectedSwitches.length > 0) {
-                // Encontra o centro entre o primeiro e último switch
-                const firstSwitch = connectedSwitches[0];
-                const lastSwitch = connectedSwitches[connectedSwitches.length - 1];
-                
-                if (firstSwitch.position && lastSwitch.position) {
-                    const minX = firstSwitch.position.x;
-                    const maxX = lastSwitch.position.x + this.nodeWidth;
-                    const centerX = (minX + maxX) / 2;
-                    
-                    // Centraliza o router
-                    const routerX = centerX - this.nodeWidth / 2;
-                    
-                    layers.routers.forEach(router => {
-                        router.position = { x: routerX, y: level1Y };
-                    });
-                }
-            }
         }
     }
     
@@ -391,11 +421,17 @@ export class NetworkTopology implements OnInit, OnDestroy {
     }
     
     /**
+     * Retorna os IDs dos routers (cached)
+     */
+    private getRouterIds(): string[] {
+        return this.nodes.filter(n => n.type === DeviceType.ROUTER).map(r => r.id);
+    }
+    
+    /**
      * Retorna nós do nível 2: Switches + APs conectados diretamente ao router
      */
     private getLevel2Nodes(switches: TopologyNode[], accessPoints: TopologyNode[]): TopologyNode[] {
-        const routers = this.nodes.filter(n => n.type === DeviceType.ROUTER);
-        const routerIds = routers.map(r => r.id);
+        const routerIds = this.getRouterIds();
         
         // APs conectados diretamente ao router
         const directAPs = accessPoints.filter(ap => {
@@ -410,63 +446,12 @@ export class NetworkTopology implements OnInit, OnDestroy {
      * Retorna APs do nível 3: APs conectados aos switches
      */
     private getLevel3AccessPoints(accessPoints: TopologyNode[]): TopologyNode[] {
-        const routers = this.nodes.filter(n => n.type === DeviceType.ROUTER);
-        const routerIds = routers.map(r => r.id);
+        const routerIds = this.getRouterIds();
         
         // APs que NÃO estão conectados diretamente ao router
         return accessPoints.filter(ap => {
             return !ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
         });
-    }
-    
-    /**
-     * Agrupa Stations pelo switch ao qual estão conectados
-     */
-    private groupStationsBySwitch(stations: TopologyNode[], switches: TopologyNode[]): TopologyNode[][] {
-        const groups: TopologyNode[][] = [];
-        
-        switches.forEach(sw => {
-            const connectedStations = stations.filter(station => {
-                return station.ports.some(port => port.connectedToDeviceId === sw.id);
-            });
-            
-            if (connectedStations.length > 0) {
-                groups.push(connectedStations);
-            }
-        });
-        
-        return groups;
-    }
-    
-    /**
-     * Agrupa Access Points pelo switch ao qual estão conectados
-     */
-    private groupAPsBySwitch(aps: TopologyNode[], switches: TopologyNode[]): TopologyNode[][] {
-        const groups: TopologyNode[][] = [];
-        
-        // Para cada switch, encontra os APs conectados a ele
-        switches.forEach(switchNode => {
-            const connectedAPs = aps.filter(ap => {
-                return ap.ports.some(port => port.connectedToDeviceId === switchNode.id);
-            });
-            
-            if (connectedAPs.length > 0) {
-                groups.push(connectedAPs);
-            }
-        });
-        
-        // Adiciona APs não conectados em um grupo separado (se houver)
-        const unconnectedAPs = aps.filter(ap => {
-            return !ap.ports.some(port => 
-                switches.some(sw => sw.id === port.connectedToDeviceId)
-            );
-        });
-        
-        if (unconnectedAPs.length > 0) {
-            groups.push(unconnectedAPs);
-        }
-        
-        return groups;
     }
     
     /**
@@ -558,12 +543,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         
         const point = this.getNodeTopCenter(toNode);
         return { x: point.x - 30, y: point.y - 48 };
-
-        // const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
-        // if (!fromNode || !fromNode.position) return { x: 0, y: 0 };
-        
-        // const point = this.getNodeBottomCenter(fromNode);
-        // return { x: point.x - 30, y: point.y + 15 };
     }
     
     /**
@@ -581,72 +560,21 @@ export class NetworkTopology implements OnInit, OnDestroy {
      * Retorna a classe CSS baseada no tipo de dispositivo
      */
     getDeviceClass(type: DeviceType): string {
-        switch (type) {
-            case DeviceType.ROUTER:
-                return 'device-router';
-            case DeviceType.SWITCH:
-                return 'device-switch';
-            case DeviceType.ACCESS_POINT:
-                return 'device-ap';
-            case DeviceType.STATION:
-                return 'device-station';
-            default:
-                return '';
-        }
-    }
-    
-    /**
-     * Retorna o ícone PrimeIcons baseado no tipo de dispositivo
-     */
-    getDeviceIcon(type: DeviceType): string {
-        switch (type) {
-            case DeviceType.ROUTER:
-                return 'pi pi-server';
-            case DeviceType.SWITCH:
-                return 'pi pi-sitemap';
-            case DeviceType.ACCESS_POINT:
-                return 'pi pi-wifi';
-            case DeviceType.STATION:
-                return 'pi pi-desktop';
-            default:
-                return 'pi pi-box';
-        }
+        return this.DEVICE_CONFIG[type]?.className || '';
     }
     
     /**
      * Retorna a imagem PNG baseada no tipo de dispositivo
      */
     getDeviceImage(type: DeviceType): string {
-        switch (type) {
-            case DeviceType.ROUTER:
-                return 'assets/imgs/router.png';
-            case DeviceType.SWITCH:
-                return 'assets/imgs/switche.png';
-            case DeviceType.ACCESS_POINT:
-                return 'assets/imgs/ap.png';
-            case DeviceType.STATION:
-                return 'assets/imgs/station.png';
-            default:
-                return '';
-        }
+        return this.DEVICE_CONFIG[type]?.image || '';
     }
     
     /**
      * Retorna o nome do tipo de dispositivo formatado
      */
     getDeviceTypeName(type: DeviceType): string {
-        switch (type) {
-            case DeviceType.ROUTER:
-                return 'Roteador';
-            case DeviceType.SWITCH:
-                return 'Switch';
-            case DeviceType.ACCESS_POINT:
-                return 'Access Point';
-            case DeviceType.STATION:
-                return 'Estação';
-            default:
-                return 'Dispositivo';
-        }
+        return this.DEVICE_CONFIG[type]?.displayName || 'Dispositivo';
     }
     
     /**
@@ -669,8 +597,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         this.selectedDevice = node;
         
         // Calcula a posição na tela do nó considerando zoom e pan
-        const svgRect = this.svgElement.nativeElement.getBoundingClientRect();
-        const containerRect = this.svgElement.nativeElement.parentElement.getBoundingClientRect();
         const nodeX = (node.position?.x || 0) * this.scale + this.translateX;
         const nodeY = (node.position?.y || 0) * this.scale + this.translateY;
         
@@ -806,56 +732,78 @@ export class NetworkTopology implements OnInit, OnDestroy {
      */
     async exportToPDF(): Promise<void> {
         try {
-            const svg = this.svgElement.nativeElement as SVGElement;
-            
-            // Clona o SVG para não afetar o original
-            const svgClone = svg.cloneNode(true) as SVGElement;
-            
-            // Remove o transform do grupo principal para exportar sem zoom/pan
-            const mainGroup = svgClone.querySelector('g[transform]');
-            if (mainGroup) {
-                mainGroup.removeAttribute('transform');
+            const svgClone = this.cloneSvgWithoutTransform();
+            await this.convertSvgImagesToBase64(svgClone);
+            const svgDataUrl = this.serializeSvgToDataUrl(svgClone);
+            await this.renderSvgToPdf(svgDataUrl);
+        } catch (error) {
+            console.error('Erro ao exportar PDF:', error);
+            alert('Erro ao exportar o PDF. Tente novamente.');
+        }
+    }
+    
+    /**
+     * Clona o SVG e remove transformações
+     */
+    private cloneSvgWithoutTransform(): SVGElement {
+        const svg = this.svgElement.nativeElement as SVGElement;
+        const svgClone = svg.cloneNode(true) as SVGElement;
+        
+        const mainGroup = svgClone.querySelector('g[transform]');
+        if (mainGroup) {
+            mainGroup.removeAttribute('transform');
+        }
+        
+        return svgClone;
+    }
+    
+    /**
+     * Converte todas as imagens do SVG para base64
+     */
+    private async convertSvgImagesToBase64(svgElement: SVGElement): Promise<void> {
+        const images = svgElement.querySelectorAll('image');
+        const imagePromises: Promise<void>[] = [];
+        
+        images.forEach((imageElement) => {
+            const href = imageElement.getAttribute('href') || imageElement.getAttribute('xlink:href');
+            if (href && !href.startsWith('data:')) {
+                const promise = this.imageToDataURL(href)
+                    .then(dataUrl => {
+                        imageElement.setAttribute('href', dataUrl);
+                        imageElement.removeAttribute('xlink:href');
+                    })
+                    .catch(error => {
+                        console.error('Error converting image:', error);
+                    });
+                imagePromises.push(promise);
             }
-            
-            // Converte todas as imagens para base64
-            const images = svgClone.querySelectorAll('image');
-            const imagePromises: Promise<void>[] = [];
-            
-            images.forEach((imageElement) => {
-                const href = imageElement.getAttribute('href') || imageElement.getAttribute('xlink:href');
-                if (href && !href.startsWith('data:')) {
-                    const promise = this.imageToDataURL(href)
-                        .then(dataUrl => {
-                            imageElement.setAttribute('href', dataUrl);
-                            imageElement.removeAttribute('xlink:href');
-                        })
-                        .catch(error => {
-                            console.error('Error converting image:', error);
-                        });
-                    imagePromises.push(promise);
-                }
-            });
-            
-            // Aguarda todas as imagens serem convertidas
-            await Promise.all(imagePromises);
-            
-            // Serializa o SVG
-            const serializer = new XMLSerializer();
-            let svgString = serializer.serializeToString(svgClone);
-            
-            // Adiciona namespace se não existir
-            if (!svgString.includes('xmlns')) {
-                svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-            }
-            
-            // Converte SVG para Data URL diretamente
-            const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
-            const svgDataUrl = `data:image/svg+xml;base64,${svgBase64}`;
-            
-            // Cria uma imagem a partir do SVG
+        });
+        
+        await Promise.all(imagePromises);
+    }
+    
+    /**
+     * Serializa o SVG e converte para Data URL
+     */
+    private serializeSvgToDataUrl(svgElement: SVGElement): string {
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svgElement);
+        
+        if (!svgString.includes('xmlns')) {
+            svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
+        }
+        
+        const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
+        return `data:image/svg+xml;base64,${svgBase64}`;
+    }
+    
+    /**
+     * Renderiza SVG em canvas e gera PDF
+     */
+    private async renderSvgToPdf(svgDataUrl: string): Promise<void> {
+        return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            
             const img = new Image();
             
             img.onload = () => {
@@ -863,17 +811,11 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 canvas.height = this.svgHeight;
                 
                 if (ctx) {
-                    // Fundo branco
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    
-                    // Desenha o SVG
                     ctx.drawImage(img, 0, 0);
                     
-                    // Converte canvas para imagem
                     const imgData = canvas.toDataURL('image/png');
-                    
-                    // Cria o PDF
                     const pdf = new jsPDF({
                         orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
                         unit: 'px',
@@ -882,20 +824,17 @@ export class NetworkTopology implements OnInit, OnDestroy {
                     
                     pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
                     pdf.save('topologia-de-rede.pdf');
+                    resolve();
+                } else {
+                    reject(new Error('Failed to get canvas context'));
                 }
             };
             
             img.onerror = (error) => {
-                console.error('Erro ao carregar o SVG:', error);
-                alert('Erro ao exportar o PDF. Tente novamente.');
+                reject(new Error('Erro ao carregar o SVG'));
             };
             
-            // Usa Data URL em vez de Blob URL para evitar problemas de CORS
             img.src = svgDataUrl;
-            
-        } catch (error) {
-            console.error('Erro ao exportar PDF:', error);
-            alert('Erro ao exportar o PDF. Tente novamente.');
-        }
+        });
     }
 }
