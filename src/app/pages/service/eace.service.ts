@@ -7,6 +7,7 @@ import { ViewGlobalResponse } from "./dtos/view-global.dtos";
 import { AlarmViewModel, RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-log.dto";
 import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
 import { TopologyNode } from "./dtos/network-topology.dto";
+import { WayosGetDeviceInfo } from "./dtos/wayos.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -16,6 +17,21 @@ export class EaceService {
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
     constructor(private httpService: HttpService) { }
+
+    /**
+     * @description Obtém informações detalhadas de um dispositivo Wayos com base no número de série
+     * @param sn Número de série do dispositivo
+     * @returns Observable com as informações do dispositivo
+     */
+    public getWayosDeviceInfo(sn: string): Observable<WayosGetDeviceInfo> {
+        return this.httpService.get<any>(`/v1/wayos-device-info/${sn}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched device info:', data);
+                }
+            })
+        );
+    }
 
     /**
      * @description Obtém os dados da topologia de rede para uma loja específica

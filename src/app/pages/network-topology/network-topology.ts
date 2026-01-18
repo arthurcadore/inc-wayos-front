@@ -9,6 +9,7 @@ import { EaceService } from "../service/eace.service";
 import { DeviceType, TopologyNode } from "../service/dtos/network-topology.dto";
 import { MessageService } from "primeng/api";
 import { ActivatedRoute } from "@angular/router";
+import { WayosRouterInfo } from "../service/dtos/view-global.dtos";
 
 // Interface para uma conexão visual entre dispositivos
 export interface TopologyConnection {
@@ -38,6 +39,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
     @ViewChild('popoverAnchor', { read: ElementRef }) popoverAnchor!: ElementRef;
 
     shopId: number | null = null;
+    routerDevice: WayosRouterInfo | null = null;
 
     // Configuração de dispositivos
     private readonly DEVICE_CONFIG = {
@@ -99,13 +101,14 @@ export class NetworkTopology implements OnInit, OnDestroy {
     lastMouseY = 0;
 
     isLoading: boolean = false;
-    subscription: any = null;
+    private viewGlobalSubscription: any = null;
+    private networkTopologySubscription: any = null;
 
     constructor(
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
         private readonly messageService: MessageService,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.route.queryParams.subscribe(params => {
@@ -119,7 +122,41 @@ export class NetworkTopology implements OnInit, OnDestroy {
                 });
                 return;
             }
-            this.loadNetworkTopologyData();
+            this.loadData();
+        });
+    }
+
+    async loadData(): Promise<void> {
+        this.isLoading = true;
+        this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
+            next: (data) => {
+                const viewGlobalItem = data.data.find(item => item.shopId === this.shopId);
+
+                if (!viewGlobalItem) {
+                    this.isLoading = false;
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Erro',
+                        detail: `Nenhum dispositivo encontrado para o shopId ${this.shopId}.`,
+                        life: 5000,
+                    });
+                    return;
+                }
+
+                this.routerDevice = viewGlobalItem.router;
+                this.loadNetworkTopologyData();
+            },
+            error: (err) => {
+                this.isLoading = false;
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Erro',
+                    detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
+                });
+            },
+            complete: () => {
+                this.isLoading = false;
+            },
         });
     }
 
@@ -128,9 +165,16 @@ export class NetworkTopology implements OnInit, OnDestroy {
      */
     loadNetworkTopologyData(): void {
         this.isLoading = true;
-        this.subscription = this.eaceService.getNetworkTopologyData(this.shopId!).subscribe({
+        this.networkTopologySubscription = this.eaceService.getNetworkTopologyData(this.shopId!).subscribe({
             next: (data) => {
                 this.nodes = data;
+                
+                const routerNode = this.nodes.find(n => n.type === DeviceType.ROUTER);
+                if (routerNode) {
+                    routerNode.name = 'Roteador';
+                    routerNode.model = this.routerDevice?.model || '(n/d)';                    
+                }
+                
                 this.calculateLayout();
                 this.calculateConnections();
             },
@@ -150,8 +194,11 @@ export class NetworkTopology implements OnInit, OnDestroy {
     }
 
     ngOnDestroy(): void {
-        if (this.subscription) {
-            this.subscription.unsubscribe();
+        if (this.viewGlobalSubscription) {
+            this.viewGlobalSubscription.unsubscribe();
+        }
+        if (this.networkTopologySubscription) {
+            this.networkTopologySubscription.unsubscribe();
         }
     }
 
