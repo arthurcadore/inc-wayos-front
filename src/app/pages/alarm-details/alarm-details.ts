@@ -154,7 +154,7 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     this.deviceIsOnline = device.online;
                     this.deviceIp = device.devIp;
                     this.deviceSn = device.sn;
-                    this.deviceMac = 'n/d'; // MAC não está disponível para switches e APs
+                    this.deviceMac = device.devMac;
                 }
             },
             error: (err) => {

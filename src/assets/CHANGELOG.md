@@ -7,6 +7,21 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.4.0] - 2026-01-18
+
+### Status
+**BETA** - Versão inicial em desenvolvimento
+
+### Adicionado
+- Módulo de topologia de rede
+- Último Momento Offline nos dispositivos (router, switch e ap)
+
+### Corrigido
+- Alarmes dos dispositivos inc (estava buscando por shopId e deveri ser por serial number)
+- Endereço MAC de dispositivos INC na tela de alertas
+
+---
+
 ## [0.3.1] - 2025-12-31
 
 ### Status
