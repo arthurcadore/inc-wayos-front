@@ -68,8 +68,9 @@ export class NetworkTopology implements OnInit, OnDestroy {
     // Configuração de layout
     private readonly LAYOUT_CONFIG = {
         LEVEL_1_Y: 80,
-        LEVEL_2_Y: 300,
-        LEVEL_3_Y: 520,
+        LEVEL_2_Y: 240,
+        LEVEL_3_Y: 460,
+        LEVEL_4_Y: 580,
         NODE_SPACING: 25,
         GROUP_SPACING: 25,
         MARGIN: 25
@@ -210,6 +211,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
         const groupCenters = this.positionLevel3Nodes(layers);
         this.positionLevel2Nodes(layers, groupCenters);
         this.positionLevel1Nodes(layers);
+        this.positionLevel4Nodes(layers);
     }
 
     /**
@@ -299,7 +301,28 @@ export class NetworkTopology implements OnInit, OnDestroy {
             )
         );
 
-        if (connectedSwitches.length === 0) return;
+        // Se não há switches, posiciona o router baseado nos APs diretos
+        if (connectedSwitches.length === 0) {
+            const level2Nodes = this.getLevel2Nodes(layers.switches, layers.accessPoints);
+            const directAPs = level2Nodes.filter(n => n.type === DeviceType.ACCESS_POINT);
+            
+            if (directAPs.length > 0 && directAPs[0].position && directAPs[directAPs.length - 1].position) {
+                const firstAP = directAPs[0];
+                const lastAP = directAPs[directAPs.length - 1];
+                const centerX = (firstAP.position!.x + lastAP.position!.x + this.nodeWidth) / 2;
+                const routerX = centerX - this.nodeWidth / 2;
+                
+                layers.routers.forEach(router => {
+                    router.position = { x: routerX, y: this.LAYOUT_CONFIG.LEVEL_1_Y };
+                });
+            } else {
+                // Fallback: posiciona o router no centro se não houver nós de referência
+                layers.routers.forEach(router => {
+                    router.position = { x: this.LAYOUT_CONFIG.MARGIN, y: this.LAYOUT_CONFIG.LEVEL_1_Y };
+                });
+            }
+            return;
+        }
 
         const firstSwitch = connectedSwitches[0];
         const lastSwitch = connectedSwitches[connectedSwitches.length - 1];
@@ -315,14 +338,35 @@ export class NetworkTopology implements OnInit, OnDestroy {
     }
 
     /**
+     * Posiciona nós do nível 4 (Dispositivos sem portas - isolados)
+     */
+    private positionLevel4Nodes(layers: ReturnType<typeof this.groupNodesByType>): void {
+        if (layers.noPortsDevices.length === 0) return;
+
+        const totalWidth = layers.noPortsDevices.length * this.nodeWidth +
+            (layers.noPortsDevices.length - 1) * this.LAYOUT_CONFIG.NODE_SPACING;
+        
+        let currentX = this.LAYOUT_CONFIG.MARGIN;
+        
+        layers.noPortsDevices.forEach(node => {
+            node.position = { x: currentX, y: this.LAYOUT_CONFIG.LEVEL_4_Y };
+            currentX += this.nodeWidth + this.LAYOUT_CONFIG.NODE_SPACING;
+        });
+    }
+
+    /**
      * Agrupa nós por tipo de dispositivo
      */
-    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[], stations: TopologyNode[] } {
+    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[], stations: TopologyNode[], noPortsDevices: TopologyNode[] } {
+        const noPortsDevices = this.nodes.filter(n => !n.ports || n.ports.length === 0);
+        const devicesWithPorts = this.nodes.filter(n => n.ports && n.ports.length > 0);
+        
         return {
-            routers: this.nodes.filter(n => n.type === DeviceType.ROUTER),
-            switches: this.nodes.filter(n => n.type === DeviceType.SWITCH),
-            accessPoints: this.nodes.filter(n => n.type === DeviceType.ACCESS_POINT),
-            stations: this.nodes.filter(n => n.type === DeviceType.STATION)
+            routers: devicesWithPorts.filter(n => n.type === DeviceType.ROUTER),
+            switches: devicesWithPorts.filter(n => n.type === DeviceType.SWITCH),
+            accessPoints: devicesWithPorts.filter(n => n.type === DeviceType.ACCESS_POINT),
+            stations: devicesWithPorts.filter(n => n.type === DeviceType.STATION),
+            noPortsDevices: noPortsDevices
         };
     }
 
@@ -366,7 +410,10 @@ export class NetworkTopology implements OnInit, OnDestroy {
     private calculateConnections(): void {
         this.connections = [];
 
-        this.nodes.forEach(node => {
+        // Filtra apenas dispositivos com portas para criar conexões
+        const nodesWithPorts = this.nodes.filter(node => node.ports && node.ports.length > 0);
+
+        nodesWithPorts.forEach(node => {
             node.ports.forEach(port => {
                 const targetNode = this.nodes.find(n => n.id === port.connectedToDeviceId);
                 if (targetNode && node.position && targetNode.position) {
