@@ -304,9 +304,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
      */
     private positionLevel4Nodes(layers: ReturnType<typeof this.groupNodesByType>): void {
         if (layers.noPortsDevices.length === 0) return;
-
-        const totalWidth = layers.noPortsDevices.length * this.nodeWidth +
-            (layers.noPortsDevices.length - 1) * this.LAYOUT_CONFIG.NODE_SPACING;
         
         let currentX = this.LAYOUT_CONFIG.MARGIN;
         
@@ -543,123 +540,195 @@ export class NetworkTopology implements OnInit, OnDestroy {
         });
     }
 
-    private async imageToDataURL(url: string): Promise<string> {
+    /**
+     * Converte uma imagem para base64 data URL
+     */
+    private async convertImageToBase64(imagePath: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.crossOrigin = 'anonymous';
-
             img.onload = () => {
                 const canvas = document.createElement('canvas');
                 canvas.width = img.width;
                 canvas.height = img.height;
-
                 const ctx = canvas.getContext('2d');
                 if (ctx) {
                     ctx.drawImage(img, 0, 0);
                     resolve(canvas.toDataURL('image/png'));
                 } else {
-                    reject(new Error('Failed to get canvas context'));
+                    reject(new Error('Falha ao criar contexto do canvas'));
                 }
             };
-
-            img.onerror = () => reject(new Error(`Failed to load image: ${url}`));
-            img.src = url;
+            img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${imagePath}`));
+            img.src = imagePath;
         });
     }
 
+    /**
+     * Exporta a topologia de rede para PDF no formato A4 horizontal
+     */
     async exportToPDF(): Promise<void> {
+        if (!this.svgElement) {
+            this.showError('Elemento SVG não encontrado');
+            return;
+        }
+
+        this.isLoading = true;
         try {
-            const svgClone = this.cloneSvgWithoutTransform();
-            await this.convertSvgImagesToBase64(svgClone);
-            const svgDataUrl = this.serializeSvgToDataUrl(svgClone);
-            await this.renderSvgToPdf(svgDataUrl);
-        } catch (error) {
-            console.error('Erro ao exportar PDF:', error);
-            alert('Erro ao exportar o PDF. Tente novamente.');
-        }
-    }
+            // Obter o elemento SVG
+            const svgElement = this.svgElement.nativeElement as SVGElement;
+            
+            // Salvar estado atual de transformação
+            const currentScale = this.scale;
+            const currentTranslateX = this.translateX;
+            const currentTranslateY = this.translateY;
 
-    private cloneSvgWithoutTransform(): SVGElement {
-        const svg = this.svgElement.nativeElement as SVGElement;
-        const svgClone = svg.cloneNode(true) as SVGElement;
+            // Resetar transformações temporariamente
+            this.scale = 1;
+            this.translateX = 0;
+            this.translateY = 0;
 
-        const mainGroup = svgClone.querySelector('g[transform]');
-        if (mainGroup) {
-            mainGroup.removeAttribute('transform');
-        }
+            // Aguardar um pequeno delay para a atualização do DOM
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-        return svgClone;
-    }
+            // Converter todas as imagens de dispositivos para base64
+            const imageElements = svgElement.querySelectorAll('image');
+            const imageConversions = Array.from(imageElements).map(async (imgElement) => {
+                const href = imgElement.getAttribute('href') || imgElement.getAttribute('xlink:href');
+                if (href && !href.startsWith('data:')) {
+                    try {
+                        const dataUrl = await this.convertImageToBase64(href);
+                        imgElement.setAttribute('href', dataUrl);
+                        // Remover o atributo xlink:href se existir
+                        imgElement.removeAttribute('xlink:href');
+                    } catch (err) {
+                        console.warn(`Falha ao converter imagem ${href}:`, err);
+                    }
+                }
+            });
 
-    private async convertSvgImagesToBase64(svgElement: SVGElement): Promise<void> {
-        const images = svgElement.querySelectorAll('image');
-        const imagePromises: Promise<void>[] = [];
+            await Promise.all(imageConversions);
 
-        images.forEach((imageElement) => {
-            const href = imageElement.getAttribute('href') || imageElement.getAttribute('xlink:href');
-            if (href && !href.startsWith('data:')) {
-                const promise = this.imageToDataURL(href)
-                    .then(dataUrl => {
-                        imageElement.setAttribute('href', dataUrl);
-                        imageElement.removeAttribute('xlink:href');
-                    })
-                    .catch(error => {
-                        console.error('Error converting image:', error);
-                    });
-                imagePromises.push(promise);
+            // Serializar SVG para string
+            const serializer = new XMLSerializer();
+            let svgString = serializer.serializeToString(svgElement);
+            
+            // Adicionar namespace XML se necessário
+            if (!svgString.includes('xmlns')) {
+                svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
             }
-        });
 
-        await Promise.all(imagePromises);
-    }
+            // Criar blob do SVG
+            const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const svgUrl = URL.createObjectURL(svgBlob);
 
-    private serializeSvgToDataUrl(svgElement: SVGElement): string {
-        const serializer = new XMLSerializer();
-        let svgString = serializer.serializeToString(svgElement);
+            // Criar imagem a partir do SVG
+            const img = new Image();
+            await new Promise<void>((resolve, reject) => {
+                img.onload = () => resolve();
+                img.onerror = () => reject(new Error('Falha ao carregar SVG como imagem'));
+                img.src = svgUrl;
+            });
 
-        if (!svgString.includes('xmlns')) {
-            svgString = svgString.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"');
-        }
-
-        const svgBase64 = btoa(unescape(encodeURIComponent(svgString)));
-        return `data:image/svg+xml;base64,${svgBase64}`;
-    }
-
-    private async renderSvgToPdf(svgDataUrl: string): Promise<void> {
-        return new Promise((resolve, reject) => {
+            // Criar canvas para renderizar o SVG
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
-            const img = new Image();
+            
+            if (!ctx) {
+                throw new Error('Falha ao criar contexto do canvas');
+            }
 
-            img.onload = () => {
-                canvas.width = this.svgWidth;
-                canvas.height = this.svgHeight;
+            // Dimensões A4 em pixels (300 DPI para alta qualidade)
+            const dpi = 300;
+            const a4WidthMm = 297;
+            const a4HeightMm = 210;
+            const a4WidthPx = (a4WidthMm / 25.4) * dpi;
+            const a4HeightPx = (a4HeightMm / 25.4) * dpi;
 
-                if (ctx) {
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0);
+            canvas.width = a4WidthPx;
+            canvas.height = a4HeightPx;
 
-                    const imgData = canvas.toDataURL('image/png');
-                    const pdf = new jsPDF({
-                        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
-                        unit: 'px',
-                        format: [canvas.width, canvas.height]
-                    });
+            // Preencher com fundo branco
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-                    pdf.save('topologia-de-rede.pdf');
-                    resolve();
-                } else {
-                    reject(new Error('Failed to get canvas context'));
-                }
-            };
+            // Margens fixas de segurança (10mm de cada lado convertidas para pixels)
+            const marginMm = 10;
+            const marginPx = (marginMm / 25.4) * dpi;
+            const availableWidth = a4WidthPx - (2 * marginPx);
+            const availableHeight = a4HeightPx - (2 * marginPx);
 
-            img.onerror = (error) => {
-                reject(new Error('Erro ao carregar o SVG'));
-            };
+            // Calcular escala para caber dentro da área disponível mantendo proporção
+            const scaleX = availableWidth / this.svgWidth;
+            const scaleY = availableHeight / this.svgHeight;
+            let scale = Math.min(scaleX, scaleY);
 
-            img.src = svgDataUrl;
-        });
+            // Reduzir mais 5% da escala como segurança adicional
+            scale = scale * 0.95;
+
+            // Dimensões finais do SVG no canvas
+            const finalWidth = this.svgWidth * scale;
+            const finalHeight = this.svgHeight * scale;
+
+            // Garantir que as dimensões finais são menores que a área disponível
+            if (finalWidth > availableWidth || finalHeight > availableHeight) {
+                console.warn('Ajustando escala para garantir enquadramento completo');
+                const adjustedScale = Math.min(availableWidth / this.svgWidth, availableHeight / this.svgHeight) * 0.90;
+                scale = adjustedScale;
+            }
+
+            // Recalcular dimensões finais com a escala ajustada
+            const adjustedWidth = this.svgWidth * scale;
+            const adjustedHeight = this.svgHeight * scale;
+
+            // Centralizar na página
+            const x = (a4WidthPx - adjustedWidth) / 2;
+            const y = (a4HeightPx - adjustedHeight) / 2;
+
+            // Desenhar a imagem no canvas
+            ctx.drawImage(img, x, y, adjustedWidth, adjustedHeight);
+
+            // Limpar URL temporária
+            URL.revokeObjectURL(svgUrl);
+
+            // Restaurar transformações originais
+            this.scale = currentScale;
+            this.translateX = currentTranslateX;
+            this.translateY = currentTranslateY;
+
+            // Criar PDF A4 horizontal
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // Adicionar a imagem do canvas ao PDF
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', 0, 0, a4WidthMm, a4HeightMm);
+
+            // Gerar nome do arquivo com timestamp
+            const now = new Date();
+            const timestamp = now.toISOString()
+                .replace(/T/, '_')
+                .replace(/\..+/, '')
+                .replace(/:/g, '-');
+            const filename = `topologia-de-rede_${timestamp}.pdf`;
+
+            // Fazer download
+            pdf.save(filename);
+
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Sucesso',
+                detail: 'PDF exportado com sucesso',
+                life: 3000
+            });
+        } catch (err: any) {
+            console.error('Erro ao exportar PDF:', err);
+            this.showError(err.message || 'Falha ao exportar PDF');
+        } finally {
+            this.isLoading = false;
+        }
     }
 }
