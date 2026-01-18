@@ -5,13 +5,13 @@ import { ButtonModule } from "primeng/button";
 import { TooltipModule } from "primeng/tooltip";
 import { Popover } from "primeng/popover";
 import { jsPDF } from 'jspdf';
+import { firstValueFrom, Subscription } from 'rxjs';
 import { EaceService } from "../service/eace.service";
 import { DeviceType, TopologyNode } from "../service/dtos/network-topology.dto";
 import { MessageService } from "primeng/api";
 import { ActivatedRoute } from "@angular/router";
 import { WayosRouterInfo } from "../service/dtos/view-global.dtos";
 
-// Interface para uma conexão visual entre dispositivos
 export interface TopologyConnection {
     fromDevice: string;
     fromPort: string;
@@ -41,7 +41,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
     shopId: number | null = null;
     routerDevice: WayosRouterInfo | null = null;
 
-    // Configuração de dispositivos
     private readonly DEVICE_CONFIG = {
         [DeviceType.ROUTER]: {
             className: 'device-router',
@@ -65,7 +64,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         }
     };
 
-    // Configuração de layout
     private readonly LAYOUT_CONFIG = {
         LEVEL_1_Y: 80,
         LEVEL_2_Y: 240,
@@ -76,34 +74,38 @@ export class NetworkTopology implements OnInit, OnDestroy {
         MARGIN: 25
     };
 
-    // Dados da topologia
+    private readonly ZOOM_CONFIG = {
+        MIN: 0.5,
+        MAX: 3,
+        STEP: 0.2
+    };
+
+    private readonly LABEL_OFFSET = {
+        X: -30,
+        FROM_Y: -48,
+        TO_Y: -20
+    };
+
     nodes: TopologyNode[] = [];
     connections: TopologyConnection[] = [];
-
-    // Dispositivo selecionado para mostrar no popover
     selectedDevice: TopologyNode | null = null;
 
-    // Configurações do SVG
     svgWidth = 1600;
     svgHeight = 800;
     nodeWidth = 180;
     nodeHeight = 120;
 
-    // Controles de visualização
     scale = 1;
     translateX = 0;
     translateY = 0;
-    zoomStep = 0.2;
 
-    // Controle de pan com mouse
     isPanMode = false;
     isDragging = false;
     lastMouseX = 0;
     lastMouseY = 0;
 
-    isLoading: boolean = false;
-    private viewGlobalSubscription: any = null;
-    private networkTopologySubscription: any = null;
+    isLoading = false;
+    private queryParamsSubscription: Subscription | null = null;
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -112,15 +114,10 @@ export class NetworkTopology implements OnInit, OnDestroy {
     ) { }
 
     ngOnInit(): void {
-        this.route.queryParams.subscribe(params => {
+        this.queryParamsSubscription = this.route.queryParams.subscribe(params => {
             this.shopId = params['shopId'] ? +params['shopId'] : null;
             if (!this.shopId) {
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: 'Parâmetro shopId é obrigatório na URL.',
-                    life: 5000,
-                });
+                this.showError('Parâmetro shopId é obrigatório na URL.');
                 return;
             }
             this.loadData();
@@ -129,78 +126,43 @@ export class NetworkTopology implements OnInit, OnDestroy {
 
     async loadData(): Promise<void> {
         this.isLoading = true;
-        this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
-            next: (data) => {
-                const viewGlobalItem = data.data.find(item => item.shopId === this.shopId);
+        try {
+            const data = await firstValueFrom(this.eaceService.getViewGlobalData(true));
+            const viewGlobalItem = data.data.find(item => item.shopId === this.shopId);
 
-                if (!viewGlobalItem) {
-                    this.isLoading = false;
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Erro',
-                        detail: `Nenhum dispositivo encontrado para o shopId ${this.shopId}.`,
-                        life: 5000,
-                    });
-                    return;
-                }
+            if (!viewGlobalItem) {
+                this.showError(`Nenhum dispositivo encontrado para o shopId ${this.shopId}.`);
+                return;
+            }
 
-                this.routerDevice = viewGlobalItem.router;
-                this.loadNetworkTopologyData();
-            },
-            error: (err) => {
-                this.isLoading = false;
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: `Falha ao buscar dados da visão global - ' ${(err?.message ? ` (${err.message})` : '')}`,
-                });
-            },
-            complete: () => {
-                this.isLoading = false;
-            },
-        });
+            this.routerDevice = viewGlobalItem.router;
+            await this.loadNetworkTopologyData();
+        } catch (err: any) {
+            this.showError(err.message || 'Falha ao buscar dados da visão global');
+        } finally {
+            this.isLoading = false;
+        }
     }
 
-    /**
-     * Carrega dados mockados da topologia baseado na imagem de referência
-     */
-    loadNetworkTopologyData(): void {
-        this.isLoading = true;
-        this.networkTopologySubscription = this.eaceService.getNetworkTopologyData(this.shopId!).subscribe({
-            next: (data) => {
-                this.nodes = data;
-                
-                const routerNode = this.nodes.find(n => n.type === DeviceType.ROUTER);
-                if (routerNode) {
-                    routerNode.name = 'Roteador';
-                    routerNode.model = this.routerDevice?.model || '(n/d)';                    
-                }
-                
-                this.calculateLayout();
-                this.calculateConnections();
-            },
-            error: (err) => {
-                this.isLoading = false;
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: `Falha ao carregar dados da topologia de rede - ' ${(err?.message ? ` (${err.message})` : '')}`,
-                    life: 5000,
-                });
-            },
-            complete: () => {
-                this.isLoading = false;
+    private async loadNetworkTopologyData(): Promise<void> {
+        try {
+            this.nodes = await firstValueFrom(this.eaceService.getNetworkTopologyData(this.shopId!));            
+            const routerNode = this.nodes.find(n => n.type === DeviceType.ROUTER);
+
+            if (routerNode) {
+                routerNode.name = 'Roteador';
+                routerNode.model = this.routerDevice?.model || '(n/d)';
             }
-        });
+            
+            this.calculateLayout();
+            this.calculateConnections();
+        } catch (err: any) {
+            this.showError(`Falha ao carregar dados da topologia de rede${err.message ? ` (${err.message})` : ''}`);
+        }
     }
 
     ngOnDestroy(): void {
-        if (this.viewGlobalSubscription) {
-            this.viewGlobalSubscription.unsubscribe();
-        }
-        if (this.networkTopologySubscription) {
-            this.networkTopologySubscription.unsubscribe();
-        }
+        this.queryParamsSubscription?.unsubscribe();
     }
 
     /**
@@ -354,101 +316,83 @@ export class NetworkTopology implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Agrupa nós por tipo de dispositivo
-     */
-    private groupNodesByType(): { routers: TopologyNode[], switches: TopologyNode[], accessPoints: TopologyNode[], stations: TopologyNode[], noPortsDevices: TopologyNode[] } {
-        const noPortsDevices = this.nodes.filter(n => !n.ports || n.ports.length === 0);
-        const devicesWithPorts = this.nodes.filter(n => n.ports && n.ports.length > 0);
-        
-        return {
-            routers: devicesWithPorts.filter(n => n.type === DeviceType.ROUTER),
-            switches: devicesWithPorts.filter(n => n.type === DeviceType.SWITCH),
-            accessPoints: devicesWithPorts.filter(n => n.type === DeviceType.ACCESS_POINT),
-            stations: devicesWithPorts.filter(n => n.type === DeviceType.STATION),
-            noPortsDevices: noPortsDevices
+    private groupNodesByType() {
+        const groups = {
+            routers: [] as TopologyNode[],
+            switches: [] as TopologyNode[],
+            accessPoints: [] as TopologyNode[],
+            stations: [] as TopologyNode[],
+            noPortsDevices: [] as TopologyNode[]
         };
+        
+        this.nodes.forEach(node => {
+            if (!node.ports?.length) {
+                groups.noPortsDevices.push(node);
+            } else {
+                switch (node.type) {
+                    case DeviceType.ROUTER:
+                        groups.routers.push(node);
+                        break;
+                    case DeviceType.SWITCH:
+                        groups.switches.push(node);
+                        break;
+                    case DeviceType.ACCESS_POINT:
+                        groups.accessPoints.push(node);
+                        break;
+                    case DeviceType.STATION:
+                        groups.stations.push(node);
+                        break;
+                }
+            }
+        });
+        
+        return groups;
     }
 
-    /**
-     * Retorna os IDs dos routers (cached)
-     */
     private getRouterIds(): string[] {
         return this.nodes.filter(n => n.type === DeviceType.ROUTER).map(r => r.id);
     }
 
-    /**
-     * Retorna nós do nível 2: Switches + APs conectados diretamente ao router
-     */
     private getLevel2Nodes(switches: TopologyNode[], accessPoints: TopologyNode[]): TopologyNode[] {
         const routerIds = this.getRouterIds();
-
-        // APs conectados diretamente ao router
-        const directAPs = accessPoints.filter(ap => {
-            return ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
-        });
-
-        // Combina switches e APs diretos, ordenando: switches primeiro, depois APs
+        const directAPs = accessPoints.filter(ap =>
+            ap.ports.some(port => routerIds.includes(port.connectedToDeviceId))
+        );
         return [...switches, ...directAPs];
     }
 
-    /**
-     * Retorna APs do nível 3: APs conectados aos switches
-     */
     private getLevel3AccessPoints(accessPoints: TopologyNode[]): TopologyNode[] {
         const routerIds = this.getRouterIds();
-
-        // APs que NÃO estão conectados diretamente ao router
-        return accessPoints.filter(ap => {
-            return !ap.ports.some(port => routerIds.includes(port.connectedToDeviceId));
-        });
+        return accessPoints.filter(ap =>
+            !ap.ports.some(port => routerIds.includes(port.connectedToDeviceId))
+        );
     }
 
-    /**
-     * Calcula as conexões entre dispositivos
-     */
     private calculateConnections(): void {
         this.connections = [];
+        const seen = new Set<string>();
 
-        // Filtra apenas dispositivos com portas para criar conexões
-        const nodesWithPorts = this.nodes.filter(node => node.ports && node.ports.length > 0);
-
-        nodesWithPorts.forEach(node => {
-            node.ports.forEach(port => {
-                const targetNode = this.nodes.find(n => n.id === port.connectedToDeviceId);
-                if (targetNode && node.position && targetNode.position) {
-                    // Verifica se a conexão já existe (evita duplicatas)
-                    const exists = this.connections.some(c =>
-                        (c.fromDevice === node.id && c.toDevice === targetNode.id) ||
-                        (c.fromDevice === targetNode.id && c.toDevice === node.id)
-                    );
-
-                    if (!exists) {
-                        this.connections.push({
-                            fromDevice: node.id,
-                            fromPort: port.portName,
-                            toDevice: targetNode.id,
-                            toPort: port.connectedToPort
-                        });
+        this.nodes
+            .filter(node => node.ports?.length > 0)
+            .forEach(node => {
+                node.ports.forEach(port => {
+                    const targetNode = this.nodes.find(n => n.id === port.connectedToDeviceId);
+                    if (targetNode?.position && node.position) {
+                        const key = [node.id, targetNode.id].sort().join('|');
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            this.connections.push({
+                                fromDevice: node.id,
+                                fromPort: port.portName,
+                                toDevice: targetNode.id,
+                                toPort: port.connectedToPort
+                            });
+                        }
                     }
-                }
+                });
             });
-        });
     }
 
-    /**
-     * Retorna o centro inferior de um nó (ponto de saída)
-     */
-    getNodeBottomCenter(node: TopologyNode): { x: number, y: number } {
-        return {
-            x: (node.position?.x || 0) + this.nodeWidth / 2,
-            y: (node.position?.y || 0) + this.nodeHeight
-        };
-    }
-
-    /**
-     * Retorna o centro superior de um nó (ponto de entrada)
-     */
     getNodeTopCenter(node: TopologyNode): { x: number, y: number } {
         return {
             x: (node.position?.x || 0) + this.nodeWidth / 2,
@@ -456,147 +400,100 @@ export class NetworkTopology implements OnInit, OnDestroy {
         };
     }
 
-    /**
-     * Gera o path SVG para uma conexão com linhas verticais e horizontais
-     */
+    private getNodeBottomCenter(node: TopologyNode): { x: number, y: number } {
+        return {
+            x: (node.position?.x || 0) + this.nodeWidth / 2,
+            y: (node.position?.y || 0) + this.nodeHeight
+        };
+    }
+
     getConnectionPath(connection: TopologyConnection): string {
         const fromNode = this.nodes.find(n => n.id === connection.fromDevice);
         const toNode = this.nodes.find(n => n.id === connection.toDevice);
 
-        if (!fromNode || !toNode || !fromNode.position || !toNode.position) {
-            return '';
-        }
+        if (!fromNode?.position || !toNode?.position) return '';
 
         const start = this.getNodeBottomCenter(fromNode);
         const end = this.getNodeTopCenter(toNode);
-
-        // Calcula ponto médio vertical para criar conexões em forma de "T"
         const midY = start.y + (end.y - start.y) / 2;
 
-        // Cria path com linhas verticais e horizontais (sem diagonais)
-        // Formato: sai verticalmente do dispositivo de origem, 
-        // move horizontalmente até alinhar com o destino,
-        // e desce/sobe verticalmente até o dispositivo de destino
-        const path = `
-            M ${start.x} ${start.y}
-            L ${start.x} ${midY}
-            L ${end.x} ${midY}
-            L ${end.x} ${end.y}
-        `;
-
-        return path.trim();
+        return `M ${start.x} ${start.y} L ${start.x} ${midY} L ${end.x} ${midY} L ${end.x} ${end.y}`;
     }
 
-    /**
-     * Retorna a posição para o label da porta de origem
-     */
     getFromPortLabelPosition(connection: TopologyConnection): { x: number, y: number } {
-        const toNode = this.nodes.find(n => n.id === connection.toDevice);
-        if (!toNode || !toNode.position) return { x: 0, y: 0 };
-
-        const point = this.getNodeTopCenter(toNode);
-        return { x: point.x - 30, y: point.y - 48 };
+        return this.getPortLabelPosition(connection.toDevice, this.LABEL_OFFSET.FROM_Y);
     }
 
-    /**
-     * Retorna a posição para o label da porta de destino
-     */
     getToPortLabelPosition(connection: TopologyConnection): { x: number, y: number } {
-        const toNode = this.nodes.find(n => n.id === connection.toDevice);
-        if (!toNode || !toNode.position) return { x: 0, y: 0 };
-
-        const point = this.getNodeTopCenter(toNode);
-        return { x: point.x - 30, y: point.y - 20 };
+        return this.getPortLabelPosition(connection.toDevice, this.LABEL_OFFSET.TO_Y);
     }
 
-    /**
-     * Retorna a classe CSS baseada no tipo de dispositivo
-     */
+    private getPortLabelPosition(deviceId: string, yOffset: number): { x: number, y: number } {
+        const node = this.nodes.find(n => n.id === deviceId);
+        if (!node?.position) return { x: 0, y: 0 };
+        
+        const point = this.getNodeTopCenter(node);
+        return { x: point.x + this.LABEL_OFFSET.X, y: point.y + yOffset };
+    }
+
     getDeviceClass(type: DeviceType): string {
-        return this.DEVICE_CONFIG[type]?.className || '';
+        return this.getDeviceConfigValue(type, 'className', '');
     }
 
-    /**
-     * Retorna a imagem PNG baseada no tipo de dispositivo
-     */
     getDeviceImage(type: DeviceType): string {
-        return this.DEVICE_CONFIG[type]?.image || '';
+        return this.getDeviceConfigValue(type, 'image', '');
     }
 
-    /**
-     * Retorna o nome do tipo de dispositivo formatado
-     */
     getDeviceTypeName(type: DeviceType): string {
-        return this.DEVICE_CONFIG[type]?.displayName || 'Dispositivo';
+        return this.getDeviceConfigValue(type, 'displayName', 'Dispositivo');
     }
 
-    /**
-     * Retorna o nome do dispositivo conectado à porta
-     */
+    private getDeviceConfigValue<K extends keyof (typeof this.DEVICE_CONFIG)[DeviceType]>(
+        type: DeviceType,
+        key: K,
+        fallback: any
+    ) {
+        return this.DEVICE_CONFIG[type]?.[key] ?? fallback;
+    }
+
     getConnectedDeviceName(deviceId: string): string {
         const device = this.nodes.find(n => n.id === deviceId);
         return device ? device.name : 'Desconhecido';
     }
 
-    /**
-     * Mostra o popover com detalhes do dispositivo
-     */
     showDeviceDetails(event: MouseEvent, node: TopologyNode): void {
-        // Não mostra o popover se estiver em modo pan
-        if (this.isPanMode) {
-            return;
-        }
+        if (this.isPanMode) return;
 
         this.selectedDevice = node;
 
-        // Calcula a posição na tela do nó considerando zoom e pan
         const nodeX = (node.position?.x || 0) * this.scale + this.translateX;
         const nodeY = (node.position?.y || 0) * this.scale + this.translateY;
 
-        // Posiciona o elemento âncora no centro do dispositivo
         const anchorElement = this.popoverAnchor.nativeElement as HTMLElement;
         anchorElement.style.left = `${nodeX + (this.nodeWidth * this.scale) / 2}px`;
         anchorElement.style.top = `${nodeY + (this.nodeHeight * this.scale) / 2}px`;
 
-        // Mostra o popover usando o elemento âncora como target
-        setTimeout(() => {
-            this.devicePopover.toggle(event, anchorElement);
-        }, 0);
+        setTimeout(() => this.devicePopover.toggle(event, anchorElement), 0);
     }
 
-    /**
-     * Retorna a transformação SVG para zoom e pan
-     */
     getTransform(): string {
         return `translate(${this.translateX}, ${this.translateY}) scale(${this.scale})`;
     }
 
-    /**
-     * Aumenta o zoom
-     */
     zoomIn(): void {
-        this.scale = Math.min(this.scale + this.zoomStep, 3); // Máximo 3x
+        this.scale = Math.min(this.scale + this.ZOOM_CONFIG.STEP, this.ZOOM_CONFIG.MAX);
     }
 
-    /**
-     * Diminui o zoom
-     */
     zoomOut(): void {
-        this.scale = Math.max(this.scale - this.zoomStep, 0.5); // Mínimo 0.5x
+        this.scale = Math.max(this.scale - this.ZOOM_CONFIG.STEP, this.ZOOM_CONFIG.MIN);
     }
 
-    /**
-     * Restaura o zoom para 1:1
-     */
     resetZoom(): void {
         this.scale = 1;
         this.translateX = 0;
         this.translateY = 0;
     }
 
-    /**
-     * Ativa/desativa o modo de pan com mouse
-     */
     togglePanMode(): void {
         this.isPanMode = !this.isPanMode;
         if (!this.isPanMode) {
@@ -604,48 +501,32 @@ export class NetworkTopology implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Inicia o arrasto do gráfico
-     */
     onMouseDown(event: MouseEvent): void {
-        if (this.isPanMode) {
-            this.isDragging = true;
-            this.lastMouseX = event.clientX;
-            this.lastMouseY = event.clientY;
-            event.preventDefault();
-        }
+        if (!this.isPanMode) return;
+        
+        this.isDragging = true;
+        this.lastMouseX = event.clientX;
+        this.lastMouseY = event.clientY;
+        event.preventDefault();
     }
 
-    /**
-     * Move o gráfico enquanto arrasta
-     */
     onMouseMove(event: MouseEvent): void {
-        if (this.isPanMode && this.isDragging) {
-            const deltaX = event.clientX - this.lastMouseX;
-            const deltaY = event.clientY - this.lastMouseY;
-
-            this.translateX += deltaX;
-            this.translateY += deltaY;
-
-            this.lastMouseX = event.clientX;
-            this.lastMouseY = event.clientY;
-            event.preventDefault();
-        }
+        if (!this.isPanMode || !this.isDragging) return;
+        
+        this.translateX += event.clientX - this.lastMouseX;
+        this.translateY += event.clientY - this.lastMouseY;
+        this.lastMouseX = event.clientX;
+        this.lastMouseY = event.clientY;
+        event.preventDefault();
     }
 
-    /**
-     * Finaliza o arrasto do gráfico
-     */
     onMouseUp(event: MouseEvent): void {
-        if (this.isPanMode) {
-            this.isDragging = false;
-            event.preventDefault();
-        }
+        if (!this.isPanMode) return;
+        
+        this.isDragging = false;
+        event.preventDefault();
     }
 
-    /**
-     * Retorna o cursor CSS baseado no modo de pan
-     */
     getCursor(): string {
         if (this.isPanMode) {
             return this.isDragging ? 'grabbing' : 'grab';
@@ -653,9 +534,15 @@ export class NetworkTopology implements OnInit, OnDestroy {
         return 'default';
     }
 
-    /**
-     * Converte uma imagem para base64 Data URL
-     */
+    private showError(detail: string, life = 5000): void {
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Erro',
+            detail,
+            life
+        });
+    }
+
     private async imageToDataURL(url: string): Promise<string> {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -680,9 +567,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         });
     }
 
-    /**
-     * Exporta a topologia como PDF
-     */
     async exportToPDF(): Promise<void> {
         try {
             const svgClone = this.cloneSvgWithoutTransform();
@@ -695,9 +579,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         }
     }
 
-    /**
-     * Clona o SVG e remove transformações
-     */
     private cloneSvgWithoutTransform(): SVGElement {
         const svg = this.svgElement.nativeElement as SVGElement;
         const svgClone = svg.cloneNode(true) as SVGElement;
@@ -710,9 +591,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         return svgClone;
     }
 
-    /**
-     * Converte todas as imagens do SVG para base64
-     */
     private async convertSvgImagesToBase64(svgElement: SVGElement): Promise<void> {
         const images = svgElement.querySelectorAll('image');
         const imagePromises: Promise<void>[] = [];
@@ -735,9 +613,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         await Promise.all(imagePromises);
     }
 
-    /**
-     * Serializa o SVG e converte para Data URL
-     */
     private serializeSvgToDataUrl(svgElement: SVGElement): string {
         const serializer = new XMLSerializer();
         let svgString = serializer.serializeToString(svgElement);
@@ -750,9 +625,6 @@ export class NetworkTopology implements OnInit, OnDestroy {
         return `data:image/svg+xml;base64,${svgBase64}`;
     }
 
-    /**
-     * Renderiza SVG em canvas e gera PDF
-     */
     private async renderSvgToPdf(svgDataUrl: string): Promise<void> {
         return new Promise((resolve, reject) => {
             const canvas = document.createElement('canvas');
