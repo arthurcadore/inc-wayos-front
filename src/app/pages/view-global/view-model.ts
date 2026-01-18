@@ -23,6 +23,7 @@ export interface OfflineDevice {
 export class SiteModelView {
     refreshedAt: Date | null;
     inep: string;
+    shopId: number;
     city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'
@@ -31,6 +32,7 @@ export class SiteModelView {
     constructor(value: ViewGlobalItem, refreshedAt: string) {
         this.refreshedAt = refreshedAt ? new Date(refreshedAt) : null;
         this.inep = value.inep;
+        this.shopId = value.shopId;
         this.city = value.city;
         this.router = value.router;
         this.switches = value.switches;

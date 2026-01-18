@@ -3,8 +3,12 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
 import { EaceService } from '../service/eace.service';
 import { MessageService } from 'primeng/api';
-import { SiteModelView } from '../view-global/view-model';
+import { DeviceType, OfflineDevice, SiteModelView } from '../view-global/view-model';
 import { CommonModule } from '@angular/common';
+import { DialogService } from 'primeng/dynamicdialog';
+import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
+import { IncCloudDevice, WayosRouterInfo } from '../service/dtos/view-global.dtos';
+import { IncCloudLastOfflineMoment } from '@/components/last-offline-moment/inccloud-last-offline-moment';
 
 @Component({
     selector: 'app-school-details',
@@ -14,6 +18,7 @@ import { CommonModule } from '@angular/common';
         RouterLink,
         CommonModule,
     ],
+    providers: [DialogService],
     styles: `
     .margin-padding {
         padding: 8px 0px 8px 8px;
@@ -57,7 +62,8 @@ export class SchoolDetails implements OnInit, OnDestroy {
     constructor(
         private readonly route: ActivatedRoute,
         private readonly eaceService: EaceService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly dialogService: DialogService,
     ) { }
 
     ngOnInit(): void {
@@ -71,9 +77,9 @@ export class SchoolDetails implements OnInit, OnDestroy {
         this.isLoading = true;
         this.viewGlobalSubscription = this.eaceService.getViewGlobalData(true).subscribe({
             next: (data) => {
-                const devices = data.data.find(item => item.inep === this.inepInfo.inep);
-                if (devices) {
-                    this.siteModelView = new SiteModelView(devices, data.refreshedAt);
+                const device = data.data.find(item => item.inep === this.inepInfo.inep);
+                if (device) {
+                    this.siteModelView = new SiteModelView(device, data.refreshedAt);
 
                     // Popule as informações da escola
                     this.inepInfo.cityName = this.siteModelView.city;
@@ -115,6 +121,39 @@ export class SchoolDetails implements OnInit, OnDestroy {
             complete: () => {
                 this.isLoadingLastMoment = false;
             },
+        });
+    }
+
+    async seeLastMomentOfflineWayos(site: SiteModelView): Promise<void> {
+        this.dialogService.open(WayosLastOfflineMoment, {
+            header: `Último Momento Offline - Roteador`,
+            styleClass: 'w-full md:w-[45%] mx-auto',
+            data: {
+                shopId: (site.router as WayosRouterInfo).sceneId,
+                inep: site.inep,
+                deviceStatus: (site.router as WayosRouterInfo).online,
+                deviceSerial: (site.router as WayosRouterInfo).sn,
+                deviceModel: (site.router as WayosRouterInfo).model,
+            },
+            closable: true,
+            dismissableMask: true,
+            style: { 'background-color': '#f1f5f9' },
+        });
+    }
+
+    async seeLastMomentOfflineIncCloud(device: IncCloudDevice): Promise<void> {
+        this.dialogService.open(IncCloudLastOfflineMoment, {
+            header: `Último Momento Offline - ${device.devType}`,
+            styleClass: 'w-full md:w-[45%] mx-auto',
+            data: {
+                inep: this.inepInfo.inep,
+                deviceStatus: (device as IncCloudDevice).online,
+                deviceSerial: (device as IncCloudDevice).sn,
+                deviceModel: (device as IncCloudDevice).aliasName,
+            },
+            closable: true,
+            dismissableMask: true,
+            style: { 'background-color': '#f1f5f9' },
         });
     }
 

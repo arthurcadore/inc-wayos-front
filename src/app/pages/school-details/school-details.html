@@ -47,9 +47,17 @@
                 </div>
             }
         </div>
-        <div class="margin-padding">Dispositivos: {{inepInfo.totalDevices}}</div>
+        <div class="margin-padding">
+            <div class="mb-1">Dispositivos: {{inepInfo.totalDevices}}</div>
+            <div class="mb-1">Template do Firewall: [sim/não]</div>
+        </div>
         <div class="margin-padding text-green-500 cursor-pointer">
-            <a [routerLink]="['/connected-devices']" [queryParams]="{ devSn: inepInfo.devSn }">Dispositivos Online</a>
+            <div class="mb-1">
+                <a [routerLink]="['/connected-devices']" [queryParams]="{ devSn: inepInfo.devSn }">Dispositivos Online</a>&nbsp;
+            </div>
+            <div class="mb-1">
+                <a [routerLink]="['/network-topology']" [queryParams]="{ shopId: siteModelView?.shopId }">Topologia da rede</a>
+            </div>            
         </div>
 
         <!-- Dispositivos da Escola -->
@@ -65,7 +73,9 @@
             }
         </div>
         <div class="border-center margin-padding">IP: {{siteModelView?.router?.lanIp}}</div>
-        <div class="border-center margin-padding text-green-500 cursor-pointer">Template do Firewall</div>
+        <div class="border-center margin-padding">
+            <div class="text-green-500 cursor-pointer" (click)="seeLastMomentOfflineWayos(siteModelView!)">Último Momento Offline</div>
+        </div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">
             <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'router', value: siteModelView?.router?.sceneId}">Alarmes</a>
         </div>
@@ -82,7 +92,9 @@
             }
         </div>
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
-        <div class="border-center margin-padding"></div>
+        <div class="border-center margin-padding">
+            <div class="text-green-500 cursor-pointer" (click)="seeLastMomentOfflineIncCloud(item)">Último Momento Offline</div>
+        </div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">
             <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'switch', value: item.sn}">Alarmes</a>
         </div>
@@ -99,7 +111,9 @@
             }
         </div>
         <div class="border-center margin-padding">IP: {{item.devIp}}</div>
-        <div class="border-center margin-padding"></div>
+        <div class="border-center margin-padding">
+            <div class="text-green-500 cursor-pointer" (click)="seeLastMomentOfflineIncCloud(item)">Último Momento Offline</div>
+        </div>
         <div class="border-right margin-padding text-green-500 cursor-pointer">
             <a [routerLink]="['/alarm-details']" [queryParams]="{ deviceType: 'ap', value: item.sn }">Alarmes</a>
         </div>
