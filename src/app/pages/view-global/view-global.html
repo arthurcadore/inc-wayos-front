@@ -1,6 +1,7 @@
 <div class="flex flex-row justify-between items-center mb-3">
     <div>
         <div class="text-2xl md:text-3xl font-extrabold">Visão Global da Rede</div>
+        <div class="text-sm text-gray-600"><b class="text-black">{{ totalInstalledSites }}</b> Sites Instalados / <b class="text-black">{{ totalUninstalledSites }}</b> Entregas Físicas</div>
         <span class="text-sm text-gray-400">{{ getTimeRemainingText() }}</span>
     </div>
     <div class="flex">
@@ -78,8 +79,11 @@
     <p-table #dt2 [value]="filteredSites" dataKey="id" [paginator]="true" [globalFilterFields]="['inep', 'city']" [rows]="10" [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]" [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #caption>
             <!-- Caption -->
+            <div class="mb-2">
+                <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
+            </div>
             <div class="flex flex-col md:flex-row gap-4">
-                <p-selectbutton [options]="stateOptions" [(ngModel)]="value" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
+                <p-selectbutton [options]="statusOptions" [(ngModel)]="selectStatus" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />                
                 <p-iconfield iconPosition="left" class="md:ml-auto w-full md:w-auto">
                     <p-inputicon>
                         <i class="pi pi-search"></i>
@@ -91,22 +95,25 @@
         </ng-template>
         <ng-template #header>
             <tr>
-                <th pSortableColumn="inep" style="width:16.66%">
+                <th pSortableColumn="inep" style="width:14.28%">
                     <div class="font-extrabold">Site <p-sortIcon field="inep" /></div>
                 </th>
-                <th style="width:16.66%">
+                <th pSortableColumn="installedDevices" style="width:14.28%">
+                    <div class="font-extrabold">Site Instalado <p-sortIcon field="installedDevices" /></div>
+                </th>
+                <th style="width:14.28%">
                     <div class="font-extrabold">Roteadores</div>
                 </th>
-                <th style="width:16.66%">
+                <th style="width:14.28%">
                     <div class="font-extrabold">Switches</div>
                 </th>
-                <th style="width:16.66%">
+                <th style="width:14.28%">
                     <div class="font-extrabold">Access Points</div>
                 </th>
-                <th style="width: 16.66%">
+                <th style="width: 14.28%">
                     <div class="font-extrabold">Último Momento Offline <span class="text-gray-400 font-normal text-sm">(Roteador)</span></div>
                 </th>
-                <th style="width:16.66%">
+                <th style="width:14.28%">
                     <div class="font-extrabold">Ações</div>
                 </th>
             </tr>
@@ -116,6 +123,9 @@
                 <td>
                     <div class="font-extrabold">{{ site.inep }}</div>
                     <div class="text-sm text-gray-400">{{ site.city }}</div>
+                </td>
+                <td>
+                    <div class="">{{ site.installedDevices ? 'Sim' : 'Não' }}</div>
                 </td>
                 <td>
                     @if (site.routerIsOnline) {
@@ -162,7 +172,7 @@
         </ng-template>
         <ng-template #emptymessage>
             <tr>
-                <td colspan="6">
+                <td colspan="7">
                     <div class="text-center text-red-400">
                         Não há dados disponíveis.
                     </div>

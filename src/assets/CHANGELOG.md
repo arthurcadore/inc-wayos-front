@@ -7,6 +7,16 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.5.0] - 2026-01-18
+
+### Status
+**BETA** - Versão inicial em desenvolvimento
+
+### Adicionado
+- Informação de entregas físicas na API de visão global (princial)
+
+---
+
 ## [0.4.0] - 2026-01-18
 
 ### Status

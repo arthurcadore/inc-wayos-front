@@ -53,6 +53,9 @@ export class ViewGlobal implements OnInit, OnDestroy {
     onlineAccessPoints: number = 0;
     offlineAccessPoints: number = 0;
 
+    totalInstalledSites: number = 0;
+    totalUninstalledSites: number = 0;
+
     sites: SiteModelView[] = [];
     filteredSites: SiteModelView[] = [];
 
@@ -64,13 +67,21 @@ export class ViewGlobal implements OnInit, OnDestroy {
     private isLoading: boolean = false;
     private readonly refreshIntervalSeconds: number;
 
+    // Opções do filtro de instalação
+    installedOptions: any[] = [
+        { label: 'Todos', value: 'all' },
+        { label: 'Instalados', value: 'installed' },
+        { label: 'Entrega Física', value: 'physical_delivery' },
+    ]
+    selectInstalled: string = 'all';
+
     // Opções do filtro de status
-    stateOptions: any[] = [
+    statusOptions: any[] = [
         { label: 'Todos', value: 'all' },
         { label: 'Online', value: 'online' },
         { label: 'Offline', value: 'offline' },
     ];
-    value: string = 'all';
+    selectStatus: string = 'all';
 
     constructor(
         private readonly eaceService: EaceService,
@@ -96,19 +107,19 @@ export class ViewGlobal implements OnInit, OnDestroy {
      * - 'offline': Mostra sites com pelo menos um device offline
      */
     applyFilter(): void {
-        if (this.value === 'all') {
+        if (this.selectStatus === 'all') {
             this.filteredSites = [...this.sites];
-        } else if (this.value === 'online') {
+        } else if (this.selectStatus === 'online') {
             // Sites online = sites SEM nenhum device offline
             this.filteredSites = this.sites.filter(site => !site.hasOfflineDevices());
-        } else if (this.value === 'offline') {
+        } else if (this.selectStatus === 'offline') {
             // Sites offline = sites COM pelo menos um device offline
             this.filteredSites = this.sites.filter(site => site.hasOfflineDevices());
         }
     }
 
     exportCSV() {
-        const filteredSites = this.sites.map(site => site.toFlatTableData(DeviceType.ALL, this.value as DeviceStatus)).flat();
+        const filteredSites = this.sites.map(site => site.toFlatTableData(DeviceType.ALL, this.selectStatus as DeviceStatus)).flat();
         this.exportFileService.toCSV(filteredSites, environment.viewGlobalExportFileName);
     }
 
@@ -136,6 +147,9 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
                 this.onlineAccessPoints = data.onlineAps;
                 this.offlineAccessPoints = data.totalAps - data.onlineAps;
+
+                this.totalInstalledSites = data.totalInstalledSites;
+                this.totalUninstalledSites = data.totalUninstalledSites;
 
                 this.sites = data.data.map((item: ViewGlobalItem) => new SiteModelView(item, data.refreshedAt));
                 this.applyFilter();

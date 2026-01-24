@@ -23,6 +23,7 @@ export interface IncCloudDevice {
 export interface ViewGlobalItem {
     inep: string;
     shopId: number;
+    installedDevices: boolean;
     city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'
@@ -41,6 +42,9 @@ export interface ViewGlobalResponse {
 
     totalAps: number;
     onlineAps: number;
+
+    totalInstalledSites: number;
+    totalUninstalledSites: number;
 
     data: ViewGlobalItem[];
 }

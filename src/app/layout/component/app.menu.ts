@@ -22,7 +22,7 @@ export class AppMenu {
         this.model = [
             {
                 items: [
-                    { label: 'Visão Global', icon: 'pi pi-fw pi-globe', routerLink: ['/'] },
+                    { label: 'Dashboard', icon: 'pi pi-fw pi-globe', routerLink: ['/'] },
                     // { label: 'Eace', icon: 'pi pi-fw pi-angle-right', routerLink: ['/eace'] },
                     // { label: 'Eace Entrega Física', icon: 'pi pi-fw pi-angle-right', routerLink: ['/'] },
                 ],

@@ -24,6 +24,7 @@ export class SiteModelView {
     refreshedAt: Date | null;
     inep: string;
     shopId: number;
+    installedDevices: boolean;
     city: string;
     router: WayosRouterInfo;
     switches: IncCloudDevice[]; // devType === 'SWITCH'
@@ -33,6 +34,7 @@ export class SiteModelView {
         this.refreshedAt = refreshedAt ? new Date(refreshedAt) : null;
         this.inep = value.inep;
         this.shopId = value.shopId;
+        this.installedDevices = value.installedDevices;
         this.city = value.city;
         this.router = value.router;
         this.switches = value.switches;
