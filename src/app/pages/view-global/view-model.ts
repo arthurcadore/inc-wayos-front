@@ -61,6 +61,14 @@ export class SiteModelView {
         return this.router.online;
     }
 
+    public isInstalled(): boolean {
+        return this.installedDevices;
+    }
+
+    public isPhysicalDelivery(): boolean {
+        return !this.installedDevices;
+    }
+
     public hasOfflineDevices(): boolean {
         return !this.router.online ||
             this.switches.some(sw => !sw.online) ||

@@ -14,7 +14,11 @@
         </p-popover>
     </div>
 </div>
-<p-card header="Status do dispositivo">
+<p-card>
+    <div class="flex justify-between">
+        <div class="text-lg font-extrabold">Status do dispositivo</div>
+        <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
+    </div>
     <p class="text-gray-400">Atualizado: {{ refreshedAtFormat }}</p>
     <!-- display dos devices -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-3">
@@ -76,12 +80,18 @@
 </p-card>
 <p-divider />
 <p-card>
-    <p-table #dt2 [value]="filteredSites" dataKey="id" [paginator]="true" [globalFilterFields]="['inep', 'city']" [rows]="10" [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]" [tableStyle]="{ 'min-width': '50rem' }">
+    <p-table #dt2
+        [value]="filteredSites"
+        dataKey="id"
+        [paginator]="true"
+        [globalFilterFields]="['inep', 'city']"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 20, 50, 100, 200, 500, 10000]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first} de {last} total {totalRecords} sites"
+        [tableStyle]="{ 'min-width': '50rem' }">
         <ng-template #caption>
             <!-- Caption -->
-            <div class="mb-2">
-                <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
-            </div>
             <div class="flex flex-col md:flex-row gap-4">
                 <p-selectbutton [options]="statusOptions" [(ngModel)]="selectStatus" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />                
                 <p-iconfield iconPosition="left" class="md:ml-auto w-full md:w-auto">

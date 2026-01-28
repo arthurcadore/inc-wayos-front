@@ -101,25 +101,52 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     /**
-     * Aplica o filtro de status aos sites
-     * - 'all': Mostra todos os sites
-     * - 'online': Mostra apenas sites com todos os devices online
-     * - 'offline': Mostra sites com pelo menos um device offline
+     * @description Aplica os filtros selecionados de instalação e status aos sites exibidos
      */
     applyFilter(): void {
-        if (this.selectStatus === 'all') {
+        if (this.selectInstalled === 'all') {
+            // Todos os sites
             this.filteredSites = [...this.sites];
+            this.applyStatusFilter();
+        } else if (this.selectInstalled === 'installed') {
+            // Apenas sites instalados
+            this.filteredSites = this.sites.filter(site => site.isInstalled());
+            this.applyStatusFilter();
+        } else if (this.selectInstalled === 'physical_delivery') {
+            // Apenas sites em entrega física
+            this.filteredSites = this.sites.filter(site => site.isPhysicalDelivery());
+            this.applyStatusFilter();
+        }
+    }
+    
+    applyStatusFilter(): void {
+        if (this.selectStatus === 'all') {
+            this.filteredSites = [...this.filteredSites];
         } else if (this.selectStatus === 'online') {
             // Sites online = sites SEM nenhum device offline
-            this.filteredSites = this.sites.filter(site => !site.hasOfflineDevices());
+            this.filteredSites = this.filteredSites.filter(site => !site.hasOfflineDevices());
         } else if (this.selectStatus === 'offline') {
             // Sites offline = sites COM pelo menos um device offline
-            this.filteredSites = this.sites.filter(site => site.hasOfflineDevices());
+            this.filteredSites = this.filteredSites.filter(site => site.hasOfflineDevices());
         }
+        this.recalculateTotals();
+    }
+
+    // Com base na lista filtrada, recalcule os totais exibidos nos cards superiores
+    recalculateTotals(): void {
+        this.onlineRouters = this.filteredSites.filter(site => site.router.online).length;
+        this.offlineRouters = this.filteredSites.length - this.onlineRouters;
+        this.onlineSwitches = this.filteredSites.reduce((acc, site) => acc + site.switches.filter(sw => sw.online).length, 0);
+        this.offlineSwitches = this.filteredSites.reduce((acc, site) => acc + site.switches.filter(sw => !sw.online).length, 0);
+        this.onlineAccessPoints = this.filteredSites.reduce((acc, site) => acc + site.aps.filter(ap => ap.online).length, 0);
+        this.offlineAccessPoints = this.filteredSites.reduce((acc, site) => acc + site.aps.filter(ap => !ap.online).length, 0);
     }
 
     exportCSV() {
-        const filteredSites = this.sites.map(site => site.toFlatTableData(DeviceType.ALL, this.selectStatus as DeviceStatus)).flat();
+        const filteredSites = this.filteredSites
+            .map(site => site.toFlatTableData(DeviceType.ALL, this.selectStatus as DeviceStatus))
+            .flat();
+
         this.exportFileService.toCSV(filteredSites, environment.viewGlobalExportFileName);
     }
 
