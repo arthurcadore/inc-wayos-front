@@ -2,6 +2,8 @@ export interface WayosRouterInfo {
     inep: string;
     sceneId: number;
     sn: string;
+    simetBox: string | null;
+    backupScriptStatus: string | null;
     model: string | null;
     wanIp: string | null;
     lanIp: string | null;

@@ -41,15 +41,21 @@
                     <span class="text-gray-500">Atualizando...</span>
                 </div>
             } @else {
+                @if (inepInfo.lastMomentOnline) {
                 <div class="text-gray-500">
                     <i class="pi pi-clock"></i>&nbsp;
                     {{inepInfo.lastMomentOnline | date:'dd/MM/yyyy HH:mm:ss'}}
                 </div>
+                } @else {
+                <div class="text-red-600">n/d</div>
+                }
             }
         </div>
         <div class="margin-padding">
             <div class="mb-1">Dispositivos: {{inepInfo.totalDevices}}</div>
-            <div class="mb-1">Template do Firewall: [sim/não]</div>
+            <div class="mb-1">
+                Template: <span class="">{{siteModelView?.router?.backupScriptStatus}}</span>
+            </div>
         </div>
         <div class="margin-padding text-green-500 cursor-pointer">
             <div class="mb-1">
@@ -72,7 +78,9 @@
             <span class="text-red-600">Offline</span>
             }
         </div>
-        <div class="border-center margin-padding">IP: {{siteModelView?.router?.lanIp}}</div>
+        <div class="border-center margin-padding">
+            SimetBox: <span [pTooltip]="siteModelView?.router?.simetBox!" tooltipPosition="top">{{siteModelView?.router?.simetBox}}</span>
+        </div>
         <div class="border-center margin-padding">
             <div class="text-green-500 cursor-pointer" (click)="seeLastMomentOfflineWayos(siteModelView!)">Último Momento Offline</div>
         </div>

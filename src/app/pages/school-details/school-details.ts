@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CardModule } from 'primeng/card';
+import { TooltipModule } from 'primeng/tooltip';
 import { EaceService } from '../service/eace.service';
 import { MessageService } from 'primeng/api';
-import { DeviceType, OfflineDevice, SiteModelView } from '../view-global/view-model';
+import { SiteModelView } from '../view-global/view-model';
 import { CommonModule } from '@angular/common';
 import { DialogService } from 'primeng/dynamicdialog';
 import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
@@ -17,6 +18,7 @@ import { IncCloudLastOfflineMoment } from '@/components/last-offline-moment/incc
         CardModule,
         RouterLink,
         CommonModule,
+        TooltipModule,
     ],
     providers: [DialogService],
     styles: `
@@ -108,7 +110,7 @@ export class SchoolDetails implements OnInit, OnDestroy {
         this.isLoadingLastMoment = true;
         this.lastMomentSubscription = this.lastMomentSubscription = this.eaceService.getWayosLastOfflineMomentList(this.siteModelView?.router.sceneId!).subscribe({
             next: (data) => {
-                this.inepInfo.lastMomentOnline = data.at(0)?.happen_at || 'n/d';
+                this.inepInfo.lastMomentOnline = data.length > 0 ? data[0].happen_at : null;
             },
             error: (err) => {
                 this.isLoadingLastMoment = false;
