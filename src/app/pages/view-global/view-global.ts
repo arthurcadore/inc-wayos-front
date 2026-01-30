@@ -107,14 +107,17 @@ export class ViewGlobal implements OnInit, OnDestroy {
         if (this.selectInstalled === 'all') {
             // Todos os sites
             this.filteredSites = [...this.sites];
+            this.recalculateTotals();
             this.applyStatusFilter();
         } else if (this.selectInstalled === 'installed') {
             // Apenas sites instalados
             this.filteredSites = this.sites.filter(site => site.isInstalled());
+            this.recalculateTotals();
             this.applyStatusFilter();
         } else if (this.selectInstalled === 'physical_delivery') {
             // Apenas sites em entrega física
             this.filteredSites = this.sites.filter(site => site.isPhysicalDelivery());
+            this.recalculateTotals();
             this.applyStatusFilter();
         }
     }
@@ -129,7 +132,6 @@ export class ViewGlobal implements OnInit, OnDestroy {
             // Sites offline = sites COM pelo menos um device offline
             this.filteredSites = this.filteredSites.filter(site => site.hasOfflineDevices());
         }
-        this.recalculateTotals();
     }
 
     // Com base na lista filtrada, recalcule os totais exibidos nos cards superiores
