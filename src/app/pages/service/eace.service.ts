@@ -8,6 +8,7 @@ import { AlarmViewModel, RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-lo
 import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
 import { TopologyNode } from "./dtos/network-topology.dto";
 import { WayosGetDeviceInfo } from "./dtos/wayos.dto";
+import { LifelineData } from "./dtos/lifeline.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -17,6 +18,22 @@ export class EaceService {
     private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
     constructor(private httpService: HttpService) { }
+
+    /**
+     * @description Obtém os dados da linha do tempo (lifeline) para um dispositivo específico
+     * @param sn Número de série do dispositivo
+     * @param daysRange Intervalo de dias para os dados da linha do tempo
+     * @returns Observable com os dados da linha do tempo
+     */
+    getLifelineData(sn: string, daysRange: number): Observable<LifelineData> {
+        return this.httpService.get<LifelineData>(`/v1/lifeline-data/sn/${sn}/days-range/${daysRange}`).pipe(
+            tap(data => {
+                if (environment.enableDebug) {
+                    console.log('[EaceService] Fetched lifeline data:', data);
+                }
+            })
+        );
+    }
 
     /**
      * @description Obtém informações detalhadas de um dispositivo Wayos com base no número de série
