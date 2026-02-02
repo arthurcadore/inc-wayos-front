@@ -12,10 +12,14 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
     providers: [],
     template: `
         <div class="bg-lifeline">
-            @for (item of data; track item) {
-                <div class=" lifeline-item event-{{item.typeName.toLowerCase()}}"></div>
-            } @empty {
-                <div>No data available</div>
+            @if (isLoading) {
+                <div class="text-center text-gray-500 text-sm" style="width: 100%;">Carregando dados...</div>
+            } @else {
+                @for (item of data; track item) {
+                    <div class=" lifeline-item event-{{item.typeName.toLowerCase()}}"></div>
+                } @empty {
+                    <div class="text-center text-gray-500 text-sm" style="width: 100%;">Sem dados disponíveis (linha de vida)</div>
+                }
             }
         </div>
     `,
