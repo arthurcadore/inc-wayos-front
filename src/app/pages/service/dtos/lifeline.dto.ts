@@ -5,17 +5,14 @@ export enum LifelineItemType {
 }
 
 export interface LifelineItem {
-    type: LifelineItemType;    
-    dtHappened: string;
-    i: number; // Número de núcleos da cpu
-    t: number; // Temperatura atual da cpu
-    u: number; // Uso atual da cpu em %
+    type: LifelineItemType;
+    startAt: string;
+    cpu: string;    // porcentagem de uso da CPU em porcentagem
+    mem: string;    // porcentagem de uso da memoria em porcentagem
+    up: string;     // velocidade de upload em bytes por segundo
+    down: string;   // velocidade de download em bytes por segundo
 
     // Campos adicionais de uso apenas no front-end
     typeName: string;
-}
-
-export interface LifelineData {
-    sn: string;
-    items: LifelineItem[];
+    statusName: string;
 }

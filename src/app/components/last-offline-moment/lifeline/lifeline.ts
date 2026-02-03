@@ -10,68 +10,47 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
         CommonModule,
     ],
     providers: [],
-    template: `
-        <div class="bg-lifeline">
-            @if (isLoading) {
-                <div class="text-center text-gray-500 text-sm" style="width: 100%;">Carregando dados...</div>
-            } @else {
-                @for (item of data; track item) {
-                    <div class=" lifeline-item event-{{item.typeName.toLowerCase()}}"></div>
-                } @empty {
-                    <div class="text-center text-gray-500 text-sm" style="width: 100%;">Sem dados disponíveis (linha de vida)</div>
-                }
-            }
-        </div>
-    `,
-    styles: `
-        .bg-lifeline {
-            padding: 6px;
-            background-color: #f0f0f0;
-            display: flex;
-            border-radius: 4px;
-        }
-        .lifeline-item {
-            text-align: center;
-            width: 100%;
-            min-height: 8px;
-            cursor: pointer;
-        }
-        .event-red {
-            color: white;
-            background-color: red;
-        }
-        .event-yellow {
-            color: black;
-            background-color: yellow;
-        }
-        .event-green {
-            color: white;
-            background-color: green;
-        }
-        .event-unknown {
-            color: gray;
-            background-color: lightgray;
-        }
-    `,
+    templateUrl: './lifeline.html',
+    styleUrls: ['./lifeline.scss'],
 })
 export class Lifeline implements OnInit, OnDestroy {
     isLoading: boolean = false;
     private subscription: any = null;
 
     data: LifelineItem[] = [];
+    hoveredItem: LifelineItem | null = null;
+    popupPosition = { x: 0 };
 
     constructor(
         private readonly eaceService: EaceService
     ) { }
 
+    onItemHover(event: MouseEvent, item: LifelineItem): void {
+        this.hoveredItem = item;
+        const target = event.currentTarget as HTMLElement;
+        const rect = target.getBoundingClientRect();
+        const parentRect = target.parentElement?.getBoundingClientRect();
+        
+        if (parentRect) {
+            this.popupPosition = {
+                x: rect.left - parentRect.left + (rect.width / 2)
+            };
+        }
+    }
+
+    onItemLeave(): void {
+        this.hoveredItem = null;
+    }
+
     async loadData() {
         this.isLoading = true;
-        this.subscription = this.eaceService.getLifelineData('sssss', 7).subscribe({
+        this.subscription = this.eaceService.getLifelineData('MWDM4203126QN', 1).subscribe({
             next: (data) => {
-                for (let item of data.items) {
+                for (let item of data) {
                     item.typeName = this.parserTypeName(item.type);
+                    item.statusName = this.parseStatusName(item.type);
                 }
-                this.data = data.items;
+                this.data = data;
             },
             error: (err) => {
                 this.isLoading = false;
@@ -91,6 +70,19 @@ export class Lifeline implements OnInit, OnDestroy {
                 return 'yellow';
             case 2:
                 return 'red';
+            default:
+                return 'unknown';
+        }
+    }
+
+    private parseStatusName(type: number): string {
+        switch (type) {
+            case 0:
+                return 'Operação Normal';
+            case 1:
+                return 'Baixo Trafego';
+            case 2:
+                return 'Sem Comunicação';
             default:
                 return 'unknown';
         }

@@ -8,7 +8,7 @@ import { AlarmViewModel, RegionDevice, WayosAlarmLogItem } from "./dtos/alarm-lo
 import { WayosGetDeviceOnlineUser } from "./dtos/connected-devices.dto";
 import { TopologyNode } from "./dtos/network-topology.dto";
 import { WayosGetDeviceInfo } from "./dtos/wayos.dto";
-import { LifelineData } from "./dtos/lifeline.dto";
+import { LifelineItem } from "./dtos/lifeline.dto";
 
 @Injectable({
     providedIn: 'root'
@@ -25,8 +25,8 @@ export class EaceService {
      * @param daysRange Intervalo de dias para os dados da linha do tempo
      * @returns Observable com os dados da linha do tempo
      */
-    getLifelineData(sn: string, daysRange: number): Observable<LifelineData> {
-        return this.httpService.get<LifelineData>(`/v1/lifeline-data/sn/${sn}/days-range/${daysRange}`).pipe(
+    getLifelineData(sn: string, daysRange: number): Observable<LifelineItem[]> {
+        return this.httpService.get<LifelineItem[]>(`/v1/lifeline-data/sn/${sn}/days-range/${daysRange}`).pipe(
             tap(data => {
                 if (environment.enableDebug) {
                     console.log('[EaceService] Fetched lifeline data:', data);

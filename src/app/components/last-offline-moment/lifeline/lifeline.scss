@@ -1,0 +1,125 @@
+.bg-lifeline {
+    padding: 6px;
+    background-color: #f0f0f0;
+    display: flex;
+    border-radius: 4px;
+}
+
+.lifeline-item {
+    text-align: center;
+    width: 100%;
+    min-height: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, min-height 0.2s ease;
+}
+
+.lifeline-item.hovered {
+    transform: scaleY(1.3);
+    z-index: 1;
+}
+
+.event-red {
+    color: white;
+    background-color: #e74c3c;
+}
+
+.event-yellow {
+    color: black;
+    background-color: #f1c40f;
+}
+
+.event-green {
+    color: white;
+    background-color: #2ecc71;
+}
+
+.event-unknown {
+    color: gray;
+    background-color: #95a5a6;
+}
+
+.lifeline-popup {
+    position: absolute;
+    bottom: 100%;
+    transform: translateX(-50%);
+    margin-bottom: 10px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 0;
+    z-index: 1000;
+    pointer-events: none;
+    min-width: 200px;
+}
+
+.popup-content {
+    padding: 12px;
+}
+
+.popup-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.popup-time {
+    font-size: 11px;
+    color: #5a5a5a;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.popup-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin-bottom: 8px;
+}
+
+.popup-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.popup-metric {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+}
+
+.metric-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.metric-value {
+    color: #5a5a5a;
+    font-weight: 600;
+}
+
+.popup-arrow {
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid white;
+}
+
+.popup-arrow::before {
+    content: '';
+    position: absolute;
+    bottom: 1px;
+    left: -6px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #ccc;
+}
