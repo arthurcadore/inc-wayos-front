@@ -18,6 +18,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
 import { ExportFileService } from '@/services/export-file';
 import { PopoverModule } from 'primeng/popover';
+import { Lifeline } from '@/components/lifeline/lifeline';
 
 @Component({
     selector: 'app-view-global',
@@ -34,6 +35,7 @@ import { PopoverModule } from 'primeng/popover';
         SelectButtonModule,
         FormsModule,
         PopoverModule,
+        Lifeline,
     ],
     providers: [DialogService],
     templateUrl: './view-global.html',

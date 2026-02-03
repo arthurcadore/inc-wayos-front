@@ -42,40 +42,40 @@
     position: absolute;
     bottom: 100%;
     transform: translateX(-50%);
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     background: white;
     border: 1px solid #ccc;
     border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0;
-    z-index: 1000;
+    z-index: 9000;
     pointer-events: none;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 .popup-content {
-    padding: 12px;
+    padding: 6px;
 }
 
 .popup-header {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #333;
     text-align: center;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
 }
 
 .popup-time {
     font-size: 11px;
     color: #5a5a5a;
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .popup-divider {
     height: 1px;
     background-color: #e0e0e0;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .popup-metrics {

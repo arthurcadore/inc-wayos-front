@@ -105,25 +105,31 @@
         </ng-template>
         <ng-template #header>
             <tr>
-                <th pSortableColumn="inep" style="width:14.28%">
+                <th pSortableColumn="inep" style="width:10%">
                     <div class="font-extrabold">Site <p-sortIcon field="inep" /></div>
                 </th>
-                <th pSortableColumn="installedDevices" style="width:14.28%">
+                <th style="width:45%">
+                    <div>
+                        <span class="font-extrabold">Linha de Vida </span>
+                        <small class="text-gray-400 font-normal text-sm"> (24h)</small>
+                    </div>
+                </th>
+                <th pSortableColumn="installedDevices" style="width:10%">
                     <div class="font-extrabold">Site Instalado <p-sortIcon field="installedDevices" /></div>
                 </th>
-                <th style="width:14.28%">
+                <th style="width:5%">
                     <div class="font-extrabold">Roteadores</div>
                 </th>
-                <th style="width:14.28%">
+                <th style="width:5%">
                     <div class="font-extrabold">Switches</div>
                 </th>
-                <th style="width:14.28%">
+                <th style="width:5%">
                     <div class="font-extrabold">Access Points</div>
                 </th>
-                <th style="width: 14.28%">
+                <th style="width: 10%">
                     <div class="font-extrabold">Último Momento Offline <span class="text-gray-400 font-normal text-sm">(Roteador)</span></div>
                 </th>
-                <th style="width:14.28%">
+                <th style="width:10%">
                     <div class="font-extrabold">Ações</div>
                 </th>
             </tr>
@@ -133,6 +139,11 @@
                 <td>
                     <div class="font-extrabold">{{ site.inep }}</div>
                     <div class="text-sm text-gray-400">{{ site.city }}</div>
+                </td>
+                <td>
+                    <div>
+                        <app-lifeline [deviceSn]="site.router.sn" [monthsToShow]="1"></app-lifeline>
+                    </div>
                 </td>
                 <td>
                     <div class="">{{ site.installedDevices ? 'Sim' : 'Não' }}</div>

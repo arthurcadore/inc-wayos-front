@@ -1,6 +1,6 @@
 <div class="bg-lifeline" style="position: relative;">
     @if (isLoading) {
-    <div class="text-center text-gray-500 text-sm" style="width: 100%;">Carregando dados...</div>
+    <div class="text-center text-gray-500 text-sm" style="width: 100%;">Atualizando...</div>
     } @else {
     @for (item of data; track item) {
     <div class="lifeline-item event-{{item.typeName.toLowerCase()}}" [class.hovered]="hoveredItem === item"
@@ -13,8 +13,11 @@
     @if (hoveredItem) {
     <div class="lifeline-popup" [style.left.px]="popupPosition.x">
         <div class="popup-content">
-            <div class="popup-header">{{ hoveredItem.statusName }}</div>
-            <div class="popup-time">{{ hoveredItem.startAt | date: 'dd/MM/yyyy HH:mm:ss' }}</div>
+            <div class="flex flex-row justify-between">
+                <div class="popup-header">{{ hoveredItem.statusName }}</div>
+                <div class="popup-time">{{ hoveredItem.startAt | date: 'dd/MM/yy HH:mm' }}</div>
+
+            </div>
             <div class="popup-divider"></div>
             <div class="popup-metrics">
                 <div class="flex flex-row justify-between">
@@ -27,13 +30,16 @@
                         <span class="metric-value">{{ hoveredItem.mem }}</span>
                     </div>
                 </div>
-                <div class="popup-metric">
-                    <span class="metric-label">Up speed:</span>
-                    <span class="metric-value">{{ hoveredItem.up }}</span>
-                </div>
-                <div class="popup-metric">
-                    <span class="metric-label">Down speed:</span>
-                    <span class="metric-value">{{ hoveredItem.down }}</span>
+                <div class="flex flex-row justify-between">
+                    <div class="popup-metric">
+                        <span class="metric-label">Up:</span>
+                        <span class="metric-value">{{ hoveredItem.up }}</span>
+                    </div>
+                    <div class="popup-metric">
+                        <span class="metric-label">Down:</span>
+                        <span class="metric-value">{{ hoveredItem.down }}</span>
+                    </div>
+
                 </div>
             </div>
         </div>

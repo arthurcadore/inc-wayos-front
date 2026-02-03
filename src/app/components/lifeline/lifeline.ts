@@ -85,7 +85,7 @@ export class Lifeline implements OnInit, OnDestroy {
             case 1:
                 return 'Baixo Trafego';
             case 2:
-                return 'Sem Comunicação';
+                return 'Offline';
             default:
                 return 'unknown';
         }
