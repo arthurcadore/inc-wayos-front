@@ -1,7 +1,7 @@
 import { LifelineItem } from "@/pages/service/dtos/lifeline.dto";
 import { EaceService } from "@/pages/service/eace.service";
 import { CommonModule } from "@angular/common";
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, Input, OnDestroy, OnInit } from "@angular/core";
 
 @Component({
     selector: 'app-lifeline',
@@ -14,6 +14,9 @@ import { Component, OnDestroy, OnInit } from "@angular/core";
     styleUrls: ['./lifeline.scss'],
 })
 export class Lifeline implements OnInit, OnDestroy {
+    @Input() deviceSn: string = '';
+    @Input() monthsToShow: number = 1;
+
     isLoading: boolean = false;
     private subscription: any = null;
 
@@ -44,7 +47,7 @@ export class Lifeline implements OnInit, OnDestroy {
 
     async loadData() {
         this.isLoading = true;
-        this.subscription = this.eaceService.getLifelineData('MWDM4203126QN', 1).subscribe({
+        this.subscription = this.eaceService.getLifelineData(this.deviceSn, this.monthsToShow).subscribe({
             next: (data) => {
                 for (let item of data) {
                     item.typeName = this.parserTypeName(item.type);
