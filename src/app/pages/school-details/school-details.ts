@@ -10,7 +10,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-last-offline-moment';
 import { IncCloudDevice, WayosRouterInfo } from '../service/dtos/view-global.dtos';
 import { IncCloudLastOfflineMoment } from '@/components/last-offline-moment/inccloud-last-offline-moment';
-import { Lifeline } from '@/components/last-offline-moment/lifeline/lifeline';
+import { Lifeline } from '@/components/lifeline/lifeline';
 
 @Component({
     selector: 'app-school-details',
