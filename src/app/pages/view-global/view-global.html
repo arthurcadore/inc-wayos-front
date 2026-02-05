@@ -1,6 +1,6 @@
 <div class="flex flex-row justify-between items-center mb-3">
     <div>
-        <div class="text-2xl md:text-3xl font-extrabold">Visão Global da Rede</div>
+        <div class="text-2xl md:text-3xl font-extrabold">{{ title }}</div>
         <div class="text-sm text-gray-600"><b class="text-black">{{ totalInstalledSites }}</b> Sites Instalados / <b class="text-black">{{ totalUninstalledSites }}</b> Entregas Físicas</div>
         <span class="text-sm text-gray-400">{{ getTimeRemainingText() }}</span>
     </div>
@@ -17,7 +17,17 @@
 <p-card>
     <div class="flex justify-between">
         <div class="text-lg font-extrabold">Status do dispositivo</div>
-        <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
+        <div>
+            <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
+            <p-popover #op>
+                <div class="flex flex-col gap-4 w-[25rem]">                    
+                    <p>Informação no filtro de Entrega Física:</p>
+                    <p>Visão Global (Todas as escolas)</p>
+                    <p>Eace (Escolas entregues de forma completa)</p>
+                    <p>Eace Entrega Física (Escolas entregues apenas os Equipamentos de RI, sem Internet)</p>
+                </div>
+            </p-popover>
+        </div>
     </div>
     <p class="text-gray-400">Atualizado: {{ refreshedAtFormat }}</p>
     <!-- display dos devices -->

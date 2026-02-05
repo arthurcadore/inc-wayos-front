@@ -14,6 +14,10 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 - Informação de entregas físicas na API de visão global (princial)
+- Linha de Vida no Dashboard iniciaç
+- Linha de Vida (espefício de um INEP) na tela Detalhes por Escola
+- Configurações da aplicação de template na tela Detalhes por Escola
+- Número do SimetBox na tela Detalhes por Escola
 
 ---
 

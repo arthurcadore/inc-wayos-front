@@ -71,11 +71,16 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
     // Opções do filtro de instalação
     installedOptions: any[] = [
-        { label: 'Todos', value: 'all' },
-        { label: 'Instalados', value: 'installed' },
-        { label: 'Entrega Física', value: 'physical_delivery' },
+        { label: 'Visão Global', value: 'all' },
+        { label: 'Eace', value: 'installed' },
+        { label: 'Eace Entrega Física', value: 'physical_delivery' },
     ]
     selectInstalled: string = 'all';
+
+    get title(): string {
+        const currentOption = this.installedOptions.find(option => option.value === this.selectInstalled);
+        return currentOption.label;
+    }
 
     // Opções do filtro de status
     statusOptions: any[] = [
