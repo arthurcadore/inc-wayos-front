@@ -61,7 +61,6 @@ export class SchoolDetails implements OnInit, OnDestroy {
     isLoading: boolean = false;
     private viewGlobalSubscription: any = null;
     isLoadingLastMoment: boolean = false;
-    private lastMomentSubscription: any = null;
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -89,9 +88,8 @@ export class SchoolDetails implements OnInit, OnDestroy {
                     this.inepInfo.cityName = this.siteModelView.city;
                     this.inepInfo.devSn = this.siteModelView.router.sn;
                     this.inepInfo.online = this.siteModelView.hasOfflineDevices() ? false : true;
-                    this.inepInfo.lastMomentOnline = 'Atualizando...';
+                    this.inepInfo.lastMomentOnline = (this.siteModelView.router as WayosRouterInfo).lastOnlineTime;
                     this.inepInfo.totalDevices = this.siteModelView.switches.length + this.siteModelView.aps.length + 1; // +1 para o roteador
-                    this.loadLastMomentOnline();
                 }
             },
             error: (err) => {
@@ -104,26 +102,6 @@ export class SchoolDetails implements OnInit, OnDestroy {
             },
             complete: () => {
                 this.isLoading = false;
-            },
-        });
-    }
-
-    async loadLastMomentOnline(): Promise<void> {
-        this.isLoadingLastMoment = true;
-        this.lastMomentSubscription = this.lastMomentSubscription = this.eaceService.getWayosLastOfflineMomentList(this.siteModelView?.router.sceneId!).subscribe({
-            next: (data) => {
-                this.inepInfo.lastMomentOnline = data.length > 0 ? data[0].happen_at : null;
-            },
-            error: (err) => {
-                this.isLoadingLastMoment = false;
-                this.messageService.add({
-                    severity: 'error',
-                    summary: 'Erro',
-                    detail: `Falha ao buscar último momento online - ' ${(err?.message ? ` (${err.message})` : '')}`,
-                });
-            },
-            complete: () => {
-                this.isLoadingLastMoment = false;
             },
         });
     }
@@ -164,10 +142,6 @@ export class SchoolDetails implements OnInit, OnDestroy {
     async ngOnDestroy(): Promise<void> {
         if (this.viewGlobalSubscription) {
             this.viewGlobalSubscription.unsubscribe();
-        }
-
-        if (this.lastMomentSubscription) {
-            this.lastMomentSubscription.unsubscribe();
         }
     }
 }

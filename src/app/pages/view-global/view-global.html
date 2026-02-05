@@ -9,7 +9,7 @@
         <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" severity="info" (click)="op.toggle($event)" />
         <p-popover #op>
             <div class="flex flex-col gap-4 w-[25rem]">
-                <p>Exporta os dados da tabela para um arquivo CSV. O filtro selecionado (Todos, Online ou Offline) será considerado na exportação.</p>
+                <div>Exporta os dados da tabela para um arquivo CSV. O filtro selecionado (Todos, Online ou Offline) será considerado na exportação.</div>
             </div>
         </p-popover>
     </div>
@@ -17,14 +17,15 @@
 <p-card>
     <div class="flex justify-between">
         <div class="text-lg font-extrabold">Status do dispositivo</div>
-        <div>
+        <div class="flex justify-between">
             <p-selectbutton [options]="installedOptions" [(ngModel)]="selectInstalled" optionLabel="label" optionValue="value" (onChange)="applyFilter()" aria-labelledby="basic" />
-            <p-popover #op>
+            <p-button icon="pi pi-info-circle" [rounded]="true" [text]="true" severity="info" (click)="op2.toggle($event)" />
+            <p-popover #op2>
                 <div class="flex flex-col gap-4 w-[25rem]">                    
-                    <p>Informação no filtro de Entrega Física:</p>
-                    <p>Visão Global (Todas as escolas)</p>
-                    <p>Eace (Escolas entregues de forma completa)</p>
-                    <p>Eace Entrega Física (Escolas entregues apenas os Equipamentos de RI, sem Internet)</p>
+                    <div>Informação no filtro de Entrega Física:</div>
+                    <div>Visão Global (Todas as escolas)</div>
+                    <div>Eace (Escolas entregues de forma completa)</div>
+                    <div>Eace Entrega Física (Escolas entregues apenas os Equipamentos de RI, sem Internet)</div>
                 </div>
             </p-popover>
         </div>
