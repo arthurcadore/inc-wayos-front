@@ -225,6 +225,8 @@ export class AlarmDetails implements OnInit, OnDestroy {
                     label: 'Comentar',
                     icon: 'pi pi-comment',
                     command: () => {
+                        if (!this.dialogService) return;
+
                         this.dialogService.open(AddComment, {
                             header: 'Adicionar Comentário',
                             styleClass: 'w-full md:w-[45%] mx-auto',
@@ -269,6 +271,8 @@ export class AlarmDetails implements OnInit, OnDestroy {
     }
 
     editComment(alarm: AlarmViewModel, alarmComment: AlarmCommentViewModel): void {
+        if (!this.dialogService) return;
+        
         this.dialogService.open(EditComment, {
             header: 'Editar Comentário',
             styleClass: 'w-full md:w-[45%] mx-auto',

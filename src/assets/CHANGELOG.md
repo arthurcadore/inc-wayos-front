@@ -9,12 +9,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [0.5.0] - 2026-01-18
 
-### Status
-**BETA** - Versão inicial em desenvolvimento
-
 ### Adicionado
 - Informação de entregas físicas na API de visão global (princial)
-- Linha de Vida no Dashboard iniciaç
+- Linha de Vida no Dashboard
 - Linha de Vida (espefício de um INEP) na tela Detalhes por Escola
 - Configurações da aplicação de template na tela Detalhes por Escola
 - Número do SimetBox na tela Detalhes por Escola
