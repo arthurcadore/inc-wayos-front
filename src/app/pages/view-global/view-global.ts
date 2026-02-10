@@ -159,7 +159,34 @@ export class ViewGlobal implements OnInit, OnDestroy {
         this.exportFileService.toCSV(filteredSites, environment.viewGlobalExportFileName);
     }
 
+    applyCachedData(): void {
+        const cachedDataStr = localStorage.getItem(this.eaceService.CACHE_KEY);
+        if (cachedDataStr) {
+            const cachedData = JSON.parse(cachedDataStr);
+            this.refreshedAtFormat = cachedData.refreshedAtFormat;
+            this.refreshedAt = new Date(cachedData.refreshedAt);
+    
+            this.onlineRouters = cachedData.onlineRouters;
+            this.offlineRouters = cachedData.totalRouters - cachedData.onlineRouters;
+    
+            this.onlineSwitches = cachedData.onlineSwitches;
+            this.offlineSwitches = cachedData.totalSwitches - cachedData.onlineSwitches;
+    
+            this.onlineAccessPoints = cachedData.onlineAps;
+            this.offlineAccessPoints = cachedData.totalAps - cachedData.onlineAps;
+    
+            this.totalInstalledSites = cachedData.totalInstalledSites;
+            this.totalUninstalledSites = cachedData.totalUninstalledSites;
+    
+            this.sites = cachedData.data.map((item: ViewGlobalItem) => new SiteModelView(item, cachedData.refreshedAt));
+            this.applyFilter();
+        }
+    }
+
     ngOnInit(): void {
+        // Preencher a tabela com dados em cache, se disponíveis, para melhorar a experiência do usuário
+        this.applyCachedData();
+
         // Carregar dados inicialmente
         this.getViewGlobal();
 

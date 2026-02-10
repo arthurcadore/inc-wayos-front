@@ -14,10 +14,10 @@ import { LifelineItem } from "./dtos/lifeline.dto";
     providedIn: 'root'
 })
 export class EaceService {
-    private readonly CACHE_KEY = 'view_global_cache';
-    private readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
+    public readonly CACHE_KEY = 'view_global_cache';
+    public readonly CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
 
-    constructor(private httpService: HttpService) { }
+    constructor(private readonly httpService: HttpService) { }
 
     /**
      * @description Obtém os dados da linha do tempo (lifeline) para um dispositivo específico
@@ -222,7 +222,7 @@ export class EaceService {
         }
 
         // Verifique se o cache ainda é válido
-        if (this.isCacheValid(parseInt(cacheTimestampStr))) {
+        if (this.isCacheValid(Number.parseInt(cacheTimestampStr))) {
             if (environment.enableDebug) {
                 console.log('[EaceService] Returning valid cached data');
             }
