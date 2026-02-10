@@ -10,8 +10,8 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 ## [0.5.1] - 2026-02-10
 
 ### Corrigido
-- Atualização Discreta
-- 
+- Atualização Discreta (Sempre será apresentado INEPs se eles existirem no cache)
+- Tela de Alarmes (Agora apresenta hora exata do alarme criado)
 
 ---
 
