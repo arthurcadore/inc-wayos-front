@@ -7,6 +7,14 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.5.1] - 2026-02-10
+
+### Corrigido
+- Atualização Discreta
+- 
+
+---
+
 ## [0.5.0] - 2026-01-18
 
 ### Adicionado
