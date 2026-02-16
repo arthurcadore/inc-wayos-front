@@ -115,8 +115,9 @@ export class SiteModelView {
             if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && this.router.online) || (status === DeviceStatus.OFFLINE && !this.router.online)) {
                 rows.push({
                     'INEP': this.inep,
-                    'Site Instalado': this.installedDevices ? 'Sim' : 'Não',
+                    'Site Instalado': this.installedDevices ? 'Sim' : 'Nao',
                     'SimetBox': this.router.simetBox || 'N/A',
+                    'Template': this.router.backupScriptStatus || 'N/A',
                     'Online Status': this.router.online ? 'Online' : 'Offline',
                     'Device Type': DeviceType.ROUTER,
                     'Device SN': this.router.sn || 'N/A',
@@ -131,8 +132,9 @@ export class SiteModelView {
                 if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && switche.online) || (status === DeviceStatus.OFFLINE && !switche.online)) {
                     rows.push({
                         'INEP': this.inep,
-                        'Site Instalado': this.installedDevices ? 'Sim' : 'Não',
+                        'Site Instalado': this.installedDevices ? 'Sim' : 'Nao',
                         'SimetBox': this.router.simetBox || 'N/A',
+                        'Template': this.router.backupScriptStatus || 'N/A',
                         'Online Status': switche.online ? 'Online' : 'Offline',
                         'Device Type': DeviceType.SWITCH,
                         'Device SN': switche.sn || 'N/A',
@@ -148,8 +150,9 @@ export class SiteModelView {
                 if (status === DeviceStatus.ALL || (status === DeviceStatus.ONLINE && ap.online) || (status === DeviceStatus.OFFLINE && !ap.online)) {
                     rows.push({
                         'INEP': this.inep,
-                        'Site Instalado': this.installedDevices ? 'Sim' : 'Não',
+                        'Site Instalado': this.installedDevices ? 'Sim' : 'Nao',
                         'SimetBox': this.router.simetBox || 'N/A',
+                        'Template': this.router.backupScriptStatus || 'N/A',
                         'Online Status': ap.online ? 'Online' : 'Offline',
                         'Device Type': DeviceType.ACCESS_POINT,
                         'Device SN': ap.sn || 'N/A',
@@ -167,6 +170,7 @@ export interface FlatDataRow {
     'INEP': string;
     'Site Instalado': string;
     'SimetBox': string;
+    'Template': string;
     'Online Status': string;
     'Device Type': string;
     'Device SN': string;

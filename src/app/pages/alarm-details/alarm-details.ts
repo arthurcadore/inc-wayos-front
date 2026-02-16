@@ -411,4 +411,8 @@ export class AlarmDetails implements OnInit, OnDestroy {
         // Exportar arquivo TXT
         this.exportFileService.toTXT(content, environment.alarmLogsExportFileName);
     }
+
+    toBack(): void {
+        globalThis.history.back();
+    }
 }

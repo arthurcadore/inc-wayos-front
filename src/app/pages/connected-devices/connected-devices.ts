@@ -100,4 +100,8 @@ export class ConnectedDevices implements OnInit, OnDestroy {
             this.cinnedtedDevicesSubscription.unsubscribe();
         }
     }
+
+    toBack(): void {
+        globalThis.history.back();
+    }
 }

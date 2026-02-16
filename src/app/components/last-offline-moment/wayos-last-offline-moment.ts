@@ -1,9 +1,9 @@
-import { WayosAlarmLogItem } from "@/pages/service/dtos/alarm-log.dto";
 import { EaceService } from "@/pages/service/eace.service";
 import { CommonModule } from "@angular/common";
 import { Component, OnInit } from "@angular/core"
 import { PanelModule } from 'primeng/panel';
 import { DynamicDialogConfig } from "primeng/dynamicdialog";
+import { SiteModelView } from "@/pages/view-global/view-model";
 
 @Component({
     selector: 'app-wayos-last-offline-moment',
@@ -27,14 +27,12 @@ import { DynamicDialogConfig } from "primeng/dynamicdialog";
             <div class="mb-2 text-lg">Modelo: {{ deviceModel }}</div>
             <hr>
             @if(hasOfflineMoments === 'has-data') {
-                    @for (item of offlineMoments; track item) {
-                    <div class="mt-3 p-2 rounded-md border border-red-300 bg-red-50">
-                        <div class="text-center mb-1">
-                            <i class="pi pi-clock"></i>&nbsp;
-                            {{ item.happen_at | date:'dd/MM/yyyy HH:mm:ss' }}
-                        </div>
+                <div class="mt-3 p-2 rounded-md border border-red-300 bg-red-50">
+                    <div class="text-center mb-1">
+                        <i class="pi pi-clock"></i>&nbsp;
+                        {{ offlineMoments | date:'dd/MM/yyyy HH:mm:ss' }}
                     </div>
-                    }
+                </div>
             } @else if (hasOfflineMoments === 'no-data') {
                 <div class="mt-4 p-4 rounded-md border border-blue-300 bg-blue-50">
                     <div class="bg-blue-100 p-4 rounded-md">
@@ -70,7 +68,7 @@ export class WayosLastOfflineMoment implements OnInit {
     deviceModel: string = 'n/d';
 
     hasOfflineMoments: 'loading' | 'no-data' | 'has-data' = 'loading';
-    offlineMoments: WayosAlarmLogItem[] = [];
+    offlineMoments: string;
 
     showError: boolean = false;
     errorMessage: string = '';
@@ -93,10 +91,17 @@ export class WayosLastOfflineMoment implements OnInit {
 
     getData(): void {
         this.isLoading = true;
-        this.eaceService.getWayosLastOfflineMomentList(this.shopId).subscribe({
-            next: (data: WayosAlarmLogItem[]) => {
-                this.offlineMoments = data;
-                this.hasOfflineMoments = data.length > 0 ? 'has-data' : 'no-data';
+        this.eaceService.getViewGlobalData(true).subscribe({
+            next: (data) => {
+                const device = data.data.find(item => item.inep === this.inep);
+                if (device) {
+                    const site = new SiteModelView(device, data.refreshedAt);
+                    const routerInfo = site.router;
+                    this.offlineMoments = routerInfo.lastOnlineTime;
+                    this.hasOfflineMoments = this.offlineMoments ? 'has-data' : 'no-data';                    
+                } else {
+                    this.hasOfflineMoments = 'no-data';
+                }
             },
             error: (err) => {
                 this.isLoading = false;

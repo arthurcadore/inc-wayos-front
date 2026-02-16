@@ -731,4 +731,8 @@ export class NetworkTopology implements OnInit, OnDestroy {
             this.isLoading = false;
         }
     }
+
+    toBack(): void {
+        globalThis.history.back();
+    }
 }

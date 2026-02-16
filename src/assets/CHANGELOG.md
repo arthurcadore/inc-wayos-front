@@ -7,6 +7,19 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [0.5.2] - 2026-02-15
+
+### Adicionado
+- Foi adicionado a coluna "Template" no arquivo de exportação
+- Botão voltar nas página - 'Dispositivos Offline', 'Detalhes por Escola', 'Topologia de Rede', 'Detalhes dos Alarmes' e 'Dispositivos Conectados'
+
+### Corrigido
+- Informação do 'Último Momento Offline' da Router obitida de uma única finta de dados (/open-api/v1/device/list)
+- 'Último Momento Offline' da página de 'Detalhes da Escola" apresenta apenas em único local
+- Layout da coluna 'Access Point' da tabela do Dashboar, ajustada.
+
+---
+
 ## [0.5.1] - 2026-02-10
 
 ### Corrigido
