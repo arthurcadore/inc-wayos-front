@@ -41,6 +41,8 @@ import { Lifeline } from '@/components/lifeline/lifeline';
     templateUrl: './view-global.html',
 })
 export class ViewGlobal implements OnInit, OnDestroy {
+    private readonly VIEW_GLOBAL_FILTER_CACHE_KEY = 'view_global_filter_cache';
+
     @ViewChild('dt2') dt2!: Table;
 
     refreshedAtFormat: string = 'n/d';
@@ -90,6 +92,8 @@ export class ViewGlobal implements OnInit, OnDestroy {
     ];
     selectStatus: string = 'all';
 
+    researchField: string = '';
+
     constructor(
         private readonly eaceService: EaceService,
         private readonly messageService: MessageService,
@@ -104,6 +108,8 @@ export class ViewGlobal implements OnInit, OnDestroy {
     // Função auxiliar para obter o valor do evento de input
     // Precisei fazer isso porque o template do Angular não reconhece 'event.target.value' diretamente e estava dando erro
     getTargetValue(event: any): any {
+        this.researchField = event.target.value; // Atualiza a variável de pesquisa para manter o valor no campo mesmo após filtragem
+        this.saveFilterCache(); // Salva o cache do filtro sempre que o valor de pesquisa é atualizado
         return event.target.value;
     }
 
@@ -127,6 +133,7 @@ export class ViewGlobal implements OnInit, OnDestroy {
             this.recalculateTotals();
             this.applyStatusFilter();
         }
+        this.saveFilterCache(); // Salva o cache do filtro sempre que um filtro é aplicado para manter a consistência da experiência do usuário
     }
     
     applyStatusFilter(): void {
@@ -183,7 +190,35 @@ export class ViewGlobal implements OnInit, OnDestroy {
         }
     }
 
+    saveFilterCache(): void {
+        const filterCache = {
+            selectInstalled: this.selectInstalled,
+            selectStatus: this.selectStatus,
+            researchField: this.researchField,
+        };
+        localStorage.setItem(this.VIEW_GLOBAL_FILTER_CACHE_KEY, JSON.stringify(filterCache));
+    }
+
+    initializeFiltersFromCache(): void {
+        const filterCacheStr = localStorage.getItem(this.VIEW_GLOBAL_FILTER_CACHE_KEY);
+        if (filterCacheStr) {
+            const filterCache = JSON.parse(filterCacheStr);
+            this.selectInstalled = filterCache.selectInstalled || 'all';
+            this.selectStatus = filterCache.selectStatus || 'all';
+            this.researchField = filterCache.researchField || '';
+        } else {
+            // Se não houver cache, inicialize com o valor padrão e salve no localStorage
+            this.selectInstalled = 'all';
+            this.selectStatus = 'all';
+            this.researchField = '';
+            this.saveFilterCache();
+        }
+    }
+
     ngOnInit(): void {
+        // Inicializar filtros a partir do cache para manter a consistência da experiência do usuário
+        this.initializeFiltersFromCache();
+
         // Preencher a tabela com dados em cache, se disponíveis, para melhorar a experiência do usuário
         this.applyCachedData();
 
@@ -192,6 +227,10 @@ export class ViewGlobal implements OnInit, OnDestroy {
 
         // Iniciar timer de atualização
         this.startRefreshTimer();
+
+        setTimeout(() => {
+            this.dt2.filterGlobal(this.researchField, 'contains');
+        }, 0);
     }
 
     getViewGlobal(): void {

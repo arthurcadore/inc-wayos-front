@@ -30,11 +30,12 @@ export class AuthService {
     private readonly USER_KEY = 'auth_user';
     private readonly VIEW_GLOBAL_CACHE_KEY = 'view_global_cache';
     private readonly VIEW_GLOBAL_CACHE_TIMESTAMP_KEY = 'view_global_cache_timestamp';
+    private readonly VIEW_GLOBAL_FILTER_CACHE_KEY = 'view_global_filter_cache';
     private readonly AUTH_ENDPOINT = `${environment.apiUrl}/v1/auth/login`;
 
     constructor(
-        private router: Router,
-        private http: HttpClient
+        private readonly router: Router,
+        private readonly http: HttpClient
     ) {}
 
     /**
@@ -77,6 +78,7 @@ export class AuthService {
         localStorage.removeItem(this.USER_KEY);
         localStorage.removeItem(this.VIEW_GLOBAL_CACHE_KEY);
         localStorage.removeItem(this.VIEW_GLOBAL_CACHE_TIMESTAMP_KEY);
+        localStorage.removeItem(this.VIEW_GLOBAL_FILTER_CACHE_KEY);
         this.router.navigate(['/login']);
     }
 
