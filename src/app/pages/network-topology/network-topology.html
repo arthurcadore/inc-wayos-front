@@ -210,6 +210,19 @@
                             {{ node.model }}
                         </text>
                         
+                        <!-- Texto - Status Online/Offline -->
+                        @if (node.isOnline !== undefined) {
+                        <text 
+                            [attr.x]="nodeWidth / 2"
+                            y="130"
+                            [class]="node.isOnline ? 'node-status status-online' : 'node-status status-offline'"
+                            text-anchor="middle"
+                            font-weight="600"
+                            font-size="12">
+                            {{ node.isOnline ? '🟢 Online' : '🔴 Offline' }}
+                        </text>
+                        }
+                        
                         <!-- Overlay para interatividade (hover/click) -->
                         <rect 
                             x="0" 

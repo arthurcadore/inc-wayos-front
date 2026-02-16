@@ -65,10 +65,10 @@ export class NetworkTopology implements OnInit, OnDestroy {
     };
 
     private readonly LAYOUT_CONFIG = {
-        LEVEL_1_Y: 80,
-        LEVEL_2_Y: 240,
-        LEVEL_3_Y: 460,
-        LEVEL_4_Y: 580,
+        LEVEL_1_Y: 100,
+        LEVEL_2_Y: 270,
+        LEVEL_3_Y: 510,
+        LEVEL_4_Y: 600,
         NODE_SPACING: 25,
         GROUP_SPACING: 25,
         MARGIN: 25
@@ -93,7 +93,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
     svgWidth = 1600;
     svgHeight = 800;
     nodeWidth = 180;
-    nodeHeight = 120;
+    nodeHeight = 140;
 
     scale = 1;
     translateX = 0;
@@ -152,6 +152,7 @@ export class NetworkTopology implements OnInit, OnDestroy {
             if (routerNode) {
                 routerNode.name = 'Roteador';
                 routerNode.model = this.routerDevice?.model || '(n/d)';
+                routerNode.isOnline = this.routerDevice?.online || false;
             }
             
             this.calculateLayout();

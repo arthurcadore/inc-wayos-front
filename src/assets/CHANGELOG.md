@@ -13,6 +13,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 - Foi adicionado a coluna "Template" no arquivo de exportação
 - Botão voltar nas página - 'Dispositivos Offline', 'Detalhes por Escola', 'Topologia de Rede', 'Detalhes dos Alarmes' e 'Dispositivos Conectados'
 - Preserva o estado dos filtros da página de Dashboard
+- Nós da página da topologia agora apresentam status Online/offline
 
 ### Corrigido
 - Informação do 'Último Momento Offline' da Router obitida de uma única finta de dados (/open-api/v1/device/list)

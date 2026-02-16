@@ -114,6 +114,22 @@
     user-select: none;
 }
 
+// Estilos do status online/offline
+.node-status {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    user-select: none;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.status-online {
+    fill: #22c55e; // Verde para dispositivos online
+}
+
+.status-offline {
+    fill: #ef4444; // Vermelho para dispositivos offline
+}
+
 // Estilos das conexões
 .connection-group {
     .connection-line {
