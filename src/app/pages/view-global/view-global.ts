@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
-import { Table, TableModule } from 'primeng/table';
+import { Table, TableModule, TablePageEvent } from 'primeng/table';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputIconModule } from 'primeng/inputicon';
@@ -19,6 +19,13 @@ import { WayosLastOfflineMoment } from '@/components/last-offline-moment/wayos-l
 import { ExportFileService } from '@/services/export-file';
 import { PopoverModule } from 'primeng/popover';
 import { Lifeline } from '@/components/lifeline/lifeline';
+
+export interface FilterCache {
+    selectInstalled: string;
+    selectStatus: string;
+    researchField: string;
+    currentPageFirst: number;
+}
 
 @Component({
     selector: 'app-view-global',
@@ -93,7 +100,8 @@ export class ViewGlobal implements OnInit, OnDestroy {
     selectStatus: string = 'all';
 
     researchField: string = '';
-
+    currentPageFirst: number = 0;
+    
     constructor(
         private readonly eaceService: EaceService,
         private readonly messageService: MessageService,
@@ -103,6 +111,12 @@ export class ViewGlobal implements OnInit, OnDestroy {
         // Converter minutos para segundos
         this.refreshIntervalSeconds = environment.refreshIntervalMinutes * 60;
         this.timeRemaining = this.refreshIntervalSeconds;
+    }
+
+    handleFirstChange(value: number): void {
+        console.log('Page changed:', value);
+        this.currentPageFirst = value;
+        this.saveFilterCache();
     }
 
     // Função auxiliar para obter o valor do evento de input
@@ -191,10 +205,11 @@ export class ViewGlobal implements OnInit, OnDestroy {
     }
 
     saveFilterCache(): void {
-        const filterCache = {
+        const filterCache: FilterCache = {
             selectInstalled: this.selectInstalled,
             selectStatus: this.selectStatus,
             researchField: this.researchField,
+            currentPageFirst: this.currentPageFirst
         };
         localStorage.setItem(this.VIEW_GLOBAL_FILTER_CACHE_KEY, JSON.stringify(filterCache));
     }
@@ -202,15 +217,17 @@ export class ViewGlobal implements OnInit, OnDestroy {
     initializeFiltersFromCache(): void {
         const filterCacheStr = localStorage.getItem(this.VIEW_GLOBAL_FILTER_CACHE_KEY);
         if (filterCacheStr) {
-            const filterCache = JSON.parse(filterCacheStr);
+            const filterCache: FilterCache = JSON.parse(filterCacheStr);
             this.selectInstalled = filterCache.selectInstalled || 'all';
             this.selectStatus = filterCache.selectStatus || 'all';
             this.researchField = filterCache.researchField || '';
+            this.currentPageFirst = filterCache.currentPageFirst || 0;
         } else {
             // Se não houver cache, inicialize com o valor padrão e salve no localStorage
             this.selectInstalled = 'all';
             this.selectStatus = 'all';
             this.researchField = '';
+            this.currentPageFirst = 0;
             this.saveFilterCache();
         }
     }
@@ -228,9 +245,16 @@ export class ViewGlobal implements OnInit, OnDestroy {
         // Iniciar timer de atualização
         this.startRefreshTimer();
 
+        const currentPageFirstLocal = this.currentPageFirst;
+        
         setTimeout(() => {
             this.dt2.filterGlobal(this.researchField, 'contains');
         }, 0);
+        
+        setTimeout(() => {
+            this.currentPageFirst = currentPageFirstLocal;
+        }, 1000);
+        
     }
 
     getViewGlobal(): void {

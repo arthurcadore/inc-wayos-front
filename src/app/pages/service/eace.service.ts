@@ -26,13 +26,7 @@ export class EaceService {
      * @returns Observable com os dados da linha do tempo
      */
     getLifelineData(sn: string, daysRange: number): Observable<LifelineItem[]> {
-        return this.httpService.get<LifelineItem[]>(`/v1/lifeline-data/sn/${sn}/days-range/${daysRange}`).pipe(
-            tap(data => {
-                if (environment.enableDebug) {
-                    console.log('[EaceService] Fetched lifeline data:', data);
-                }
-            })
-        );
+        return this.httpService.get<LifelineItem[]>(`/v1/lifeline-data/sn/${sn}/days-range/${daysRange}`);
     }
 
     /**
