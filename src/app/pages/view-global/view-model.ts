@@ -122,6 +122,7 @@ export class SiteModelView {
                     'Device Type': DeviceType.ROUTER,
                     'Device SN': this.router.sn || 'N/A',
                     'LAN Port MAC': this.router.lanMac || 'N/A',
+                    'Último Momento Offline': this.router.lastOnlineTime ? new Date(this.router.lastOnlineTime).toLocaleString() : 'N/A',
                 });
             }
         }
@@ -139,6 +140,7 @@ export class SiteModelView {
                         'Device Type': DeviceType.SWITCH,
                         'Device SN': switche.sn || 'N/A',
                         'LAN Port MAC': 'N/A', // Switches não possuem LAN Port MAC no IncCloudDevice
+                        'Último Momento Offline': 'N/A', // IncCloudDevice não possui lastOffline, então deixamos como N/A
                     });
                 }
             });
@@ -157,6 +159,7 @@ export class SiteModelView {
                         'Device Type': DeviceType.ACCESS_POINT,
                         'Device SN': ap.sn || 'N/A',
                         'LAN Port MAC': 'N/A', // Access Points não possuem LAN Port MAC no IncCloudDevice
+                        'Último Momento Offline': 'N/A', // IncCloudDevice não possui lastOffline, então deixamos como N/A
                     });
                 }
             });
@@ -175,4 +178,5 @@ export interface FlatDataRow {
     'Device Type': string;
     'Device SN': string;
     'LAN Port MAC': string;
+    'Último Momento Offline': string;
 }
